@@ -1,0 +1,52 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { LoginForm } from "./LoginForm";
+import { Logo } from "@/components/brand/Logo";
+import { getSessionUser } from "@/lib/auth";
+import { getSettings } from "@/lib/db/queries/settings";
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Yönetim Girişi" };
+
+export default async function LoginPage() {
+  // Oturum açıkken giriş ekranını göstermenin anlamı yok.
+  if (await getSessionUser()) redirect("/admin");
+
+  const settings = getSettings();
+
+  return (
+    <div className="flex min-h-screen flex-col bg-tfs-grey-20">
+      <div className="bg-tfs-dark">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <Link href="/" aria-label="Portala dön">
+            <Logo variant="light" subtitle={settings.portal_title} />
+          </Link>
+        </div>
+      </div>
+
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-12">
+        <div className="rounded-brand border border-tfs-grey bg-white p-6">
+          <div className="brand-bar mb-6 pl-4">
+            <p className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+              Yönetim Paneli
+            </p>
+            <h1 className="mt-1 text-xl font-semibold text-tfs-dark">Giriş yapın</h1>
+          </div>
+
+          <LoginForm />
+        </div>
+
+        <p className="mt-4 text-center text-xs font-light text-tfs-dark-60">
+          Bültenleri ve anketleri yönetmek için yetkili hesabınızla giriş yapın.
+        </p>
+        <Link
+          href="/"
+          className="mt-2 text-center text-xs font-semibold text-tfs-red hover:underline"
+        >
+          ← Portala dön
+        </Link>
+      </div>
+    </div>
+  );
+}

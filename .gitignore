@@ -1,0 +1,23 @@
+# bağımlılıklar
+/node_modules
+
+# Next.js çıktıları
+/.next/
+/out/
+next-env.d.ts
+
+# çalışma zamanı verileri (veritabanı + yüklenen PDF'ler)
+# Yedekleme için sunucuda bu klasörü kopyalamak yeterlidir.
+/data/
+
+# ortam değişkenleri
+.env
+.env.local
+.env*.local
+
+# çeşitli
+*.pem
+.DS_Store
+/coverage
+/screenshots
+tsconfig.tsbuildinfo

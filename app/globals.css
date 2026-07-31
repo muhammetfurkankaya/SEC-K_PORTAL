@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* Kurumsal yazı ailesi — TFS Marka Kimlik Kılavuzu s.29.
+   Alt kümeler unicode-range ile tanımlı olduğundan tarayıcı yalnızca
+   ihtiyaç duyduğunu (Türkçe için latin + latin-ext) indirir.
+   Dosyalar node_modules'ten servis edilir; intranette internet gerekmez. */
+@import "@fontsource/nunito-sans/300.css";
+@import "@fontsource/nunito-sans/400.css";
+@import "@fontsource/nunito-sans/500.css";
+@import "@fontsource/nunito-sans/600.css";
+@import "@fontsource/nunito-sans/700.css";
+@import "@fontsource/nunito-sans/400-italic.css";
+
+@theme {
+  /* ————— Kurumsal renk paleti (TFS Marka Kimlik Kılavuzu s.28 & s.30) ————— */
+  /* PANTONE 433 C — ana koyu renk */
+  --color-tfs-dark: #1d252d;
+  /* PANTONE 7620 C — kurumsal kırmızı / vurgu */
+  --color-tfs-red: #ce2028;
+  /* PANTONE WARM GREY 1 C */
+  --color-tfs-grey: #d6d1ca;
+  /* PANTONE 2285 C — TFS Green alt marka */
+  --color-tfs-green: #9ed660;
+
+  /* Kılavuzun izin verdiği açık tonlar (%20–%80 aralığı) ile
+     arayüz için türetilen yardımcı renkler. */
+  --color-tfs-dark-80: #4a5057;
+  --color-tfs-dark-60: #777b81;
+  --color-tfs-dark-20: #d2d3d5;
+  --color-tfs-red-10: #fbeaeb;
+  --color-tfs-grey-40: #f1efec;
+  --color-tfs-grey-20: #f8f7f6;
+
+  --font-sans: "Nunito Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Arial, sans-serif;
+
+  /* Kılavuz düz (flat) ve keskin bir dil öngörüyor: minimum yuvarlatma. */
+  --radius-brand: 3px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: var(--color-tfs-dark);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    line-height: 1.6;
+    /* Türkçe metinlerde daha doğru tireleme */
+    hyphens: manual;
+  }
+
+  /* Klavye ile gezinme için görünür odak halkası (erişilebilirlik) */
+  :focus-visible {
+    outline: 2px solid var(--color-tfs-red);
+    outline-offset: 2px;
+  }
+
+  /* Basılı çıktıda gereksiz arayüz öğelerini gizle (anket özet raporu) */
+  @media print {
+    .print-hidden {
+      display: none !important;
+    }
+  }
+}
+
+@utility brand-bar {
+  /* Kılavuz s.51 & s.54: logo/başlık yanındaki #CE2028 dikey çubuk aksanı */
+  border-left: 4px solid var(--color-tfs-red);
+}
