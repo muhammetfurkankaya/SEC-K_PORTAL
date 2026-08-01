@@ -18,6 +18,8 @@ Görünüm TFS Marka Kimlik Kılavuzu'na göre kurulmuştur (aşağıya bakın).
 
 Gereksinim: **Node.js 20 veya üzeri** (18.18+ çalışır, 22 ile test edildi).
 
+> Adım adım anlatım ve deneme senaryoları için: **[LOCALDE-DENE.md](LOCALDE-DENE.md)**
+
 ```bash
 npm install
 npm run seed     # veritabanını kurar, sekmeleri ve ilk admin hesabını oluşturur
