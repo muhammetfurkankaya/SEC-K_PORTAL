@@ -12,7 +12,7 @@ import {
   listResponses,
 } from "@/lib/db/queries/surveys";
 import { analyzeSurvey, formatDuration } from "@/lib/analytics";
-import { formatDateTime, formatNumber, formatPercent } from "@/lib/format";
+import { formatDate, formatNumber, formatPercent } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Anket Analizi" };
@@ -166,11 +166,11 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
         <StatTile
           label="Son cevap"
           value={
-            analysis.lastResponseAt ? formatDateTime(analysis.lastResponseAt).split(" ")[0] : "—"
+            analysis.lastResponseAt ? formatDate(analysis.lastResponseAt) : "—"
           }
           hint={
             analysis.firstResponseAt
-              ? `ilk cevap ${formatDateTime(analysis.firstResponseAt)}`
+              ? `ilk cevap ${formatDate(analysis.firstResponseAt)}`
               : undefined
           }
         />

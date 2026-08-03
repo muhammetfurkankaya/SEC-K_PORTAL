@@ -152,9 +152,10 @@ Durdurmak için komut satırında **Ctrl + C**.
 |---|---|
 | Ana sayfa | **Öneri Bildirim** ve **Olay Bildirim** kartları QDMS'i yeni sekmede açar |
 | Sekmeler | SEÇ-K / SMS / İGA / THY — üstteki sekmelerden geçin |
+| Ana sayfa arama | Üstteki kutuya `yakit` yazıp **Ara** — tüm bölümlerde arar |
 | Bülten sayfası | Soldaki **indekste** arama yapın: `2026-01`, `yakit`, `sec`, `atik` |
-| Bülten kartı | **Kartın üzerine tıklayın → PDF iner.** Dosya adı bülten no + konu olur |
-| "Görüntüle" | PDF'i indirmeden tarayıcıda okur |
+| Bülten satırı | **Satıra tıklayın → bülten sağda açılır, inmez.** İndirmek için satırdaki ↓ simgesi ya da sağdaki **PDF indir** düğmesi |
+| Adres çubuğu | Bülten seçtikçe `?bulten=…` değişir — bağlantıyı kopyalayıp paylaşabilirsiniz |
 | Telefon | Aynı adresi telefondan da açabilirsiniz (aşağıdaki nota bakın) |
 
 > **Türkçe arama testi:** indekse `sec` yazın — SEÇ-K bültenleri çıkar.
@@ -175,7 +176,10 @@ Sağ üstteki **YÖNETİM** düğmesi → 3. adımdaki kullanıcı adı ve şifr
 | | **CSV indir** → Excel'de açın, Türkçe karakterler bozuk olmamalı |
 | | **Düzenle / QR** → QR kodu, **PNG/SVG indir**, **asılacak afişi yazdır** |
 | | **+ Yeni anket** → soru ekleyin, **Yayınla**, QR'ı telefonla okutup doldurun |
-| **Ayarlar** | Portal adı, QDMS adresleri, duyuru bandı, şifre değiştirme |
+| **Ayarlar** | Portal metinleri, QDMS kart başlıkları, duyuru bandı ve tonu, şifre |
+| | **PDF önizlemesini kapatıp** bülten sayfasına dönün — tıklama artık indirir |
+| | Ana sayfadaki bülten sayısını 3 yapıp ana sayfayı yenileyin |
+| | Duyuru metni yazıp tonunu **Kritik** seçin — üstte dolu kırmızı bant çıkar |
 
 ---
 
@@ -232,10 +236,10 @@ veritabanı ve yüklenen PDF'ler durur — sildiğinizde her şey sıfırlanır.
 yeni şifreyle tekrar kurmak için 3. adımdaki `SECK_ADMIN_PASSWORD` yöntemini
 kullanın.
 
-**Logoyu görmek istiyorum**
-`public/brand/` klasörüne `logo-beyaz.svg` (koyu zemin için) ve `logo.svg`
-dosyalarını koyun, sayfayı yenileyin — otomatik kullanılır. Dosya yokken
-kılavuza uygun geçici bir yazı logosu görünür.
+**Logoyu değiştirmek istiyorum**
+Kurumsal logolar `public/brand/` altında hazır (`logo-beyaz.png` koyu zemin,
+`logo.png` açık zemin, `app/icon.png` sekme simgesi). Değiştirmek için aynı
+adla üzerine yazmanız yeterli; `.svg` de kabul edilir.
 
 ---
 

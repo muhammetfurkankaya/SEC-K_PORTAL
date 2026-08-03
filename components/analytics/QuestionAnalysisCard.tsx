@@ -1,14 +1,14 @@
-import { BarTally, EmptyNote, Histogram, NpsChart, NumericStats } from "./charts";
-import { formatNumber, formatPercent } from "@/lib/format";
+import { BarTally, EmptyNote, Histogram, NumberSummary, ScoreSummary } from "./charts";
+import { formatNumber } from "@/lib/format";
 import { QUESTION_TYPE_LABELS, type QuestionType } from "@/lib/types";
-import type { OptionTally, QuestionAnalysis } from "@/lib/analytics";
+import type { QuestionAnalysis } from "@/lib/analytics";
 
 /**
  * Bir sorunun analiz kartı.
  *
- * Soru tipine göre doğru gösterimi seçer ve her kartın altında değerleri
- * tablo olarak da sunar. Tablo, açık tonlu marka renklerinin kontrast
- * uyarısına karşı öngörülen telafidir: hiçbir sayı yalnızca grafikte kalmaz.
+ * Soru tipine göre tek bir gösterim seçer. Bilinçli olarak sade tutuldu:
+ * her soru için tek bir grafik ve okunması gereken sayılar — yan yana
+ * duran istatistik yığını yok.
  */
 export function QuestionAnalysisCard({
   analysis,
@@ -32,12 +32,11 @@ export function QuestionAnalysisCard({
           </span>
         </div>
 
-        <p className="mt-1 text-xs text-tfs-dark-60">
+        <p className="tnum mt-1 text-xs text-tfs-dark-60">
           {formatNumber(analysis.answeredCount)} cevap
           {analysis.skippedCount > 0
-            ? ` · ${formatNumber(analysis.skippedCount)} kişi bu soruyu boş bıraktı`
+            ? ` · ${formatNumber(analysis.skippedCount)} kişi boş bıraktı`
             : ""}
-          {question.is_required ? " · zorunlu soru" : ""}
         </p>
       </header>
 
@@ -64,40 +63,27 @@ function Body({ analysis }: { analysis: QuestionAnalysis }) {
               yüzdeler toplamı %100&apos;ü aşabilir.
             </p>
           ) : null}
-          <ValueTable rows={analysis.options ?? []} firstColumn="Seçenek" />
         </>
       );
 
     case "rating":
+    case "nps": {
+      const max = question.scale_max ?? (question.type === "nps" ? 10 : 5);
       return (
         <>
           {analysis.numeric ? (
-            <NumericStats stats={analysis.numeric} unit="/ 5" />
+            <ScoreSummary stats={analysis.numeric} unit={`/ ${max}`} />
           ) : null}
-          <div className="mt-4">
+          <div className="mt-5">
             <Histogram items={analysis.distribution ?? []} />
           </div>
-          <ValueTable rows={analysis.distribution ?? []} firstColumn="Puan" />
         </>
       );
-
-    case "nps":
-      return (
-        <>
-          {analysis.nps ? <NpsChart {...analysis.nps} /> : null}
-          <div className="mt-5 border-t border-tfs-grey-40 pt-4">
-            <p className="mb-2 text-[0.625rem] font-semibold tracking-[0.08em] text-tfs-dark-60 uppercase">
-              Puan dağılımı
-            </p>
-            <Histogram items={analysis.distribution ?? []} />
-          </div>
-          <ValueTable rows={analysis.distribution ?? []} firstColumn="Puan" />
-        </>
-      );
+    }
 
     case "number":
       return analysis.numeric ? (
-        <NumericStats stats={analysis.numeric} />
+        <NumberSummary stats={analysis.numeric} />
       ) : (
         <EmptyNote>Bu soruya cevap gelmemiş.</EmptyNote>
       );
@@ -112,7 +98,7 @@ function Body({ analysis }: { analysis: QuestionAnalysis }) {
 
 function TextAnswers({ analysis }: { analysis: QuestionAnalysis }) {
   const texts = analysis.texts ?? [];
-  const words = analysis.topWords ?? [];
+  const words = (analysis.topWords ?? []).slice(0, 8);
 
   if (texts.length === 0) {
     return <EmptyNote>Bu soruya serbest metin cevabı gelmemiş.</EmptyNote>;
@@ -123,7 +109,7 @@ function TextAnswers({ analysis }: { analysis: QuestionAnalysis }) {
       {words.length > 0 ? (
         <div className="mb-4">
           <p className="mb-2 text-[0.625rem] font-semibold tracking-[0.08em] text-tfs-dark-60 uppercase">
-            En sık geçen kelimeler
+            Sık geçen kelimeler
           </p>
           <ul className="flex flex-wrap gap-1.5">
             {words.map((word) => (
@@ -132,7 +118,7 @@ function TextAnswers({ analysis }: { analysis: QuestionAnalysis }) {
                 className="rounded-brand border border-tfs-grey bg-tfs-grey-20 px-2 py-0.5 text-xs text-tfs-dark"
               >
                 {word.word}
-                <span className="ml-1.5 text-tfs-dark-60">{formatNumber(word.count)}</span>
+                <span className="tnum ml-1.5 text-tfs-dark-60">{formatNumber(word.count)}</span>
               </li>
             ))}
           </ul>
@@ -144,7 +130,7 @@ function TextAnswers({ analysis }: { analysis: QuestionAnalysis }) {
       </p>
 
       {/* Uzun listelerde kendi içinde kayar. */}
-      <ul className="max-h-96 space-y-2 overflow-y-auto">
+      <ul className="max-h-80 space-y-2 overflow-y-auto">
         {texts.map((item, index) => (
           <li
             key={`${item.responseId}-${index}`}
@@ -158,46 +144,5 @@ function TextAnswers({ analysis }: { analysis: QuestionAnalysis }) {
         ))}
       </ul>
     </>
-  );
-}
-
-/**
- * Grafiğin altındaki tablo görünümü.
- *
- * Katlanır (details) olarak durur; ekranı doldurmaz ama rakamlar her zaman
- * metin olarak erişilebilir kalır.
- */
-function ValueTable({ rows, firstColumn }: { rows: OptionTally[]; firstColumn: string }) {
-  if (rows.length === 0) return null;
-
-  return (
-    <details className="mt-4 border-t border-tfs-grey-40 pt-3">
-      <summary className="cursor-pointer text-[0.6875rem] font-semibold text-tfs-dark-60 hover:text-tfs-dark">
-        Değerleri tablo olarak göster
-      </summary>
-
-      <div className="mt-2 overflow-x-auto">
-        <table className="w-full min-w-[18rem] text-left text-xs">
-          <thead className="border-b border-tfs-grey text-tfs-dark-60">
-            <tr>
-              <th className="py-1.5 pr-3 font-semibold">{firstColumn}</th>
-              <th className="py-1.5 pr-3 text-right font-semibold">Adet</th>
-              <th className="py-1.5 text-right font-semibold">Yüzde</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-tfs-grey-40">
-            {rows.map((row) => (
-              <tr key={row.label}>
-                <td className="py-1.5 pr-3 text-tfs-dark">{row.label}</td>
-                <td className="py-1.5 pr-3 text-right text-tfs-dark">{formatNumber(row.count)}</td>
-                <td className="py-1.5 text-right text-tfs-dark-60">
-                  {formatPercent(row.percent)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </details>
   );
 }

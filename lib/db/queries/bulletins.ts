@@ -30,6 +30,22 @@ export function listRecentBulletins(limit = 6): BulletinWithCategory[] {
     .all(limit) as BulletinWithCategory[];
 }
 
+/**
+ * Tüm sekmelerdeki yayımlanmış bültenler.
+ *
+ * Arama sayfası bunu kullanır: çalışan bültenin hangi bölümde olduğunu
+ * bilmek zorunda kalmadan arayabilsin.
+ */
+export function listAllPublishedBulletins(): BulletinWithCategory[] {
+  return getDb()
+    .prepare(
+      `${WITH_CATEGORY}
+       WHERE b.is_published = 1 AND c.is_active = 1
+       ORDER BY b.published_date DESC, b.id DESC`,
+    )
+    .all() as BulletinWithCategory[];
+}
+
 /** Admin listesi — yayından kaldırılmışlar da dahil. */
 export function listAllBulletins(): BulletinWithCategory[] {
   return getDb()

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test, describe } from "node:test";
-import { analyzeSurvey, computeNps, formatDuration, topWords } from "../lib/analytics";
+import { analyzeSurvey, formatDuration, topWords } from "../lib/analytics";
 import type { Question, SurveyAnswer, SurveyResponse } from "../lib/types";
 
 /** Test için soru nesnesi üretir. */
@@ -46,41 +46,6 @@ function answer(
     ...overrides,
   };
 }
-
-describe("computeNps", () => {
-  test("destekleyici, nötr ve köstekleyicileri doğru ayırır", () => {
-    // 9–10 destekleyici, 7–8 nötr, 0–6 köstekleyici
-    const result = computeNps([10, 9, 8, 7, 6, 0]);
-    assert.equal(result.promoters, 2);
-    assert.equal(result.passives, 2);
-    assert.equal(result.detractors, 2);
-    // (2 - 2) / 6 * 100 = 0
-    assert.equal(result.score, 0);
-  });
-
-  test("tamamı destekleyici ise +100 verir", () => {
-    assert.equal(computeNps([9, 10, 10]).score, 100);
-  });
-
-  test("tamamı köstekleyici ise -100 verir", () => {
-    assert.equal(computeNps([0, 3, 6]).score, -100);
-  });
-
-  test("cevap yoksa sıfır döner", () => {
-    assert.deepEqual(computeNps([]), {
-      score: 0,
-      promoters: 0,
-      passives: 0,
-      detractors: 0,
-    });
-  });
-
-  test("sınır değerleri doğru sınıflar", () => {
-    assert.equal(computeNps([6]).detractors, 1);
-    assert.equal(computeNps([7]).passives, 1);
-    assert.equal(computeNps([9]).promoters, 1);
-  });
-});
 
 describe("topWords", () => {
   test("Türkçe bağlaç ve edatları ayıklar", () => {
@@ -177,7 +142,7 @@ describe("analyzeSurvey", () => {
     assert.equal(analysis.distribution?.[3].count, 3); // 4 puan
   });
 
-  test("NPS sorusunda skor üretir ve dağılım 0–10 arasıdır", () => {
+  test("0–10 ölçeğinde dağılım tüm basamakları kapsar", () => {
     const q = question({ id: 1, type: "nps", scale_min: 0, scale_max: 10 });
     const values = [10, 9, 8, 5];
     const responses = values.map((_, i) => response(i + 1));
@@ -185,11 +150,12 @@ describe("analyzeSurvey", () => {
 
     const analysis = analyzeSurvey([q], responses, answers).questions[0];
 
+    // 0'dan 10'a kadar 11 basamak, cevap gelmeyenler dahil.
     assert.equal(analysis.distribution?.length, 11);
-    assert.equal(analysis.nps?.promoters, 2);
-    assert.equal(analysis.nps?.detractors, 1);
-    // (2 - 1) / 4 * 100 = 25
-    assert.equal(analysis.nps?.score, 25);
+    assert.equal(analysis.distribution?.[0].count, 0); // 0 puan
+    assert.equal(analysis.distribution?.[10].count, 1); // 10 puan
+    assert.equal(analysis.numeric?.count, 4);
+    assert.equal(analysis.numeric?.mean, 8);
   });
 
   test("evet/hayır sorusunda etiketleri kendisi üretir", () => {

@@ -64,6 +64,32 @@ export function Checkbox({
   );
 }
 
+/**
+ * Açıklamalı aç/kapa satırı.
+ *
+ * Ayar ekranında kullanılır: her kontrolün ne yaptığı yanında yazılı olsun
+ * diye etiketi ve açıklamasını birlikte taşır.
+ */
+export function SwitchRow({
+  label,
+  description,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { label: string; description: string }) {
+  return (
+    <label className="flex cursor-pointer items-start justify-between gap-4 border-b border-tfs-grey-40 py-3 last:border-b-0">
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-tfs-dark">{label}</span>
+        <span className="mt-0.5 block text-xs font-light text-tfs-dark-60">{description}</span>
+      </span>
+      <input
+        type="checkbox"
+        {...props}
+        className="mt-0.5 size-4 shrink-0 rounded-brand border-tfs-grey accent-tfs-red"
+      />
+    </label>
+  );
+}
+
 type ButtonVariant = "primary" | "secondary" | "danger";
 
 const VARIANTS: Record<ButtonVariant, string> = {

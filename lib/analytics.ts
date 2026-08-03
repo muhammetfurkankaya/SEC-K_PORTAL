@@ -38,9 +38,8 @@ export type QuestionAnalysis = {
   skippedCount: number;
   options?: OptionTally[];
   numeric?: NumericSummary;
-  /** Puanlama/NPS dağılımı: her ölçek değeri için adet. */
+  /** Puanlama dağılımı: her ölçek değeri için adet. */
   distribution?: OptionTally[];
-  nps?: { score: number; promoters: number; passives: number; detractors: number };
   texts?: TextAnswer[];
   topWords?: WordCount[];
 };
@@ -86,34 +85,6 @@ function summarize(values: number[]): NumericSummary {
     max: sorted[sorted.length - 1],
     stdDev: Math.sqrt(variance),
   };
-}
-
-/**
- * Net Öneri Skoru (NPS).
- *
- * 9–10 verenler Destekleyici, 7–8 Nötr, 0–6 Köstekleyici sayılır.
- * Skor = %Destekleyici − %Köstekleyici (−100 … +100).
- */
-export function computeNps(values: number[]): {
-  score: number;
-  promoters: number;
-  passives: number;
-  detractors: number;
-} {
-  if (values.length === 0) return { score: 0, promoters: 0, passives: 0, detractors: 0 };
-
-  let promoters = 0;
-  let passives = 0;
-  let detractors = 0;
-
-  for (const value of values) {
-    if (value >= 9) promoters += 1;
-    else if (value >= 7) passives += 1;
-    else detractors += 1;
-  }
-
-  const score = ((promoters - detractors) / values.length) * 100;
-  return { score, promoters, passives, detractors };
 }
 
 function percent(count: number, total: number): number {
@@ -252,12 +223,7 @@ export function analyzeSurvey(
           percent: percent(count, values.length),
         }));
 
-        return {
-          ...base,
-          numeric: summarize(values),
-          distribution,
-          nps: question.type === "nps" ? computeNps(values) : undefined,
-        };
+        return { ...base, numeric: summarize(values), distribution };
       }
 
       case "number": {

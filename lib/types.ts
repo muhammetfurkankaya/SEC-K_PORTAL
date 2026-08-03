@@ -52,7 +52,7 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   single_choice: "Tek seçim",
   multi_choice: "Çok seçim",
   rating: "Puanlama (1–5)",
-  nps: "Öneri skoru (0–10)",
+  nps: "Puanlama (0–10)",
   text: "Serbest metin",
   number: "Sayı",
   yes_no: "Evet / Hayır",

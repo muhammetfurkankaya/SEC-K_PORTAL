@@ -1,40 +1,46 @@
-type QdmsCardProps = {
+type ReportActionProps = {
   href: string;
   title: string;
   description: string;
-  icon: "suggestion" | "incident";
+  kind: "suggestion" | "incident";
 };
 
 /**
- * Ana sayfadaki QDMS yönlendirme kartı.
+ * Ana sayfadaki QDMS bildirim eylemi.
  *
- * Öneri ve Olay bildirimi QDMS üzerinden yapılır; portal bu iki işlem için
- * belirgin bir giriş noktası sunar. Adresler admin panelinden düzenlenebilir.
+ * Renk tesadüfi değil: olay bildirimi kurumsal kırmızıyı taşır, öneri
+ * bildirimi koyu zemini. Saha işaretlemelerinde kırmızı tehlikeyi anlattığı
+ * için acil olan eylem kırmızıdır — renk burada bir bilgi taşıyor.
  */
-export function QdmsCard({ href, title, description, icon }: QdmsCardProps) {
+export function ReportAction({ href, title, description, kind }: ReportActionProps) {
+  const isIncident = kind === "incident";
+
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-start gap-4 rounded-brand border border-tfs-grey bg-white p-6 transition-colors hover:border-tfs-red focus-visible:border-tfs-red"
+      className={`group flex items-center gap-4 rounded-brand px-5 py-4 transition-colors ${
+        isIncident
+          ? "bg-tfs-red text-white hover:bg-[#a81a20]"
+          : "bg-tfs-dark text-white hover:bg-tfs-deep"
+      }`}
     >
       <span
         aria-hidden="true"
-        className="flex size-12 shrink-0 items-center justify-center rounded-brand bg-tfs-red-10 text-tfs-red transition-colors group-hover:bg-tfs-red group-hover:text-white"
+        className="flex size-11 shrink-0 items-center justify-center rounded-brand border border-white/30"
       >
-        {icon === "suggestion" ? <SuggestionIcon /> : <IncidentIcon />}
+        {isIncident ? <IncidentIcon /> : <SuggestionIcon />}
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2">
-          <span className="text-base font-semibold text-tfs-dark">{title}</span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-base font-semibold">{title}</span>
           <ExternalIcon />
         </span>
-        <span className="mt-1 block text-sm font-light text-tfs-dark-80">{description}</span>
-        <span className="mt-3 block text-xs font-semibold tracking-[0.08em] text-tfs-red uppercase">
-          QDMS&apos;te aç
-        </span>
+        {description ? (
+          <span className="mt-0.5 block text-xs font-light text-white/80">{description}</span>
+        ) : null}
       </span>
     </a>
   );
@@ -73,7 +79,7 @@ function ExternalIcon() {
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
-      className="size-3.5 shrink-0 text-tfs-dark-60"
+      className="size-3.5 shrink-0 opacity-70"
       stroke="currentColor"
       strokeWidth={2}
       strokeLinecap="round"

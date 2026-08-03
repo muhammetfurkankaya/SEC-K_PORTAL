@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
-import { PasswordForm, PortalSettingsForm } from "./SettingsForms";
+import { PasswordForm, PortalSettingsForm, ResetSettingsForm } from "./SettingsForms";
 import { AdminHeading, Panel } from "@/components/admin/AdminHeading";
-import { getSettings } from "@/lib/db/queries/settings";
+import { getRawSettings } from "@/lib/db/queries/settings";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Ayarlar" };
 
 export default function SettingsPage() {
-  const settings = getSettings();
+  const settings = getRawSettings();
 
   return (
     <>
       <AdminHeading
         title="Ayarlar"
-        description="Portal bilgilerini, QDMS bağlantılarını ve hesap şifrenizi yönetin."
+        description="Portal metinlerini, QDMS bağlantılarını, duyuruyu ve bülten görünümünü buradan yönetin."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_21rem]">
         <Panel title="Portal Ayarları">
           <PortalSettingsForm settings={settings} />
         </Panel>
@@ -28,9 +28,14 @@ export default function SettingsPage() {
 
           <Panel title="Yedekleme">
             <p className="text-sm font-light text-tfs-dark-80">
-              Tüm bültenler ve anket cevapları sunucudaki <code className="text-tfs-red">data/</code>{" "}
-              klasöründe tutulur. Düzenli yedek için bu klasörü kopyalamak yeterlidir.
+              Tüm bültenler ve anket cevapları sunucudaki{" "}
+              <code className="text-tfs-red">data/</code> klasöründe tutulur. Düzenli yedek
+              için bu klasörü kopyalamak yeterlidir.
             </p>
+          </Panel>
+
+          <Panel title="Varsayılanlara Dön">
+            <ResetSettingsForm />
           </Panel>
         </div>
       </div>

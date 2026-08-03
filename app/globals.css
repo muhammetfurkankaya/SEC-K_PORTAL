@@ -31,6 +31,10 @@
   --color-tfs-grey-40: #f1efec;
   --color-tfs-grey-20: #f8f7f6;
 
+  /* Koyu bandın altında derinlik için ana koyunun bir gölgesi — yeni bir
+     renk değil, PANTONE 433 C'nin koyulaştırılmış hâli. */
+  --color-tfs-deep: #12181d;
+
   --font-sans: "Nunito Sans", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, Arial, sans-serif;
 
@@ -68,6 +72,86 @@
 }
 
 @utility brand-bar {
-  /* Kılavuz s.51 & s.54: logo/başlık yanındaki #CE2028 dikey çubuk aksanı */
+  /* Kılavuz s.51 & s.54: başlık yanındaki #CE2028 dikey çubuk aksanı.
+     Gerçek logonun yanında kullanılmaz — amblem kırmızıyı zaten taşıyor. */
   border-left: 4px solid var(--color-tfs-red);
+}
+
+/* ————————————————————————————————————————————————
+   Plaka — bu arayüzün imza öğesi.
+
+   Bülten numarasını apron işaretlemeleri ve doküman kontrol damgaları
+   dilinde ele alır: koyu plaka, tabular rakamlar, geniş harf aralığı,
+   solunda kırmızı çizgi. Kullanıcının aslında aradığı şey numara olduğu
+   için görsel çapa odur.
+   ———————————————————————————————————————————————— */
+@utility placard {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  background: var(--color-tfs-dark);
+  color: #fff;
+  border-left: 3px solid var(--color-tfs-red);
+  padding: 0.1875rem 0.5rem 0.1875rem 0.4375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1.35;
+}
+
+/* Açık zeminlerde, satır içinde daha sessiz duran sürüm. */
+@utility placard-quiet {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-tfs-grey-40);
+  color: var(--color-tfs-dark);
+  border-left: 3px solid var(--color-tfs-red);
+  padding: 0.125rem 0.375rem 0.125rem 0.3125rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* Sayı ve tarih sütunlarında hizalama. */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ————————————————————————————————————————————————
+   Kimlik dikişi.
+
+   Koyu kimlik bandını içerikten ayıran ince kırmızı çizgi. Önce eğik
+   "apron tehlike şeridi" olarak denendi; sahaya göndermesi hoştu ama hiçbir
+   bilgi taşımıyor ve eylem düğmelerindeki kırmızıyla yarışıyordu. İmza öğesi
+   olarak plaka yeterli — bu yüzden dikiş kılavuzun kırmızı çizgi diline
+   indirildi.
+   ———————————————————————————————————————————————— */
+@utility brand-seam {
+  height: 3px;
+  background-color: var(--color-tfs-red);
+}
+
+@layer base {
+  /* Önizleme paneli geçişi — tek hareket, o da isteyene. */
+  @media (prefers-reduced-motion: no-preference) {
+    .fade-in {
+      animation: fade-in 140ms ease-out;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }

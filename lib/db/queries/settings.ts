@@ -1,30 +1,35 @@
 import { getDb } from "@/lib/db";
+import {
+  ANNOUNCEMENT_LEVELS,
+  SETTING_DEFAULTS,
+  SORT_KEYS,
+  type AnnouncementLevel,
+  type PortalSettings,
+  type ResolvedSettings,
+  type SettingKey,
+  type SortKey,
+} from "@/lib/settings-schema";
 
 /**
- * Portal ayarları.
+ * Portal ayarlarının okunması ve yazılması.
  *
- * QDMS adresleri kodda sabit değildir: QDMS'in Öneri ve Olay bildirimi için
- * ayrı derin linkleri varsa admin panelinden girilebilir.
+ * Anahtar listesi ve seçenekler lib/settings-schema.ts içindedir; istemci
+ * bileşenleri oradan import eder. Burada yalnızca veritabanı erişimi var.
  */
-export const SETTING_DEFAULTS = {
-  portal_title: "SEÇ-K Portalı",
-  portal_subtitle: "Sağlık, Emniyet, Çevre ve Kalite",
-  qdms_suggestion_url: "https://tqdms.turkishfuel.com/QDMS/QDMSNET/BSAT/Default.aspx",
-  qdms_incident_url: "https://tqdms.turkishfuel.com/QDMS/QDMSNET/BSAT/Default.aspx",
-  announcement: "",
-} as const;
 
-export type SettingKey = keyof typeof SETTING_DEFAULTS;
+function isTruthy(value: string): boolean {
+  return value === "1" || value === "true" || value === "on";
+}
 
-/** Tüm ayarları, kaydedilmemiş olanlar için varsayılanla birlikte verir. */
-export function getSettings(): Record<SettingKey, string> {
+/** Ham ayar değerleri — kaydedilmemiş olanlar için varsayılanla birlikte. */
+export function getRawSettings(): PortalSettings {
   const rows = getDb().prepare(`SELECT key, value FROM settings`).all() as {
     key: string;
     value: string;
   }[];
 
   const stored = new Map(rows.map((r) => [r.key, r.value]));
-  const result = { ...SETTING_DEFAULTS } as Record<SettingKey, string>;
+  const result = { ...SETTING_DEFAULTS } as PortalSettings;
 
   for (const key of Object.keys(SETTING_DEFAULTS) as SettingKey[]) {
     const value = stored.get(key);
@@ -33,11 +38,37 @@ export function getSettings(): Record<SettingKey, string> {
   return result;
 }
 
-export function getSetting(key: SettingKey): string {
-  const row = getDb().prepare(`SELECT value FROM settings WHERE key = ?`).get(key) as
-    | { value: string }
-    | undefined;
-  return row?.value ?? SETTING_DEFAULTS[key];
+/**
+ * Arayüzün kullandığı ayarlar.
+ *
+ * Sayı ve boolean alanlar burada bir kez çözülür; sayfalar
+ * `settings.homeRecentCount` gibi hazır değerleri okur, her yerde ayrı ayrı
+ * dönüştürme yapılmaz.
+ */
+export function getSettings(): ResolvedSettings {
+  const raw = getRawSettings();
+
+  const level = (ANNOUNCEMENT_LEVELS as readonly string[]).includes(raw.announcement_level)
+    ? (raw.announcement_level as AnnouncementLevel)
+    : "uyari";
+
+  const sort = (SORT_KEYS as readonly string[]).includes(raw.default_sort)
+    ? (raw.default_sort as SortKey)
+    : "tarih-yeni";
+
+  const recent = Number(raw.home_recent_count);
+
+  return {
+    ...raw,
+    // Duyuru yalnızca metni varsa VE açıksa görünür.
+    announcementVisible: isTruthy(raw.announcement_active) && raw.announcement.trim().length > 0,
+    announcementLevel: level,
+    homeRecentCount: Number.isFinite(recent) ? Math.min(Math.max(Math.trunc(recent), 3), 24) : 6,
+    pdfPreviewEnabled: isTruthy(raw.enable_pdf_preview),
+    downloadCountVisible: isTruthy(raw.show_download_count),
+    surveysSectionVisible: isTruthy(raw.show_surveys_section),
+    defaultSort: sort,
+  };
 }
 
 export function setSettings(values: Partial<Record<SettingKey, string>>): void {
@@ -52,4 +83,9 @@ export function setSettings(values: Partial<Record<SettingKey, string>>): void {
       if (value !== undefined) stmt.run(key, value);
     }
   })();
+}
+
+/** Tüm ayarları varsayılanlara döndürür. */
+export function resetSettings(): void {
+  getDb().prepare(`DELETE FROM settings`).run();
 }

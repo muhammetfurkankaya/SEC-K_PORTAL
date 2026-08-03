@@ -1,13 +1,19 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/brand/SectionTitle";
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
+import { getSettings } from "@/lib/db/queries/settings";
 import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Anketler" };
 
 export default function SurveysPage() {
+  // Anket bölümü ayarlardan kapatılmışsa bu sayfa da kapalıdır. QR ile
+  // paylaşılan tek tek anket bağlantıları çalışmaya devam eder.
+  if (!getSettings().surveysSectionVisible) notFound();
+
   const surveys = listOpenSurveys();
 
   return (

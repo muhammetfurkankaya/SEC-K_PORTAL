@@ -6,12 +6,14 @@ export function SiteFooter() {
 
   return (
     <footer className="mt-16 border-t border-tfs-grey bg-tfs-grey-20 print-hidden">
-      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-xs text-tfs-dark-60 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 py-6 text-xs text-tfs-dark-60 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <p>
-          {settings.portal_title} · {settings.portal_subtitle}
+          <span className="font-semibold text-tfs-dark">{settings.portal_title}</span>
+          {settings.portal_subtitle ? ` · ${settings.portal_subtitle}` : ""}
         </p>
         <p>
-          Turkish Fuel Services · {year} · Şirket içi kullanım içindir
+          Turkish Fuel Services · {year}
+          {settings.footer_note ? ` · ${settings.footer_note}` : ""}
         </p>
       </div>
     </footer>

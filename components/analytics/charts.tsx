@@ -6,21 +6,17 @@ import type { OptionTally } from "@/lib/analytics";
  *
  * Tasarım kararları:
  *
- * • **Renk işi.** Büyüklük karşılaştıran her grafik (seçenek dağılımları,
- *   histogramlar, departmanlar) tek hue kullanır — kurumsal kırmızı #CE2028.
- *   Kategorik palete ihtiyaç yok, çünkü karşılaştırılan şey kimlik değil
- *   büyüklük. Yalnızca NPS üç sıralı sınıf taşıdığı için diverging'dir:
- *   #CE2028 (köstekleyici) — #D6D1CA (nötr) — #9ED660 (destekleyici).
+ * • **Tek hue.** Her grafik büyüklük karşılaştırır (seçenek dağılımları,
+ *   histogramlar, departmanlar), kimlik değil — bu yüzden hepsi tek renk
+ *   kullanır: kurumsal kırmızı #CE2028. Kategorik palete gerek yok, birden
+ *   fazla renk burada bilgi taşımaz yalnızca gürültü ekler.
  *
- * • **Erişilebilirlik.** Marka paletinin açık tonları (#D6D1CA, #9ED660) beyaz
- *   zeminde 3:1 kontrastın altında kalıyor. Palet kurumsal kimlikle sabit
- *   olduğu için rengi değiştirmek yerine öngörülen telafiyi uyguluyoruz:
- *   her segmentin sayısı ve yüzdesi **doğrudan yazılır**, üç sınıf ayrıca
- *   metin etiketiyle adlandırılır ve tüm değerler tablo olarak da verilir.
- *   Böylece hiçbir bilgi yalnızca renge bağlı kalmaz.
+ * • **Değerler her zaman yazılı.** Sayı ve yüzde çubuğun yanında yazar;
+ *   hiçbir bilgi yalnızca renge veya çubuk boyuna bağlı kalmaz. #CE2028
+ *   beyaz zeminde kontrast eşiğini geçtiği için ek bir telafi gerekmez.
  *
- * • **Grafikler saf HTML/CSS.** Sunucuda render edilir; JavaScript
- *   gerektirmez, yazdırmada bozulmaz.
+ * • **Saf HTML/CSS.** Sunucuda render edilir; JavaScript gerektirmez,
+ *   yazdırmada bozulmaz.
  */
 
 const BAR_HUE = "bg-tfs-red";
@@ -123,133 +119,80 @@ export function Histogram({ items }: { items: OptionTally[] }) {
 }
 
 /**
- * NPS diverging çubuğu ve skoru.
+ * Puanlama özeti — ortalamayı öne çıkarır, gerisini yanına yazar.
  *
- * Üç sıralı sınıfı tek bir yığın çubukta gösterir; nötr grup ortada gri
- * kalır. Her sınıf hem renkle hem adı ve sayısıyla verilir.
+ * Karar verici için okunması gereken tek sayı ortalamadır; ortanca ve cevap
+ * sayısı bağlamı verir. Min/maks ve standart sapma bilinçli olarak
+ * çıkarıldı: dağılım histogramı aynı bilgiyi zaten gösteriyor.
  */
-export function NpsChart({
-  score,
-  promoters,
-  passives,
-  detractors,
-}: {
-  score: number;
-  promoters: number;
-  passives: number;
-  detractors: number;
-}) {
-  const total = promoters + passives + detractors;
-
-  if (total === 0) return <EmptyNote>Bu soruya cevap gelmemiş.</EmptyNote>;
-
-  const segments = [
-    { label: "Köstekleyici", hint: "0–6 puan", count: detractors, color: "bg-tfs-red" },
-    { label: "Nötr", hint: "7–8 puan", count: passives, color: "bg-tfs-grey" },
-    { label: "Destekleyici", hint: "9–10 puan", count: promoters, color: "bg-tfs-green" },
-  ];
-
-  return (
-    <div>
-      <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
-        <div>
-          <p className="text-[0.6875rem] font-semibold tracking-[0.1em] text-tfs-dark-60 uppercase">
-            NPS Skoru
-          </p>
-          {/* Hero sayı: panonun okunacak ilk değeri. */}
-          <p className="text-4xl leading-none font-semibold text-tfs-dark">
-            {score > 0 ? "+" : ""}
-            {formatNumber(score, 0)}
-          </p>
-          <p className="mt-1 text-[0.6875rem] font-light text-tfs-dark-60">
-            −100 ile +100 arası · {formatNumber(total)} cevap
-          </p>
-        </div>
-
-        <p className="max-w-xs text-xs font-light text-tfs-dark-80">
-          Skor, destekleyicilerin yüzdesinden köstekleyicilerin yüzdesi çıkarılarak
-          hesaplanır. Sıfırın üstü olumlu kabul edilir.
-        </p>
-      </div>
-
-      {/* Yığın çubuk — segmentler arasında 2px yüzey boşluğu */}
-      <div className="mt-4 flex h-6 w-full gap-0.5 overflow-hidden">
-        {segments.map((segment) =>
-          segment.count > 0 ? (
-            <div
-              key={segment.label}
-              className={`flex items-center justify-center ${segment.color}`}
-              style={{ width: `${(segment.count / total) * 100}%` }}
-              title={`${segment.label} (${segment.hint}): ${formatNumber(segment.count)}`}
-            >
-              {/* Etiket yalnızca sığdığında içeride yazılır. */}
-              {segment.count / total > 0.12 ? (
-                <span
-                  className={`text-[0.625rem] font-semibold ${
-                    segment.color === "bg-tfs-red" ? "text-white" : "text-tfs-dark"
-                  }`}
-                >
-                  {formatNumber(segment.count)}
-                </span>
-              ) : null}
-            </div>
-          ) : null,
-        )}
-      </div>
-
-      {/* Açıklama (legend) — üç sınıf olduğu için zorunlu */}
-      <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
-        {segments.map((segment) => (
-          <li key={segment.label} className="flex items-center gap-2 text-xs">
-            <span aria-hidden="true" className={`block size-2.5 shrink-0 ${segment.color}`} />
-            <span className="text-tfs-dark">{segment.label}</span>
-            <span className="text-tfs-dark-60">
-              {segment.hint} · <span className="font-semibold text-tfs-dark">
-                {formatNumber(segment.count)}
-              </span>{" "}
-              ({formatPercent((segment.count / total) * 100)})
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/** Sayısal özet — grafik değil, değer kutuları. */
-export function NumericStats({
+export function ScoreSummary({
   stats,
   unit = "",
 }: {
-  stats: { count: number; mean: number; median: number; min: number; max: number; stdDev: number };
+  stats: { count: number; mean: number; median: number };
   unit?: string;
 }) {
   if (stats.count === 0) return <EmptyNote>Bu soruya cevap gelmemiş.</EmptyNote>;
 
-  // Birim yalnızca ölçek üzerindeki değerlere yazılır; "48 / 5 cevap" gibi
-  // anlamsız bir okuma oluşmasın diye adet ve sapma birimsiz kalır.
+  return (
+    <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+      <div>
+        <p className="text-[0.625rem] font-semibold tracking-[0.1em] text-tfs-dark-60 uppercase">
+          Ortalama
+        </p>
+        <p className="tnum text-3xl leading-none font-semibold text-tfs-dark">
+          {formatNumber(stats.mean, 2)}
+          {unit ? (
+            <span className="ml-1 text-sm font-light text-tfs-dark-60">{unit}</span>
+          ) : null}
+        </p>
+      </div>
+
+      <div className="flex gap-6">
+        <span>
+          <span className="block text-[0.625rem] font-semibold tracking-[0.1em] text-tfs-dark-60 uppercase">
+            Ortanca
+          </span>
+          <span className="tnum text-base font-semibold text-tfs-dark">
+            {formatNumber(stats.median, 2)}
+          </span>
+        </span>
+        <span>
+          <span className="block text-[0.625rem] font-semibold tracking-[0.1em] text-tfs-dark-60 uppercase">
+            Cevap
+          </span>
+          <span className="tnum text-base font-semibold text-tfs-dark">
+            {formatNumber(stats.count)}
+          </span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Sayı sorusu özeti — ölçek olmadığı için aralık da gösterilir. */
+export function NumberSummary({
+  stats,
+}: {
+  stats: { count: number; mean: number; median: number; min: number; max: number };
+}) {
+  if (stats.count === 0) return <EmptyNote>Bu soruya cevap gelmemiş.</EmptyNote>;
+
   const cells = [
-    { label: "Ortalama", value: formatNumber(stats.mean, 2), withUnit: true },
-    { label: "Ortanca", value: formatNumber(stats.median, 2), withUnit: true },
-    { label: "En düşük", value: formatNumber(stats.min, 2), withUnit: false },
-    { label: "En yüksek", value: formatNumber(stats.max, 2), withUnit: false },
-    { label: "Std. sapma", value: formatNumber(stats.stdDev, 2), withUnit: false },
-    { label: "Cevap", value: formatNumber(stats.count), withUnit: false },
+    { label: "Ortalama", value: formatNumber(stats.mean, 2) },
+    { label: "Ortanca", value: formatNumber(stats.median, 2) },
+    { label: "Aralık", value: `${formatNumber(stats.min, 0)} – ${formatNumber(stats.max, 0)}` },
+    { label: "Cevap", value: formatNumber(stats.count) },
   ];
 
   return (
-    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       {cells.map((cell) => (
         <div key={cell.label}>
           <dt className="text-[0.625rem] font-semibold tracking-[0.08em] text-tfs-dark-60 uppercase">
             {cell.label}
           </dt>
-          <dd className="mt-0.5 text-lg font-semibold text-tfs-dark">
-            {cell.value}
-            {unit && cell.withUnit ? (
-              <span className="ml-0.5 text-xs font-normal text-tfs-dark-60">{unit}</span>
-            ) : null}
-          </dd>
+          <dd className="tnum mt-0.5 text-lg font-semibold text-tfs-dark">{cell.value}</dd>
         </div>
       ))}
     </dl>

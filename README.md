@@ -2,9 +2,10 @@
 
 Turkish Fuel Services şirket içi SEÇ-K portalı. Üç işi yapar:
 
-1. **Bülten arşivi** — SEÇ-K / SMS / İGA / THY bültenleri PDF olarak yayımlanır,
-   sade bir düzende görüntülenir, tek tıkla indirilir. Yanında bülten numarası,
-   konu ve yayım tarihi içeren aranabilir bir indeks bulunur.
+1. **Bülten arşivi** — SEÇ-K / SMS / İGA / THY bültenleri PDF olarak yayımlanır.
+   Solda bülten numarası, konu ve yayım tarihi içeren aranabilir indeks; bir
+   satıra tıklayınca bülten **sağ tarafta okunabilir biçimde açılır**, indirme
+   yalnızca “PDF indir” düğmesiyle olur.
 2. **QDMS yönlendirme** — ana sayfada Öneri Bildirim ve Olay Bildirim için iki
    belirgin giriş noktası.
 3. **Anket ve analiz** — QR kod ile dağıtılan anketler ve karar vericiye hazır
@@ -62,11 +63,14 @@ npm run build     # üretim derlemesi
 
 | Adres | İçerik |
 |---|---|
-| `/` | QDMS kartları, sekmeler, açık anketler, son yayımlananlar |
-| `/bultenler/<sekme>` | Aranabilir bülten indeksi + bülten kartları (tıkla → indir) |
-| `/bultenler/<sekme>/<id>` | Gömülü PDF görüntüleyici + indirme düğmesi |
+| `/` | Arama, QDMS bildirim eylemleri, açık anketler, son yayımlananlar |
+| `/ara?q=` | Tüm sekmelerde bülten arama |
+| `/bultenler/<sekme>` | Aranabilir indeks + yanında PDF önizlemesi |
+| `/bultenler/<sekme>?bulten=<id>` | Belirli bir bülteni açar (paylaşılabilir bağlantı) |
 | `/anketler` | Doldurulmaya açık anketlerin listesi |
 | `/anket/<token>` | QR kodun açtığı anket formu (mobil öncelikli) |
+
+Eski `/bultenler/<sekme>/<id>` adresleri yeni biçime yönlendirilir.
 
 ### Yönetim (`/admin`, kullanıcı adı + şifre)
 
@@ -78,10 +82,34 @@ npm run build     # üretim derlemesi
 | `/admin/anketler` | Anket oluştur, soru editörü, QR kod, yayınla / kapat / kopyala |
 | `/admin/anketler/<id>/analiz` | Analiz ekranı ve CSV dışa aktarım |
 | `/admin/anketler/<id>/qr` | Panoya asılacak yazdırılabilir QR afişi |
-| `/admin/ayarlar` | Portal adı, QDMS adresleri, duyuru bandı, şifre değiştirme |
+| `/admin/ayarlar` | Portal metinleri, QDMS kartları, duyuru, bülten görünümü, şifre |
 
 **Sekmeler kodda sabit değildir.** Yeni bir bölüm gerektiğinde
 `/admin/kategoriler` üzerinden eklenir ve navigasyonda anında görünür.
+
+---
+
+## Ayarlardan yönetilenler
+
+`/admin/ayarlar` ekranındaki her kontrolün portalda görünür bir karşılığı
+vardır:
+
+| Ayar | Etkisi |
+|---|---|
+| Portal adı / alt başlık | Üst bant, alt bilgi, sayfa başlıkları |
+| Ana sayfa tanıtım metni | Ana sayfadaki başlık altı açıklama (boşsa gizlenir) |
+| Alt bilgi notu | Her sayfanın altındaki iletişim satırı |
+| QDMS kart başlığı ve açıklaması | Ana sayfadaki iki bildirim eyleminin metni |
+| QDMS adresleri | Kartların açtığı hedef (öneri ve olay için ayrı) |
+| Duyuru metni / tonu / açık-kapalı | Üstteki duyuru şeridi; ton bandın rengini belirler (bilgi · uyarı · kritik) |
+| Ana sayfada bülten sayısı | “Son yayımlananlar” listesinin uzunluğu (3–24) |
+| Varsayılan sıralama | Bülten listesi ilk açıldığında hangi sıraya göre dizilir |
+| PDF önizlemesi | Kapatılırsa satıra tıklamak doğrudan indirir, önizleme paneli çıkmaz |
+| İndirme sayısını göster | Sayacın çalışanlara görünüp görünmeyeceği |
+| Anket bölümü | Anketler sekmesi ve ana sayfadaki anket şeridi (QR bağlantıları çalışmaya devam eder) |
+
+“Ayarları sıfırla” hepsini ilk kurulum değerlerine döndürür; bültenler,
+anketler ve şifre etkilenmez.
 
 ---
 
@@ -91,13 +119,17 @@ npm run build     # üretim derlemesi
 |---|---|
 | Tek seçim | Adet + yüzde çubukları |
 | Çok seçim | Adet + yüzde (toplam %100'ü aşabilir, not düşülür) |
-| Puanlama (1–5) | Ortalama, ortanca, min, maks, standart sapma + dağılım histogramı |
-| Öneri skoru (0–10) | NPS skoru, destekleyici/nötr/köstekleyici kırılımı + histogram |
+| Puanlama (1–5) | Ortalama, ortanca, cevap sayısı + dağılım histogramı |
+| Puanlama (0–10) | Ortalama, ortanca, cevap sayısı + dağılım histogramı |
 | Evet / Hayır | Adet + yüzde |
-| Sayı | Ortalama, ortanca, min, maks, standart sapma |
+| Sayı | Ortalama, ortanca, aralık, cevap sayısı |
 | Serbest metin | Cevap listesi + en sık geçen kelimeler (Türkçe bağlaçlar ayıklanır) |
 
-Analiz ekranında tarih aralığı ve departman filtresi vardır; **CSV indirme aynı
+Analiz bilinçli olarak sadedir: her soru için tek bir grafik ve okunması
+gereken sayılar. Net Öneri Skoru (NPS) bandı kaldırıldı — 0–10 ölçeği düz
+puanlama olarak gösterilir.
+
+Ekranda tarih aralığı ve departman filtresi vardır; **CSV indirme aynı
 filtreyi kullanır**, yani ekranda görülen küme ile indirilen dosya örtüşür.
 CSV, Türkçe Excel için BOM ve noktalı virgül ayırıcı ile üretilir.
 
@@ -131,17 +163,29 @@ otomatik yüklenir.
 
 ### Logo
 
-`public/brand/` klasörüne logo dosyası koyduğunuzda portal onu otomatik
-kullanır — kod değişikliği gerekmez:
+Resmî TFS logoları `public/brand/` altında hazırdır:
 
 | Dosya | Nerede |
 |---|---|
-| `logo-beyaz.svg` | Koyu üst bant ve yönetim paneli |
-| `logo.svg` | Açık zeminler, yazdırma |
+| `logo-beyaz.png` | Koyu üst bant ve yönetim paneli |
+| `logo.png` | Açık zeminler, yazdırma |
+| `amblem.png` | Amblem (kuş/damla) |
+| `app/icon.png` | Tarayıcı sekmesi simgesi |
 
-Dosya yokken kılavuzun kurallarına uygun (Nunito Sans SemiBold + `#CE2028`
-dikey çubuk) geçici bir yazı kilidi gösterilir. Ayrıntı:
-`public/brand/README.md`.
+Dosyalar kurumsal arşivden alınıp şeffaf kenarları kırpılarak web boyutuna
+getirildi. Değiştirmek isterseniz aynı adla üzerine yazmanız yeterli; `.svg`
+ve `.webp` de kabul edilir (bkz. `lib/brand.ts`). Dosya bulunamazsa portal
+kılavuza uygun yazı tabanlı bir kilide düşer, logosuz kalmaz.
+
+Resmî logo kullanılırken logonun yanına ayrıca kırmızı dikey çubuk
+çizilmez — amblem kırmızıyı zaten taşıdığı için vurgu ikinci kez yapılmaz.
+
+### Arayüz imzası
+
+Bülten numarası **plaka** olarak ele alınır: koyu zemin, tabular rakamlar,
+geniş harf aralığı, solunda kırmızı çizgi. Apron işaretlemeleri ve doküman
+kontrol damgalarının dilinden gelir; kullanıcının aradığı şey numara olduğu
+için görsel çapa odur (`.placard` / `.placard-quiet`, bkz. `app/globals.css`).
 
 ---
 
@@ -159,6 +203,7 @@ dikey çubuk) geçici bir yazı kilidi gösterilir. Ayrıntı:
 ```
 lib/db/schema.sql        veritabanı şeması
 lib/search.ts            Türkçe duyarlı arama (normalizeTr) — her yerde kullanılır
+lib/settings-schema.ts   ayar anahtarları ve seçenekler (istemci de buradan okur)
 lib/analytics.ts         anket toplulaştırma ve NPS hesapları
 lib/auth.ts              scrypt şifre + HMAC imzalı oturum cookie'si
 lib/uploads.ts           PDF yükleme doğrulaması
