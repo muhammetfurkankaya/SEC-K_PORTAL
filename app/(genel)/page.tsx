@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BulletinCard } from "@/components/BulletinCard";
 import { ReportAction } from "@/components/ReportAction";
 import { SectionTitle } from "@/components/brand/SectionTitle";
 import { listActiveCategories } from "@/lib/db/queries/categories";
@@ -18,6 +19,10 @@ export default function HomePage() {
   const openSurveys = settings.surveysSectionVisible ? listOpenSurveys() : [];
 
   const totalBulletins = categories.reduce((sum, c) => sum + c.bulletin_count, 0);
+
+  // Kart alanı listenin yanına sığdığı kadar bülten gösterir; listenin
+  // tamamını tekrar etmesi gerekmiyor.
+  const cards = recent.slice(0, 4);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -143,25 +148,37 @@ export default function HomePage() {
             Henüz bülten yayımlanmamış. Yönetim panelinden PDF yükleyerek başlayabilirsiniz.
           </p>
         ) : (
-          <ul className="divide-y divide-tfs-grey-40 rounded-brand border border-tfs-grey bg-white">
-            {recent.map((bulletin) => (
-              <li key={bulletin.id}>
-                <Link
-                  href={`/bultenler/${bulletin.category_slug}?bulten=${bulletin.id}`}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-tfs-grey-20"
-                >
-                  <span className="placard-quiet">{bulletin.bulletin_no}</span>
-                  <span className="min-w-0 flex-1 text-sm text-tfs-dark">{bulletin.subject}</span>
-                  <span className="text-[0.6875rem] font-semibold tracking-[0.08em] text-tfs-dark-60 uppercase">
-                    {bulletin.category_name}
-                  </span>
-                  <span className="tnum w-24 shrink-0 text-right text-xs text-tfs-dark-60">
-                    {formatDate(bulletin.published_date)}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          /* Solda tam liste, sağda en yenilerin kartları. Liste taramak,
+             kartlar göz gezdirmek için — ikisi aynı bültenlere farklı iki
+             yoldan bakıyor. */
+          <div className="grid items-start gap-6 lg:grid-cols-[1.1fr_1fr]">
+            {/* items-start: liste kartlar kadar uzayıp altında boş çerçeve
+                bırakmasın. */}
+            <ul className="divide-y divide-tfs-grey-40 rounded-brand border border-tfs-grey bg-white">
+              {recent.map((bulletin) => (
+                <li key={bulletin.id}>
+                  <Link
+                    href={`/bultenler/${bulletin.category_slug}?bulten=${bulletin.id}`}
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-3 transition-colors hover:bg-tfs-grey-20"
+                  >
+                    <span className="placard-quiet">{bulletin.bulletin_no}</span>
+                    <span className="min-w-0 flex-1 text-sm text-tfs-dark">
+                      {bulletin.subject}
+                    </span>
+                    <span className="tnum shrink-0 text-xs text-tfs-dark-60">
+                      {formatDate(bulletin.published_date)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {cards.map((bulletin) => (
+                <BulletinCard key={bulletin.id} bulletin={bulletin} showCategory />
+              ))}
+            </div>
+          </div>
         )}
       </section>
     </div>
