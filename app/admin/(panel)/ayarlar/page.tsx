@@ -26,14 +26,6 @@ export default function SettingsPage() {
             <PasswordForm />
           </Panel>
 
-          <Panel title="Yedekleme">
-            <p className="text-sm font-light text-tfs-dark-80">
-              Tüm bültenler ve anket cevapları sunucudaki{" "}
-              <code className="text-tfs-red">data/</code> klasöründe tutulur. Düzenli yedek
-              için bu klasörü kopyalamak yeterlidir.
-            </p>
-          </Panel>
-
           <Panel title="Varsayılanlara Dön">
             <ResetSettingsForm />
           </Panel>

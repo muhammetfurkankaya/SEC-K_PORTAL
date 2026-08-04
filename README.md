@@ -63,8 +63,8 @@ npm run build     # üretim derlemesi
 
 | Adres | İçerik |
 |---|---|
-| `/` | Arama, QDMS bildirim eylemleri, açık anketler, son yayımlananlar |
-| `/ara?q=` | Tüm sekmelerde bülten arama |
+| `/` | Anlık öneri veren arama, QDMS bildirim eylemleri, açık anketler, son yayımlananlar (liste + kartlar) |
+| `/ara?q=` | Tüm sekmelerde bülten arama (ana sayfadaki kutu buraya gönderir) |
 | `/bultenler/<sekme>` | Aranabilir indeks + yanında PDF önizlemesi |
 | `/bultenler/<sekme>?bulten=<id>` | Belirli bir bülteni açar (paylaşılabilir bağlantı) |
 | `/anketler` | Doldurulmaya açık anketlerin listesi |
@@ -204,6 +204,7 @@ için görsel çapa odur (`.placard` / `.placard-quiet`, bkz. `app/globals.css`)
 lib/db/schema.sql        veritabanı şeması
 lib/search.ts            Türkçe duyarlı arama (normalizeTr) — her yerde kullanılır
 lib/settings-schema.ts   ayar anahtarları ve seçenekler (istemci de buradan okur)
+components/BulletinSearch.tsx  ana sayfadaki anlık öneri veren arama
 lib/analytics.ts         anket toplulaştırma ve NPS hesapları
 lib/auth.ts              scrypt şifre + HMAC imzalı oturum cookie'si
 lib/uploads.ts           PDF yükleme doğrulaması

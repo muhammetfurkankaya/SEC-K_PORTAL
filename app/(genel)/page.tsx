@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { BulletinCard } from "@/components/BulletinCard";
+import { BulletinSearch } from "@/components/BulletinSearch";
 import { ReportAction } from "@/components/ReportAction";
 import { SectionTitle } from "@/components/brand/SectionTitle";
-import { listActiveCategories } from "@/lib/db/queries/categories";
-import { listRecentBulletins } from "@/lib/db/queries/bulletins";
+import { listAllPublishedBulletins, listRecentBulletins } from "@/lib/db/queries/bulletins";
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -14,15 +14,22 @@ export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   const settings = getSettings();
-  const categories = listActiveCategories();
   const recent = listRecentBulletins(settings.homeRecentCount);
   const openSurveys = settings.surveysSectionVisible ? listOpenSurveys() : [];
-
-  const totalBulletins = categories.reduce((sum, c) => sum + c.bulletin_count, 0);
 
   // Kart alanı listenin yanına sığdığı kadar bülten gösterir; listenin
   // tamamını tekrar etmesi gerekmiyor.
   const cards = recent.slice(0, 4);
+
+  // Arama önerileri istemcide filtrelenir; yalnızca gereken alanlar
+  // gönderilir, tüm bülten kaydı değil.
+  const suggestions = listAllPublishedBulletins().map((bulletin) => ({
+    id: bulletin.id,
+    bulletin_no: bulletin.bulletin_no,
+    subject: bulletin.subject,
+    category_name: bulletin.category_name,
+    category_slug: bulletin.category_slug,
+  }));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -42,47 +49,10 @@ export default function HomePage() {
       </section>
 
       {/* Arama sekmelerin üstünde çalışır: çalışan bültenin hangi bölümde
-          olduğunu bilmek zorunda kalmaz. */}
-      <form action="/ara" method="get" className="mt-6" role="search">
-        <label htmlFor="q" className="sr-only">
-          Tüm bültenlerde ara
-        </label>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <div className="relative flex-1">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-tfs-dark-60"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-            >
-              <circle cx="11" cy="11" r="6.5" />
-              <path d="m16 16 4 4" />
-            </svg>
-            <input
-              id="q"
-              name="q"
-              type="search"
-              placeholder="Tüm bültenlerde ara — bülten no veya konu"
-              className="w-full rounded-brand border border-tfs-grey bg-white py-3 pr-4 pl-11 text-sm text-tfs-dark placeholder:text-tfs-dark-60 focus:border-tfs-red focus:outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            className="rounded-brand bg-tfs-dark px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-tfs-red"
-          >
-            Ara
-          </button>
-        </div>
-        {totalBulletins > 0 ? (
-          <p className="mt-1.5 text-xs font-light text-tfs-dark-60">
-            {formatNumber(totalBulletins)} bülten, {formatNumber(categories.length)} bölümde.
-            Türkçe karakter yazmanız gerekmez.
-          </p>
-        ) : null}
-      </form>
+          olduğunu bilmek zorunda kalmaz. Yazdıkça eşleşenler altta açılır. */}
+      <div className="mt-6">
+        <BulletinSearch bulletins={suggestions} />
+      </div>
 
       {/* ————————————— Bildirimler ————————————— */}
       <section className="mt-8" aria-labelledby="bildirim-baslik">

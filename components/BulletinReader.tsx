@@ -101,9 +101,10 @@ export function BulletinReader({
   // bir bülten seçtiğinde öne gelir.
   const [mobileOpen, setMobileOpen] = useState(Boolean(initialSelectedId));
 
-  const selected =
-    bulletins.find((b) => b.id === selectedId) ??
-    (visible.length > 0 ? visible[0] : null);
+  // Seçim süzülmüş liste üzerinden çözülür: arama sonucu dışında kalan bir
+  // bülten önizlemede durmasın. Bu yüzden filtre daraldığında önizleme
+  // görünen ilk bültene kayar.
+  const selected = visible.find((b) => b.id === selectedId) ?? visible[0] ?? null;
 
   // Seçim değiştikçe adres çubuğunu güncelle (yeniden yükleme olmadan).
   useEffect(() => {

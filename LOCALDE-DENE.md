@@ -152,7 +152,8 @@ Durdurmak için komut satırında **Ctrl + C**.
 |---|---|
 | Ana sayfa | **Öneri Bildirim** ve **Olay Bildirim** kartları QDMS'i yeni sekmede açar |
 | Sekmeler | SEÇ-K / SMS / İGA / THY — üstteki sekmelerden geçin |
-| Ana sayfa arama | Üstteki kutuya `yakit` yazıp **Ara** — tüm bölümlerde arar |
+| Ana sayfa arama | Üstteki kutuya `ucak` yazın — **Ara'ya basmadan** eşleşen bültenler altta listelenir; birini seçince o bülten açılır. Ok tuşları + Enter da çalışır |
+| | Tüm sonuçları görmek için **Ara** düğmesi |
 | Bülten sayfası | Soldaki **indekste** arama yapın: `2026-01`, `yakit`, `sec`, `atik` |
 | Bülten satırı | **Satıra tıklayın → bülten sağda açılır, inmez.** İndirmek için satırdaki ↓ simgesi ya da sağdaki **PDF indir** düğmesi |
 | Adres çubuğu | Bülten seçtikçe `?bulten=…` değişir — bağlantıyı kopyalayıp paylaşabilirsiniz |
@@ -171,7 +172,7 @@ Sağ üstteki **YÖNETİM** düğmesi → 3. adımdaki kullanıcı adı ve şifr
 | | Bir bülteni **Yayından kaldır** — portalda kaybolur, panelde "Taslak" olur |
 | **Sekmeler** | **Yeni sekme ekle** (ör. "ISG Bültenleri") → üst menüde anında çıkar |
 | | Sekmeleri ↑ ↓ ile sıralayın |
-| **Anketler** | **Analiz** düğmesi → grafikler, NPS skoru, serbest metin cevapları |
+| **Anketler** | **Analiz** düğmesi → grafikler, puan ortalamaları, serbest metin cevapları |
 | | Tarih / departman **filtresi** → grafikler yenilenir |
 | | **CSV indir** → Excel'de açın, Türkçe karakterler bozuk olmamalı |
 | | **Düzenle / QR** → QR kodu, **PNG/SVG indir**, **asılacak afişi yazdır** |
