@@ -47,6 +47,20 @@ npm run demo -- --temizle  # demo verisini geri alır
 
 > Demo script'i yalnızca yerel deneme içindir; sunucuda çalıştırmayın.
 
+### Şifre sıfırlama
+
+Şifreler `node:crypto` scrypt ile tek yönlü hashlenir; mevcut şifre hiçbir
+yerden okunamaz. Kaybolduğunda veri silmeden yenisini belirleyin:
+
+```bash
+npm run sifre                          # rastgele yeni şifre üretir ve yazdırır
+npm run sifre -- --sifre='YeniSifre12' # şifreyi siz belirlersiniz
+npm run sifre -- --kullanici=furkan    # belirli bir hesap
+npm run sifre -- --liste               # hesapları listeler
+```
+
+Bültenler, anketler ve ayarlar etkilenmez.
+
 ### Kontroller
 
 ```bash

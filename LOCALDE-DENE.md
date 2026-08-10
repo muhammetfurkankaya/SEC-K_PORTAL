@@ -232,10 +232,21 @@ Kendi yüklediğiniz bültenler silinmez, yalnızca demo verisi gider.
 `data` klasörünü silin, sonra `npm run seed` çalıştırın. Bu klasörde
 veritabanı ve yüklenen PDF'ler durur — sildiğinizde her şey sıfırlanır.
 
-**Şifremi unuttum**
-`data` klasörünü silip `npm run seed` çalıştırın (bültenler de silinir), ya da
-yeni şifreyle tekrar kurmak için 3. adımdaki `SECK_ADMIN_PASSWORD` yöntemini
-kullanın.
+**Şifremi unuttum / mevcut şifreyi nereden görebilirim?**
+Şifre tek yönlü hashlenerek saklandığı için hiçbir yerden okunamaz — yalnızca
+`npm run seed` çalıştığı anda ekrana yazılır. Komut satırında yukarı
+kaydırırsanız o kutu duruyor olabilir.
+
+Bulamazsanız yenisini belirleyin — bültenler ve anketler silinmez:
+
+```
+npm run sifre                          rastgele yeni şifre üretir ve yazar
+npm run sifre -- --sifre=Deneme12345   şifreyi kendiniz belirlersiniz
+npm run sifre -- --liste               hesapları listeler
+```
+
+Giriş yaptıktan sonra **Yönetim → Ayarlar → Şifre Değiştir** ile de
+değiştirebilirsiniz.
 
 **Logoyu değiştirmek istiyorum**
 Kurumsal logolar `public/brand/` altında hazır (`logo-beyaz.png` koyu zemin,

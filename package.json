@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx scripts/seed.ts",
+    "sifre": "tsx scripts/sifre.ts",
     "demo": "tsx scripts/demo.ts",
     "test": "tsx --test tests/*.test.ts"
   },
