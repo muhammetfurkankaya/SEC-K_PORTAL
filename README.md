@@ -17,7 +17,13 @@ Görünüm TFS Marka Kimlik Kılavuzu'na göre kurulmuştur (aşağıya bakın).
 
 ## Hızlı başlangıç (local)
 
-Gereksinim: **Node.js 20 veya üzeri** (18.18+ çalışır, 22 ile test edildi).
+Gereksinim: **Node.js 20 veya üzeri.**
+
+> **Node 16/18 ile kurulmaz.** SQLite paketinin hazır derlenmiş dosyaları
+> yalnızca Node 18/20/22 için yayımlandığı için daha eski bir Node'da npm
+> paketi kaynaktan derlemeye çalışır ve Python + Visual Studio derleyicisi
+> ister. `npm install` bunu kurulumdan önce kontrol edip net bir mesajla
+> durur. **Python kurmanız gerekmez** — Node sürümünü yükseltmek yeterlidir.
 
 > Adım adım anlatım ve deneme senaryoları için: **[LOCALDE-DENE.md](LOCALDE-DENE.md)**
 
@@ -60,6 +66,9 @@ npm run sifre -- --liste               # hesapları listeler
 ```
 
 Bültenler, anketler ve ayarlar etkilenmez.
+
+> Not: `npm ci --omit=dev` kullanmayın — üretim derlemesi TypeScript ve
+> Tailwind'e ihtiyaç duyar, `tsx` ise seed/şifre komutlarını çalıştırır.
 
 ### Kontroller
 
@@ -262,6 +271,19 @@ listeleme sızmaz ve indirme sayacı tutulabilir.
 ---
 
 ## Sunucuya yayın
+
+### Windows sunucu — hazır script'ler
+
+`kurulum/` klasöründeki üç script işi sırayla yapar; ayrıntı:
+**[kurulum/README.md](kurulum/README.md)**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\kurulum\1-node-kur.ps1    # Node 20 LTS (yönetici)
+powershell -ExecutionPolicy Bypass -File .\kurulum\2-portal-kur.ps1  # bağımlılık + .env + veritabanı + derleme
+powershell -ExecutionPolicy Bypass -File .\kurulum\3-servis-kur.ps1  # açılışta otomatik başlat (yönetici)
+```
+
+### Elle kurulum
 
 `npm run build` `output: "standalone"` çıktısı üretir: `.next/standalone`
 klasörü tek başına çalışabilir.
