@@ -308,7 +308,7 @@ function main(): void {
   seedSurvey();
 
   console.log("");
-  console.log("Demo verisi hazır. Geri almak için: npm run demo -- --temizle");
+  console.log("Demo verisi hazır. Geri almak için aynı komutu --temizle ile çalıştırın.");
 }
 
 main();

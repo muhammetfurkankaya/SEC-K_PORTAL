@@ -1,0 +1,44 @@
+Yonetim komutlari
+=================
+
+Bu klasordeki dosyalar duz JavaScript'e derlenmistir; calistirmak icin
+yalnizca Node.js yeterlidir (TypeScript veya tsx gerekmez).
+
+Komutlari paketin KOK klasorunden calistirin.
+
+
+  node komutlar\seed.cjs
+
+      Veritabanini kurar, dort sekmeyi ve ilk admin hesabini olusturur,
+      sifreyi ekrana yazar. Yalnizca ilk kurulumda gerekir; veritabani
+      varsa hicbir seyi degistirmez.
+
+
+  node komutlar\sifre.cjs
+
+      Admin sifresini sifirlar. Bultenler, anketler ve ayarlar silinmez.
+
+      --sifre=YeniSifre12    sifreyi siz belirlersiniz (en az 8 karakter)
+      --kullanici=furkan     belirli bir hesabi hedefler
+      --liste                kayitli hesaplari listeler
+
+      Ornek:
+        node komutlar\sifre.cjs --sifre=Guclu1Sifre
+        node komutlar\sifre.cjs --liste
+
+
+  node komutlar\demo.cjs
+
+      Ekranlari gercekci veriyle gormek icin ornek bulten ve anket ekler.
+      Yalnizca deneme amacli; canli kurulumda kullanmayin.
+
+      --temizle    eklenen ornek verileri geri alir
+
+      Ornek:
+        node komutlar\demo.cjs
+        node komutlar\demo.cjs --temizle
+
+
+Not: Sifre tek yonlu (scrypt) hashlenerek saklanir. Mevcut sifre hicbir
+yerden okunamaz — yalnizca seed veya sifre komutu calistiginda bir kez
+ekrana yazilir.

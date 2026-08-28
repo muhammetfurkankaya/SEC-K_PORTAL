@@ -52,7 +52,7 @@ function main(): void {
   if (process.argv.includes("--liste")) {
     printUsers(users);
     console.log("");
-    console.log("Şifre sıfırlamak için: npm run sifre -- --kullanici=<ad>");
+    console.log("Belirli bir hesabı sıfırlamak için --kullanici=<ad> ekleyin.");
     return;
   }
 
@@ -71,7 +71,7 @@ function main(): void {
     console.log("");
     printUsers(users);
     console.log("");
-    console.log("Örnek: npm run sifre -- --kullanici=admin");
+    console.log("Kullanıcıyı --kullanici=<ad> ile belirtin.");
     process.exitCode = 1;
     return;
   }

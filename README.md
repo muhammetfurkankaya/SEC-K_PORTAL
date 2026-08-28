@@ -272,7 +272,27 @@ listeleme sızmaz ve indirme sayacı tutulabilir.
 
 ## Sunucuya yayın
 
-### Windows sunucu — hazır script'ler
+### Kurulum gerektirmeyen yayın paketi (önerilen)
+
+Sunucuda `npm install` çalıştırmak istemiyorsanız — ya da sunucunun npm
+erişimi yoksa — derlenmiş paket hazırlayın:
+
+```bash
+npm run build
+npm run paket:windows      # -> yayin-paketi/
+```
+
+Çıkan `yayin-paketi/` klasörünü sunucuya kopyalayıp içindeki `kur.ps1`
+script'ini çalıştırmak yeterli. Sunucuda **yalnızca Node.js 20 veya 22**
+gerekir; npm, internet ve derleyici gerekmez.
+
+Paket hazırlanırken `better-sqlite3`'ün Windows x64 hazır ikilileri (Node 20
+ve 22 için) indirilip `sqlite-ikili/` altına konur; sunucuda `baslat.cjs`
+çalıştığı Node sürümüne uygun olanı yerleştirir. Yönetim komutları da düz
+JavaScript'e derlenir, böylece `tsx` gerekmez. Ayrıntı:
+**[kurulum/paket/KURULUM.md](kurulum/paket/KURULUM.md)**
+
+### Windows sunucu — kaynak kurulumu
 
 `kurulum/` klasöründeki üç script işi sırayla yapar; ayrıntı:
 **[kurulum/README.md](kurulum/README.md)**

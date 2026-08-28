@@ -81,7 +81,7 @@ function main(): void {
   console.log("Admin kullanıcısı:");
   seedAdmin();
 
-  console.log("Kurulum tamamlandı. `npm run dev` ile başlatabilirsiniz.");
+  console.log("Kurulum tamamlandı.");
 }
 
 main();

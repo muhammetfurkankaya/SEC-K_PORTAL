@@ -15,6 +15,9 @@ next-env.d.ts
 .env.local
 .env*.local
 
+# Windows yayın paketi (npm run paket:windows ile üretilir)
+/yayin-paketi/
+
 # çeşitli
 *.pem
 .DS_Store

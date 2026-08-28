@@ -15,7 +15,8 @@
     "seed": "tsx scripts/seed.ts",
     "sifre": "tsx scripts/sifre.ts",
     "demo": "tsx scripts/demo.ts",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "paket:windows": "tsx scripts/windows-paket.ts"
   },
   "overrides": {
     "postcss": "^8.5.25",
@@ -38,6 +39,7 @@
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "esbuild": "^0.28.1",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2"
   }
