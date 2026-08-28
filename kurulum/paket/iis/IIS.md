@@ -76,9 +76,12 @@ cd C:\seckportal
 powershell -ExecutionPolicy Bypass -File .\kur.ps1
 ```
 
-Bu adım veritabanını kurar, **admin şifresini ekrana yazar** ve portalı
-3000 portunda çalışan bir zamanlanmış görev olarak başlatır.
-**Şifreyi kaydedin.**
+Bu adım veritabanını kurar, admin hesabını açar ve portalı 3000 portunda
+çalışan bir zamanlanmış görev olarak başlatır.
+
+Giriş bilgileri: kullanıcı adı `admin`, şifre `Tfs2026...` — **ilk girişten
+sonra Ayarlar → Şifre Değiştir'den değiştirin.** Değiştirilene kadar panelde
+kırmızı bir uyarı şeridi görünür.
 
 ### 3. IIS ön yüzünü kurun
 
@@ -137,7 +140,7 @@ powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 `
 
 Bu modda:
 
-- Veritabanı yoksa script kurar ve şifreyi ekrana yazar
+- Veritabanı yoksa script kurar (giriş: `admin` / `Tfs2026...`)
 - Zamanlanmış görev varsa **kaldırılır** (iki sürecin aynı veritabanına
   yazmasını önlemek için) ve 3000 portu güvenlik duvarından kapatılır
 - Portu IIS seçer; `.env` içindeki `PORT` bu modda kullanılmaz

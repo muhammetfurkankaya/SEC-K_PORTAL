@@ -7,9 +7,8 @@
  * SECK_ADMIN_PASSWORD ortam değişkeni ile verilebilir, verilmezse rastgele
  * üretilip terminale yazdırılır.
  */
-import crypto from "node:crypto";
 import { getDb } from "../lib/db";
-import { hashPassword } from "../lib/password";
+import { DEFAULT_ADMIN_PASSWORD, hashPassword } from "../lib/password";
 import { createUser, countUsers, getUserByUsername } from "../lib/db/queries/users";
 import { createCategory, getCategoryBySlug } from "../lib/db/queries/categories";
 
@@ -45,10 +44,10 @@ function seedAdmin(): void {
     return;
   }
 
-  // Rastgele ama okunabilir bir başlangıç şifresi.
-  const password =
-    process.env.SECK_ADMIN_PASSWORD?.trim() ||
-    crypto.randomBytes(9).toString("base64url").replace(/[-_]/g, "");
+  // Varsayılan şifre sabit: kurulumu yapan kişi terminal çıktısını kaçırsa
+  // bile panele girebilsin diye. SECK_ADMIN_PASSWORD ile değiştirilebilir.
+  const password = process.env.SECK_ADMIN_PASSWORD?.trim() || DEFAULT_ADMIN_PASSWORD;
+  const isDefault = password === DEFAULT_ADMIN_PASSWORD;
 
   createUser({
     username,
@@ -63,7 +62,13 @@ function seedAdmin(): void {
   console.log(`  │  Kullanıcı adı : ${username.padEnd(26)} │`);
   console.log(`  │  Şifre         : ${password.padEnd(26)} │`);
   console.log("  └─────────────────────────────────────────────┘");
-  console.log("  Bu şifreyi kaydedin ve ilk girişten sonra Ayarlar'dan değiştirin.");
+  if (isDefault) {
+    console.log("  Bu varsayılan şifredir ve kurulum belgelerinde yazılıdır.");
+    console.log("  İLK GİRİŞTEN SONRA Ayarlar > Şifre değiştir ile değiştirin.");
+    console.log("  Değiştirilene kadar yönetim panelinde uyarı görünür.");
+  } else {
+    console.log("  Bu şifreyi kaydedin — bir daha görüntülenemez.");
+  }
   console.log("");
 }
 

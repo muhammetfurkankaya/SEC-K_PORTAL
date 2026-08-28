@@ -40,11 +40,26 @@ powershell -ExecutionPolicy Bypass -File .\kur.ps1
 ```
 
 Script sırayla: `.env` oluşturup oturum anahtarı üretir → veritabanını kurar
-ve **admin şifresini ekrana yazar** → açılışta otomatik başlatma görevini
-oluşturur → güvenlik duvarında portu iç ağa açar → portalı başlatır.
+ve admin hesabını açar → açılışta otomatik başlatma görevini oluşturur →
+güvenlik duvarında portu iç ağa açar → portalı başlatır.
 
-> **Ekrana yazılan kullanıcı adı ve şifreyi kaydedin.** Şifre tek yönlü
-> hashlenerek saklandığı için sonradan görüntülenemez.
+### Yönetim paneli giriş bilgileri
+
+| | |
+|---|---|
+| Kullanıcı adı | `admin` |
+| Şifre | `Tfs2026...` |
+
+> **Bu varsayılan şifre bu belgede yazılı olduğu için gizli değildir.**
+> İlk girişten sonra **Ayarlar → Şifre Değiştir**'den değiştirin.
+> Değiştirilene kadar yönetim panelinin üstünde kırmızı bir uyarı şeridi
+> görünür; şifreyi değiştirdiğinizde kendiliğinden kaybolur.
+
+Kurulumu başka bir şifreyle yapmak isterseniz:
+
+```powershell
+.\kur.ps1 -AdminSifre "KendiSifreniz123"
+```
 
 Seçenekler:
 

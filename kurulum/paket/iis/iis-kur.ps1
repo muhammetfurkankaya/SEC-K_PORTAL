@@ -272,8 +272,8 @@ if (Test-Path -LiteralPath (Join-Path $dataDir "portal.db")) {
     } finally {
         Pop-Location
     }
-    Write-Warn2 "Yukaridaki kutudaki kullanici adi ve SIFREYI kaydedin."
-    Write-Info "Sifre tek yonlu saklanir; sonradan goruntulenemez."
+    Write-Warn2 "Varsayilan sifre atandi. ILK GIRISTEN SONRA degistirin:"
+    Write-Info "Ayarlar > Sifre Degistir. Degistirilene kadar panelde uyari gorunur."
 }
 
 # ————————————————————————————— Site klasoru ve web.config —————————————————————————————

@@ -33,10 +33,14 @@ npm run seed     # veritabanını kurar, sekmeleri ve ilk admin hesabını oluş
 npm run dev      # http://localhost:3000
 ```
 
-`npm run seed` çıktısında admin kullanıcı adı ve şifresi yazar — **kaydedin**.
-İlk girişten sonra Yönetim → Ayarlar'dan şifreyi değiştirin.
+İlk kurulum sabit bir giriş bilgisi bırakır: kullanıcı adı **`admin`**, şifre
+**`Tfs2026...`** (`lib/password.ts` içindeki `DEFAULT_ADMIN_PASSWORD`).
 
-Sabit bir şifre ile kurmak isterseniz:
+> Bu şifre depoda ve kurulum belgelerinde yazılı olduğu için gizli değildir.
+> İlk girişten sonra Yönetim → Ayarlar → Şifre Değiştir'den değiştirin;
+> değiştirilene kadar yönetim panelinde kırmızı bir uyarı şeridi görünür.
+
+Kurulumu farklı bir şifreyle yapmak isterseniz:
 
 ```bash
 SECK_ADMIN_USERNAME=furkan SECK_ADMIN_PASSWORD='guclu-bir-sifre' npm run seed

@@ -126,8 +126,14 @@ if (Test-Path -LiteralPath (Join-Path $root "data\portal.db")) {
     }
 
     Remove-Item Env:\SECK_ADMIN_PASSWORD -ErrorAction SilentlyContinue
-    Write-Warn2 "Yukaridaki kutudaki kullanici adi ve SIFREYI kaydedin."
-    Write-Info "Sifre tek yonlu saklanir; sonradan goruntulenemez."
+
+    if ($AdminSifre) {
+        Write-Warn2 "Yukaridaki kutudaki kullanici adi ve SIFREYI kaydedin."
+        Write-Info "Sifre tek yonlu saklanir; sonradan goruntulenemez."
+    } else {
+        Write-Warn2 "Varsayilan sifre atandi. ILK GIRISTEN SONRA degistirin:"
+        Write-Info "Ayarlar > Sifre Degistir. Degistirilene kadar panelde uyari gorunur."
+    }
 }
 
 # ————————————————————————————— Açılışta başlatma —————————————————————————————

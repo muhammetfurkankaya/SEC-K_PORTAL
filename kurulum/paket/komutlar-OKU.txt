@@ -9,9 +9,10 @@ Komutlari paketin KOK klasorunden calistirin.
 
   node komutlar\seed.cjs
 
-      Veritabanini kurar, dort sekmeyi ve ilk admin hesabini olusturur,
-      sifreyi ekrana yazar. Yalnizca ilk kurulumda gerekir; veritabani
-      varsa hicbir seyi degistirmez.
+      Veritabanini kurar, dort sekmeyi ve ilk admin hesabini olusturur.
+      Giris: kullanici adi "admin", sifre "Tfs2026..." — ilk giristen sonra
+      Ayarlar > Sifre Degistir ile degistirin. Yalnizca ilk kurulumda
+      gerekir; veritabani varsa hicbir seyi degistirmez.
 
 
   node komutlar\sifre.cjs
@@ -39,6 +40,6 @@ Komutlari paketin KOK klasorunden calistirin.
         node komutlar\demo.cjs --temizle
 
 
-Not: Sifre tek yonlu (scrypt) hashlenerek saklanir. Mevcut sifre hicbir
-yerden okunamaz — yalnizca seed veya sifre komutu calistiginda bir kez
-ekrana yazilir.
+Not: Sifreler tek yonlu (scrypt) hashlenerek saklanir. Kurulum varsayilani
+("Tfs2026...") disinda bir sifre bir kez degistirildikten sonra hicbir
+yerden okunamaz; kaybolursa yukaridaki sifre komutu ile yenisi belirlenir.
