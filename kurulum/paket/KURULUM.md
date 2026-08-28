@@ -106,22 +106,27 @@ alınan yedek daha tutarlı olur.
 
 ---
 
-## IIS ile 80/443 üzerinden yayınlamak
+## IIS ile 80/443 üzerinden yayınlamak (HTTP/HTTPS)
 
-Portal kendi web sunucusunu 3000 portunda çalıştırır. IIS'te
-**Application Request Routing** ile ters vekil kurup gelen istekleri
-`http://localhost:3000` adresine yönlendirin. QDMS ile aynı sunucuda yan
+Portal kendi web sunucusunu 3000 portunda çalıştırır; IIS ön kapı olur,
+sertifikayı sunar ve istekleri portala iletir. QDMS ile aynı sunucuda yan
 yana çalışır.
 
-Ters vekil arkasında `.env` dosyasında şunları ayarlayın:
+Bunun için ayrı bir script var:
 
-```
-SECK_BASE_URL=https://seck.turkishfuel.com
-SECK_SECURE_COOKIE=true
+```powershell
+powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 `
+    -HostAdi seck.turkishfuel.com -Sertifika A1B2C3... -HttpsZorla
 ```
 
-`SECK_SECURE_COOKIE` **yalnızca HTTPS** kullanıyorsanız `true` olmalı;
-HTTP'de `true` yaparsanız yönetim paneline giriş yapılamaz.
+Script IIS sitesini, uygulama havuzunu, `web.config` dosyasını ve sertifika
+bağlantısını kurar; `.env` içindeki dış adresi de günceller.
+
+**Ayrıntılı anlatım, iki yöntem arasındaki fark, elle kurulum adımları ve
+sorun giderme: [`iis\IIS.md`](iis/IIS.md)**
+
+> IIS kullansanız da **Node.js 20 kurulu olmalı** — IIS portalın kodunu
+> kendi başına çalıştıramaz, portal bir Node.js uygulamasıdır.
 
 ---
 
@@ -166,7 +171,8 @@ ikilisi uyumsuzdur. Node 20 LTS kurun.
 
 **Port 3000 kullanılıyor**
 `.\kur.ps1 -Port 8080` ile farklı port seçin. Kurulum yapıldıysa `.env`
-içindeki `PORT` değerini değiştirip görevi yeniden başlatın.
+içindeki `PORT` değerini değiştirip görevi yeniden başlatın:
+`Stop-ScheduledTask -TaskName 'SEC-K Portali'; Start-ScheduledTask -TaskName 'SEC-K Portali'`
 
 **Ağdaki başka bilgisayarlardan açılmıyor**
 Güvenlik duvarı kuralı, script yönetici olarak çalıştırıldığında ekleniyor.

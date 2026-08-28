@@ -1,57 +1,87 @@
 /**
  * SEÇ-K Portalı — başlatıcı.
  *
- * Çalıştığı Node sürümüne uygun SQLite ikilisini yerine kopyalar, sonra
- * portalı başlatır. Bu paket derlenmiş hâldedir: npm, internet veya
- * derleyici gerekmez; yalnızca Node.js 20 veya 22 kurulu olmalıdır.
+ * Çalıştığı Node sürümüne uygun SQLite ikilisini yerine kopyalar, .env
+ * dosyasını okur, sonra portalı başlatır. Bu paket derlenmiş hâldedir: npm,
+ * internet veya derleyici gerekmez; yalnızca Node.js 20 veya 22 kurulu olmalı.
  *
  * Kullanım:  node baslat.cjs
+ *
+ * IIS altında HttpPlatformHandler ile çalıştırıldığında süreci IIS başlatır ve
+ * dinlenecek portu HTTP_PLATFORM_PORT ile bildirir; bu durumda o port
+ * kullanılır ve sunucu yalnızca 127.0.0.1 üzerinden dinler — dışarıya açık
+ * olan tek kapı IIS olur.
  */
 "use strict";
 
 var fs = require("fs");
 var path = require("path");
 
-// NODE_MODULE_VERSION (ABI), derlenmiş .node dosyasının hangi Node sürümüyle
-// uyumlu olduğunu belirler. Node 20 → 115, Node 22 → 127.
-var ABI = process.versions.modules;
-var SUPPORTED = { "115": "20", "127": "22" };
+// ————————————————————————————————— .env —————————————————————————————————
 
-if (!SUPPORTED[ABI]) {
-  console.error("");
-  console.error("  Bu paket Node.js 20 veya 22 ile calisir.");
-  console.error("  Bu bilgisayardaki surum: v" + process.versions.node);
-  console.error("");
-  console.error("  Node.js 20 LTS kurun: https://nodejs.org/en/download");
-  console.error("  Kurulumdan sonra komut penceresini kapatip yeniden acin.");
-  console.error("");
-  process.exit(1);
-}
+/**
+ * .env dosyasını okuyup process.env'e yerleştirir.
+ *
+ * Next'in derlenmiş server.js dosyası PORT ve HOSTNAME değerlerini kendi env
+ * yükleyicisinden ÖNCE okuyor; bu yüzden .env'deki PORT tek başına etkisiz
+ * kalıyordu. Dosyayı burada, sunucu yüklenmeden önce biz okuyoruz.
+ *
+ * Zaten tanımlı olan değişkenler korunur: böylece IIS'in veya zamanlanmış
+ * görevin verdiği değerler .env'i ezebilir.
+ */
+function loadEnvFile(file) {
+  if (!fs.existsSync(file)) return;
 
-var source = path.join(__dirname, "sqlite-ikili", "better_sqlite3-abi" + ABI + ".node");
-var targetDir = path.join(__dirname, "node_modules", "better-sqlite3", "build", "Release");
-var target = path.join(targetDir, "better_sqlite3.node");
-
-if (!fs.existsSync(source)) {
-  console.error("  SQLite ikilisi bulunamadi: " + source);
-  console.error("  Paket eksik kopyalanmis olabilir; arsivi yeniden acin.");
-  process.exit(1);
-}
-
-// Her aciliste kopyalamak yerine yalnizca farkliysa kopyaliyoruz.
-var needsCopy = true;
-if (fs.existsSync(target)) {
+  var text;
   try {
-    needsCopy = fs.statSync(target).size !== fs.statSync(source).size;
+    text = fs.readFileSync(file, "utf8");
   } catch (error) {
-    needsCopy = true;
+    console.error("  .env okunamadi: " + error.message);
+    return;
+  }
+
+  // PowerShell'in UTF8 çıktısı BOM ile başlayabiliyor.
+  text = text.replace(/^\uFEFF/, "");
+
+  var lines = text.split(/\r?\n/);
+  for (var i = 0; i < lines.length; i += 1) {
+    var line = lines[i].trim();
+    if (!line || line.charAt(0) === "#") continue;
+
+    var eq = line.indexOf("=");
+    if (eq < 1) continue;
+
+    var key = line.slice(0, eq).trim();
+    var value = line.slice(eq + 1).trim();
+
+    var first = value.charAt(0);
+    if (value.length > 1 && (first === '"' || first === "'") && value.charAt(value.length - 1) === first) {
+      value = value.slice(1, -1);
+    }
+
+    if (!key || !value) continue;
+    if (Object.prototype.hasOwnProperty.call(process.env, key)) continue;
+
+    process.env[key] = value;
   }
 }
 
-if (needsCopy) {
-  fs.mkdirSync(targetDir, { recursive: true });
-  fs.copyFileSync(source, target);
-  console.log("  SQLite ikilisi hazirlandi (Node " + SUPPORTED[ABI] + ", ABI " + ABI + ")");
+loadEnvFile(path.join(__dirname, ".env"));
+
+// IIS (HttpPlatformHandler) süreci kendisi başlatır ve dinlenecek portu
+// HTTP_PLATFORM_PORT ile verir. Bu modda dışarıya IIS bakar; Node'un tüm
+// arayüzlerde dinlemesi gereksizdir ve IIS'i (dolayısıyla HTTPS'i) atlatma
+// riski taşır.
+if (process.env.HTTP_PLATFORM_PORT) {
+  process.env.PORT = process.env.HTTP_PLATFORM_PORT;
+  process.env.HOSTNAME = "127.0.0.1";
 }
+
+// ————————————————————————————— SQLite ikilisi —————————————————————————————
+
+// Node surumune uygun .node dosyasini yerine koyar; uyumsuz bir surumde
+// anlasilir bir mesajla durur. Ayni dosya yonetim komutlari tarafindan da
+// kullaniliyor.
+require("./sqlite-hazir.cjs");
 
 require("./server.js");

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SEC-K Portali - IIS ters vekil (reverse proxy) yapilandirmasi
+
+  Bu dosya IIS site klasorune "web.config" adiyla kopyalanir. Gelen tum
+  istekleri 127.0.0.1:3000 uzerinde calisan portal surecine iletir.
+
+  Gerekenler:  URL Rewrite 2.1  +  Application Request Routing 3.0
+  Node sureci: zamanlanmis gorev ("SEC-K Portali") tarafindan calistirilir.
+
+  Elle kullaniyorsaniz degistirilmesi gerekebilecek yerler:
+    - 3000        -> portalin dinledigi port (.env icindeki PORT)
+    - enabled     -> HTTPS yonlendirme kurali; SERTIFIKA BAGLANDIKTAN SONRA
+                    "true" yapin, aksi halde HTTP uzerinden site acilmaz.
+
+  iis-kur.ps1 bu degerleri kendisi yaziyor; elle kurulum yapmiyorsaniz bu
+  dosyayi duzenlemenize gerek yok.
+-->
+<configuration>
+  <system.webServer>
+
+    <rewrite>
+      <rules>
+        <!-- HTTP ile gelen istekleri HTTPS'e tasir. Sertifika baglanmadan
+             once acilmamalidir; yoksa site erisilemez hale gelir.
+             301 degil 302 kullaniliyor: tarayicilar 301'i kalici olarak
+             onbellege alir ve HTTP'ye geri donmek gerekirse sorun cikar. -->
+        <rule name="SEC-K HTTPS yonlendirme" enabled="false" stopProcessing="true">
+          <match url="(.*)" />
+          <conditions>
+            <add input="{HTTPS}" pattern="^OFF$" />
+          </conditions>
+          <action type="Redirect" url="https://{HTTP_HOST}/{R:1}" redirectType="Found" />
+        </rule>
+
+        <!-- Tum istekler portal surecine iletilir. Site klasorunde web.config
+             disinda dosya bulunmadigi icin statik dosya sizmasi mumkun degil. -->
+        <rule name="SEC-K ters vekil" stopProcessing="true">
+          <match url="(.*)" />
+          <!-- Gercek istemci adresini portala tasir: anket hiz siniri ve
+               "tek kez doldurulabilir" kontrolu bu bilgiyi kullaniyor.
+               Istemcinin gonderdigi bir X-Forwarded-For basligi varsa uzerine
+               yazilir, yani taklit edilemez.
+               Bu satirin calismasi icin degiskenin sunucu genelinde izinli
+               olmasi gerekir (rewrite/allowedServerVariables); iis-kur.ps1
+               izni ekliyor, ekleyemezse bu blogu dosyadan cikariyor. -->
+          <serverVariables>
+            <set name="HTTP_X_FORWARDED_FOR" value="{REMOTE_ADDR}" />
+          </serverVariables>
+          <action type="Rewrite" url="http://127.0.0.1:3000/{R:1}" />
+        </rule>
+      </rules>
+    </rewrite>
+
+    <security>
+      <requestFiltering>
+        <!-- Bulten PDF'leri icin 25 MB sinir var; IIS varsayilani (~28 MB)
+             cok yakin oldugu icin yukseltiyoruz. -->
+        <requestLimits maxAllowedContentLength="52428800" />
+      </requestFiltering>
+    </security>
+
+    <!-- Portalin kendi hata sayfalari gorunsun; IIS araya girmesin. -->
+    <httpErrors existingResponse="PassThrough" />
+
+    <!-- Vekil edilen yanitlar zaten portal tarafindan sikistiriliyor. -->
+    <urlCompression doStaticCompression="false" doDynamicCompression="false" />
+
+  </system.webServer>
+</configuration>

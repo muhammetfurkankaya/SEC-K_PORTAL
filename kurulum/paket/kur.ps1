@@ -1,4 +1,4 @@
-# SEÇ-K Portalı — sunucu kurulumu (yayın paketi)
+﻿# SEÇ-K Portalı — sunucu kurulumu (yayın paketi)
 #
 # Bu paket derlenmiş hâldedir: npm, internet veya derleyici gerekmez.
 # Yalnızca Node.js 20 veya 22 kurulu olmalıdır.
@@ -171,7 +171,7 @@ if (-not $GorevAtla) {
             New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Action Allow `
                 -Protocol TCP -LocalPort $Port -Profile Domain, Private | Out-Null
             Write-Ok "Guvenlik duvarinda port $Port ic aga acildi."
-            Write-Info "Genel aglara acilmadi — sirket ici kullanim icin dogrusu bu."
+            Write-Info "Genel aglara acilmadi; sirket ici kullanim icin dogrusu bu."
         } else {
             Write-Ok "Guvenlik duvari kurali zaten var."
         }

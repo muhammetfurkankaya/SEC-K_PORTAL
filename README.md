@@ -334,18 +334,29 @@ node server.js
 belirtilen yerde) olduğundan emin olun. Önüne nginx koyup 3000 portuna
 yönlendirin.
 
-### Windows Server (IIS)
+### Windows Server (IIS) — HTTP/HTTPS
 
-İki yol var:
+IIS portalın kodunu kendi başına çalıştıramaz; portal bir Node.js
+uygulamasıdır ve **sunucuda Node.js 20 kurulu olmak zorundadır.** IIS ön kapı
+olur: 80/443'ü dinler, sertifikayı sunar, istekleri portala iletir.
 
-1. **Ters vekil (önerilen).** Node.js'i bir Windows servisi olarak çalıştırın
-   (ör. [NSSM](https://nssm.cc/) ile `node server.js`), IIS'te
-   *Application Request Routing* ile `http://localhost:3000` adresine reverse
-   proxy kurun. QDMS ile aynı sunucuda sorunsuz yan yana çalışır.
-2. **iisnode** modülü ile doğrudan barındırma.
+Yayın paketinde bunun için hazır script ve şablonlar var:
 
-Her iki durumda `SECK_SESSION_SECRET` ve `SECK_BASE_URL` değişkenlerini
-tanımlayın, `data/` klasörüne servis hesabı için yazma izni verin.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 `
+    -HostAdi seck.turkishfuel.com -Sertifika <parmak-izi> -HttpsZorla
+```
+
+İki yöntem destekleniyor:
+
+1. **Ters vekil** (`-Mod vekil`, varsayılan) — URL Rewrite + ARR; Node
+   sürecini zamanlanmış görev çalıştırır, portal IIS'ten bağımsız ayakta kalır.
+2. **IIS süreci yönetir** (`-Mod iis`) — HttpPlatformHandler; IIS portalı
+   kendisi başlatır, çökerse yeniden başlatır, zamanlanmış görev gerekmez.
+
+QDMS ile aynı sunucuda, aynı portu farklı ana bilgisayar adlarıyla
+paylaşarak yan yana çalışır. Ayrıntı, elle kurulum adımları ve sorun giderme:
+**[kurulum/paket/iis/IIS.md](kurulum/paket/iis/IIS.md)**
 
 ### İlk kurulumdan sonra
 

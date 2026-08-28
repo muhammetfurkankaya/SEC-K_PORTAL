@@ -154,6 +154,11 @@ async function bundleAdminScripts(): Promise<void> {
       format: "cjs",
       // Native modül paketlenemez; sunucudaki node_modules'ten yüklenecek.
       external: ["better-sqlite3"],
+      // Komutlar better-sqlite3'ü yüklenirken require ediyor; doğru .node
+      // dosyasının o andan ÖNCE yerine konmuş olması gerekiyor. Sunucuda ilk
+      // çalıştırılan komut seed.cjs olabildiği için bu işi sunucu
+      // başlatıcısına bırakamıyoruz.
+      banner: { js: 'require("../sqlite-hazir.cjs");' },
       logLevel: "warning",
     });
     log(`  + ${script.out}`);
@@ -272,9 +277,15 @@ function writeBundleFiles(): void {
 
   const files: { from: string; to: string }[] = [
     { from: "baslat.cjs", to: "baslat.cjs" },
+    { from: "sqlite-hazir.cjs", to: "sqlite-hazir.cjs" },
     { from: "kur.ps1", to: "kur.ps1" },
     { from: "KURULUM.md", to: "KURULUM.md" },
     { from: "komutlar-OKU.txt", to: path.join("komutlar", "OKU.txt") },
+    // IIS ile 80/443 uzerinden yayin: script, sablonlar ve rehber.
+    { from: path.join("iis", "iis-kur.ps1"), to: path.join("iis", "iis-kur.ps1") },
+    { from: path.join("iis", "web.config.vekil"), to: path.join("iis", "web.config.vekil") },
+    { from: path.join("iis", "web.config.iis"), to: path.join("iis", "web.config.iis") },
+    { from: path.join("iis", "IIS.md"), to: path.join("iis", "IIS.md") },
   ];
 
   for (const file of files) {

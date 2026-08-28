@@ -1,8 +1,10 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { hashIp } from "@/lib/auth";
+import { pickClientIp } from "@/lib/client-ip";
+import { generateToken } from "@/lib/token";
 import { fail, type ActionState } from "@/lib/action-state";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { AVAILABILITY_MESSAGES, checkAvailability } from "@/lib/survey-window";
@@ -104,9 +106,39 @@ function readAnswer(
 
 async function clientIp(): Promise<string | null> {
   const store = await headers();
-  const forwarded = store.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  return store.get("x-real-ip");
+  return pickClientIp(store.get("x-forwarded-for"), store.get("x-real-ip"));
+}
+
+const DEVICE_COOKIE = "seck_katilimci";
+
+/**
+ * Katılımcıyı yalnızca sınırlama amacıyla tanımlayan değer.
+ *
+ * Ters vekil arkasında (IIS + ARR, HttpPlatformHandler) istek portala
+ * 127.0.0.1 üzerinden gelir ve X-Forwarded-For her kurulumda eklenmez. Böyle
+ * bir kurulumda IP'ye dayalı hız sınırı ve "tek kez doldurulabilir" kontrolü
+ * sessizce devre dışı kalıyordu. Bu yüzden IP okunamıyorsa tarayıcıya bir kez
+ * yazılan rastgele bir çerezi kullanıyoruz.
+ *
+ * Kimlik bilgisi değil: değer rastgeledir, kişiye bağlanamaz ve veritabanına
+ * yalnızca HMAC'lenmiş hâli yazılır.
+ */
+async function participantKey(): Promise<string | null> {
+  const ip = await clientIp();
+  if (ip) return ip;
+
+  const jar = await cookies();
+  const existing = jar.get(DEVICE_COOKIE)?.value;
+  if (existing) return `cihaz:${existing}`;
+
+  const generated = generateToken(16);
+  jar.set(DEVICE_COOKIE, generated, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/anket",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  return `cihaz:${generated}`;
 }
 
 export async function submitSurveyAction(
@@ -121,7 +153,7 @@ export async function submitSurveyAction(
   const availability = checkAvailability(survey);
   if (!availability.open) return fail(AVAILABILITY_MESSAGES[availability.reason]);
 
-  const ipHash = hashIp(await clientIp());
+  const ipHash = hashIp(await participantKey());
 
   // Kötüye kullanımı sınırla: aynı adresten 10 dakikada en fazla 15 gönderim.
   if (ipHash) {
