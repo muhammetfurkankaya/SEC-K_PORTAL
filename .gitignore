@@ -17,6 +17,7 @@ next-env.d.ts
 
 # Windows yayın paketi (npm run paket:windows ile üretilir)
 /yayin-paketi/
+/SEC-K-Portali-sunucu.zip
 
 # çeşitli
 *.pem

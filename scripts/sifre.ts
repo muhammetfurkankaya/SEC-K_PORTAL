@@ -25,6 +25,16 @@ function arg(name: string): string | undefined {
 
 type UserRow = { id: number; username: string; role: string; last_login_at: string | null };
 
+/**
+ * Kurulum komutunun bu ortamdaki çağrılış biçimi. Kaynak ağaçta `npm run seed`
+ * çalışır; sunucudaki yayın paketinde ise komutlar düz JS'e derlendiği ve
+ * pakette npm bulunmadığı için `node komutlar\seed.cjs` doğru olanıdır.
+ */
+function seedKomutu(): string {
+  const entry = process.argv[1] ?? "";
+  return entry.endsWith(".cjs") ? "node komutlar\\seed.cjs" : "npm run seed";
+}
+
 function listUsers(): UserRow[] {
   return getDb()
     .prepare(`SELECT id, username, role, last_login_at FROM admin_users ORDER BY id`)
@@ -44,7 +54,7 @@ function main(): void {
   const users = listUsers();
 
   if (users.length === 0) {
-    console.log("Hiç yönetici hesabı yok. Önce `npm run seed` çalıştırın.");
+    console.log(`Hiç yönetici hesabı yok. Önce \`${seedKomutu()}\` çalıştırın.`);
     process.exitCode = 1;
     return;
   }
