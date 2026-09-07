@@ -9,11 +9,29 @@
 const SEPARATOR = ";";
 const BOM = "﻿";
 
+/**
+ * Excel/LibreOffice'in formül olarak yorumladığı hücre başlangıçları.
+ *
+ * Anket serbest metin cevaplarını QR kodu okutan herkes yazabiliyor; bu
+ * cevaplar karar vericinin Excel'de açtığı dosyaya giriyor. "=" ile başlayan
+ * bir hücre açıldığında formül olarak çalışır (DDE ile dış komut çalıştırma
+ * dahil). Bu yüzden böyle hücrelerin başına tek tırnak koyup metin olmaya
+ * zorluyoruz.
+ */
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+/** Sayı gibi görünen değerler (ör. "-3", "4,5") formül sayılmaz. */
+const PLAIN_NUMBER = /^-?\d+(?:[.,]\d+)?$/;
+
 /** Bir hücreyi CSV kurallarına göre kaçırır. */
 function escapeCell(value: unknown): string {
   if (value === null || value === undefined) return "";
 
   let text = String(value);
+
+  if (FORMULA_START.test(text) && !PLAIN_NUMBER.test(text)) {
+    text = `'${text}`;
+  }
 
   // Satır sonlarını koru ama hücreyi tırnak içine al.
   const needsQuotes =

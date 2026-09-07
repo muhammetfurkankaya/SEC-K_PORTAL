@@ -53,12 +53,24 @@
     </rewrite>
 
     <security>
-      <requestFiltering>
+      <requestFiltering removeServerHeader="true">
         <!-- Bulten PDF'leri icin 25 MB sinir var; IIS varsayilani (~28 MB)
              cok yakin oldugu icin yukseltiyoruz. -->
         <requestLimits maxAllowedContentLength="52428800" />
       </requestFiltering>
     </security>
+
+    <httpProtocol>
+      <customHeaders>
+        <!-- Hangi surumu calistirdigimizi duyurmanin faydasi yok. -->
+        <remove name="X-Powered-By" />
+        <!-- HSTS satiri yalnizca HTTPS zorlanirken eklenir; iis-kur.ps1
+             -HttpsZorla verilmediginde bu blogu dosyadan cikarir. Sertifika
+             yokken tarayiciya "bu siteye hep HTTPS ile gel" demek siteyi
+             erisilemez hale getirir. -->
+        <add name="Strict-Transport-Security" value="max-age=31536000" />
+      </customHeaders>
+    </httpProtocol>
 
     <!-- Portalin kendi hata sayfalari gorunsun; IIS araya girmesin. -->
     <httpErrors existingResponse="PassThrough" />

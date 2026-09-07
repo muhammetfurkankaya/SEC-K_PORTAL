@@ -318,6 +318,29 @@ if ($Mod -eq "vekil") {
     if (-not (Test-Path -LiteralPath $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
 }
 
+# HSTS: tarayiciya "bu siteye bir yil boyunca hep HTTPS ile gel" der. Sertifika
+# yokken gonderilirse site erisilemez hale gelebilecegi icin yalnizca HTTPS
+# zorlanirken biraktiyoruz.
+if (-not $HttpsZorla) {
+    $config = $config -replace '(?s)\s*<!--\s*HSTS satiri.*?/>', ''
+}
+
+# removeServerHeader yalnizca IIS 10 ve ustunde var (Windows Server 2016+).
+# Eski IIS bu ozelligi taniyamaz ve site 500.19 verir.
+$iisMajor = 0
+try {
+    $iisMajor = [int](Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\InetStp" -ErrorAction Stop).MajorVersion
+} catch {
+    $iisMajor = 0
+}
+
+if ($iisMajor -lt 10) {
+    $config = $config.Replace(' removeServerHeader="true"', '')
+    Write-Info "IIS $iisMajor tespit edildi; 'Server' basligi kaldirma ozelligi atlandi."
+} else {
+    Write-Ok "IIS $iisMajor - 'Server' ve 'X-Powered-By' basliklari kaldirilacak."
+}
+
 $configPath = Join-Path $siteDir "web.config"
 # IIS yapilandirma dosyalari BOM'suz UTF-8 olmali.
 [IO.File]::WriteAllText($configPath, $config, (New-Object Text.UTF8Encoding($false)))
@@ -464,12 +487,44 @@ $poolUser = "IIS AppPool\$SiteAdi"
 & icacls "$siteDir" /grant "${poolUser}:(OI)(CI)(RX)" /C /Q | Out-Null
 Write-Ok "Site klasorune okuma izni verildi."
 
+<#
+    .env oturum cookie'lerini imzalayan gizli anahtari, data\ ise veritabanini
+    ve yuklenen PDF'leri tutuyor. Klasorden izin devraldiklari surece sunucuda
+    oturum acabilen herkes anahtari okuyabilir; anahtari bilen kisi kendine
+    yonetici oturum cookie'si uretebilir. Devralmayi kesip yalnizca SYSTEM ve
+    yerel yoneticilere yetki veriyoruz (gruplar SID ile: Turkce Windows'ta
+    "Administrators" -> "Yoneticiler").
+#>
+$SID_SYSTEM = "*S-1-5-18"
+$SID_ADMINS = "*S-1-5-32-544"
+$izinTamam = $true
+
+foreach ($hedef in @($envPath, $dataDir)) {
+    if (-not (Test-Path -LiteralPath $hedef)) { continue }
+
+    $klasorMu = (Get-Item -LiteralPath $hedef) -is [IO.DirectoryInfo]
+    $bayrak = if ($klasorMu) { "(OI)(CI)(F)" } else { "(F)" }
+
+    & icacls "$hedef" /inheritance:r /grant "${SID_SYSTEM}:$bayrak" /grant "${SID_ADMINS}:$bayrak" /T /C /Q 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { $izinTamam = $false }
+}
+
+if ($izinTamam) {
+    Write-Ok ".env ve data\ yalnizca SYSTEM ve yoneticilere acik."
+} else {
+    Write-Warn2 ".env / data\ izinleri tam ayarlanamadi."
+}
+
 if ($Mod -eq "iis") {
-    # Bu modda Node surecini havuz kimligi calistirir: programa okuma,
-    # veri klasorune yazma izni gerekir.
+    # Bu modda Node surecini havuz kimligi calistirir: programa okuma, veri
+    # klasorune yazma, .env dosyasina okuma izni gerekir. Yukaridaki kilidin
+    # ARDINDAN veriliyor ki devralma kesme bu izinleri silmesin.
     & icacls "$paket"   /grant "${poolUser}:(OI)(CI)(RX)" /C /Q | Out-Null
     & icacls "$dataDir" /grant "${poolUser}:(OI)(CI)(M)"  /T /C /Q | Out-Null
-    Write-Ok "Pakete okuma, data\ klasorune yazma izni verildi."
+    if (Test-Path -LiteralPath $envPath) {
+        & icacls "$envPath" /grant "${poolUser}:(R)" /C /Q | Out-Null
+    }
+    Write-Ok "Havuz kimligine gereken okuma/yazma izinleri verildi."
 }
 
 # ————————————————————————————— Surec yonetimi —————————————————————————————

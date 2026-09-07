@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUser, verifyPassword, hashPassword } from "@/lib/auth";
+import { requireUser, startSession, verifyPassword, hashPassword } from "@/lib/auth";
+import { DEFAULT_ADMIN_PASSWORD } from "@/lib/password";
 import { fail, succeed, zodFieldErrors, type ActionState } from "@/lib/action-state";
 import { logAction } from "@/lib/db/queries/audit";
 import { resetSettings, setSettings } from "@/lib/db/queries/settings";
@@ -132,7 +133,15 @@ export async function resetSettingsAction(): Promise<ActionState> {
 const PasswordSchema = z
   .object({
     current: z.string().min(1, "Mevcut şifrenizi girin."),
-    next: z.string().min(8, "Yeni şifre en az 8 karakter olmalı.").max(200),
+    next: z
+      .string()
+      .min(8, "Yeni şifre en az 8 karakter olmalı.")
+      .max(200)
+      // Kurulum varsayılanı bu depoda ve kurulum belgelerinde yazılı; yeni
+      // şifre olarak seçilmesi hesabı herkese açık bırakır.
+      .refine((value) => value !== DEFAULT_ADMIN_PASSWORD, {
+        message: "Kurulumla gelen varsayılan şifre kullanılamaz; farklı bir şifre seçin.",
+      }),
     repeat: z.string().min(1, "Yeni şifreyi tekrar girin."),
   })
   .refine((data) => data.next === data.repeat, {
@@ -166,5 +175,10 @@ export async function changePasswordAction(
   updatePassword(user.id, hashPassword(parsed.data.next));
   logAction(session, "sifre.degistir");
 
-  return succeed("Şifreniz güncellendi.");
+  // Oturum cookie'leri şifre karmasına bağlı: şifre değişince bu hesapla
+  // açılmış tüm oturumlar (varsa başka tarayıcılar, başka kişiler) düşer.
+  // Kendi oturumumuzu yeni damgayla tazeliyoruz ki panelde kalabilelim.
+  await startSession(session);
+
+  return succeed("Şifreniz güncellendi. Diğer cihazlardaki oturumlar kapatıldı.");
 }

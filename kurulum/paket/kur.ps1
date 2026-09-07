@@ -136,6 +136,46 @@ if (Test-Path -LiteralPath (Join-Path $root "data\portal.db")) {
     }
 }
 
+# ————————————————————————————— Dosya izinleri —————————————————————————————
+Write-Step "Dosya izinleri"
+
+<#
+    .env dosyasi oturum cookie'lerini imzalayan gizli anahtari, data\ klasoru
+    ise veritabanini ve yuklenen PDF'leri tutuyor. Bu iki yol klasorden izin
+    devraldigi surece sunucuda oturum acabilen herkes anahtari okuyabilir —
+    anahtari bilen kisi kendine yonetici oturum cookie'si uretebilir.
+
+    Bu yuzden devralmayi kesip yalnizca SYSTEM (gorevi calistiran hesap) ve
+    yerel yoneticilere tam yetki veriyoruz. Gruplar SID ile veriliyor: Turkce
+    Windows'ta "Administrators" grubunun adi "Yoneticiler" oluyor.
+#>
+$SID_SYSTEM = "*S-1-5-18"
+$SID_ADMINS = "*S-1-5-32-544"
+
+$envPath = Join-Path $root ".env"
+$dataDir = Join-Path $root "data"
+$izinTamam = $true
+
+foreach ($hedef in @($envPath, $dataDir)) {
+    if (-not (Test-Path -LiteralPath $hedef)) { continue }
+
+    $klasorMu = (Get-Item -LiteralPath $hedef) -is [IO.DirectoryInfo]
+    $bayrak = if ($klasorMu) { "(OI)(CI)(F)" } else { "(F)" }
+
+    $cikti = & icacls "$hedef" /inheritance:r /grant "${SID_SYSTEM}:$bayrak" /grant "${SID_ADMINS}:$bayrak" /T /C /Q 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $izinTamam = $false
+        Write-Warn2 "Izinler ayarlanamadi: $hedef"
+        Write-Info ($cikti | Select-Object -First 2)
+    }
+}
+
+if ($izinTamam) {
+    Write-Ok ".env ve data\ yalnizca SYSTEM ve yoneticiler tarafindan okunabilir."
+} else {
+    Write-Info "Script'i yonetici olarak calistirdiginizdan emin olun."
+}
+
 # ————————————————————————————— Açılışta başlatma —————————————————————————————
 $taskCreated = $false
 

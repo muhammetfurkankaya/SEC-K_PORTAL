@@ -55,14 +55,28 @@ function sign(payload: string): string {
   return crypto.createHmac("sha256", getSecret()).update(payload).digest("base64url");
 }
 
-type TokenPayload = SessionUser & { exp: number };
+type TokenPayload = SessionUser & { exp: number; pv?: string };
 
-function createToken(user: SessionUser): string {
+/**
+ * Şifreye bağlı oturum damgası.
+ *
+ * Cookie imzalı olduğu için kurcalanamaz, ancak şifre değiştirildiğinde eski
+ * cookie'ler kendiliğinden geçersiz olmaz — 8 saat boyunca çalışmaya devam
+ * ederdi. Kurulum varsayılan şifresi belgelerde yazılı olduğundan bu önemli:
+ * şifreyi değiştiren kişi, o şifreyle açılmış oturumların da kapanmasını
+ * bekler. Damga şifre karmasından türetildiği için şifre değişince değişir.
+ */
+function passwordStamp(passwordHash: string): string {
+  return crypto.createHmac("sha256", getSecret()).update(passwordHash).digest("base64url").slice(0, 16);
+}
+
+function createToken(user: SessionUser, passwordHash: string): string {
   const payload: TokenPayload = {
     id: user.id,
     username: user.username,
     role: user.role,
     exp: Date.now() + SESSION_HOURS * 60 * 60 * 1000,
+    pv: passwordStamp(passwordHash),
   };
   const body = base64url(JSON.stringify(payload));
   return `${body}.${sign(body)}`;
@@ -101,14 +115,26 @@ export function authenticate(username: string, password: string): SessionUser | 
 
   if (!verifyPassword(password, hash) || !user) return null;
 
+  // Pasife alınmış hesap giriş yapamaz. Şifre doğrulamasından sonra
+  // kontrol ediyoruz: aksi halde yanıt süresi hesabın durumunu sızdırır.
+  if (user.is_active !== 1) return null;
+
   touchLastLogin(user.id);
   return { id: user.id, username: user.username, role: user.role };
 }
 
-/** Oturum cookie'sini yazar. */
+/**
+ * Oturum cookie'sini yazar.
+ *
+ * Şifre karması cookie'ye damga olarak gömülür (bkz. passwordStamp); şifre
+ * değiştiğinde eski oturumlar geçersiz olur.
+ */
 export async function startSession(user: SessionUser): Promise<void> {
+  const record = getUserById(user.id);
+  if (!record) return;
+
   const store = await cookies();
-  store.set(COOKIE_NAME, createToken(user), {
+  store.set(COOKIE_NAME, createToken(user, record.password_hash), {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
@@ -135,7 +161,13 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
   // Kullanıcı silinmiş veya pasife alınmış olabilir — veritabanından doğrula.
   const user = getUserById(payload.id);
-  if (!user) return null;
+  if (!user || user.is_active !== 1) return null;
+
+  // Şifre değiştiyse bu cookie ile açılmış oturum artık geçerli değil.
+  // Damgası olmayan cookie'ler bu sürümden önce yazılmış olabilir; onları da
+  // geçersiz sayıyoruz ki eski oturumlar kontrolü atlayamasın.
+  const stamp = passwordStamp(user.password_hash);
+  if (!payload.pv || payload.pv !== stamp) return null;
 
   return { id: user.id, username: user.username, role: user.role };
 }

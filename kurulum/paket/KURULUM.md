@@ -107,10 +107,47 @@ Ayrıntı: `komutlar\OKU.txt`
 
 ---
 
+## Güvenlik
+
+Kurulum sonrası **sizin yapmanız gereken iki şey** var:
+
+1. **Varsayılan şifreyi değiştirin** (Ayarlar → Şifre Değiştir). Değiştirilene
+   kadar panelde kırmızı uyarı şeridi durur. Şifre değiştiğinde o hesapla
+   açılmış diğer tüm oturumlar kapanır.
+2. **HTTPS kullanın.** Sertifikanız varsa `iis\iis-kur.ps1` ile bağlayın ve
+   `.env` içinde `SECK_SECURE_COOKIE=true` olduğundan emin olun — oturum
+   cookie'si yalnızca o zaman şifreli bağlantıyla sınırlanır.
+
+Kutudan çıktığı gibi çalışan korumalar:
+
+| Konu | Uygulanan |
+|---|---|
+| Şifre saklama | scrypt (N=16384) ile tek yönlü karma, sabit zamanlı karşılaştırma |
+| Oturum | HMAC imzalı, httpOnly, sameSite=lax cookie; 8 saat geçerli |
+| Şifre değişimi | Eski oturumlar geçersiz olur; pasife alınan hesap anında düşer |
+| Kaba kuvvet | 5 dakikada 8 hatalı denemeden sonra her deneme yavaşlatılır (doğru şifreyi bilen kilitlenmez) |
+| Yönetim ekranları | Her sayfa ve her işlem ayrı ayrı oturum doğrular |
+| PDF erişimi | Dosyalar web kökünün dışında; yayından kaldırılan bültenler sunulmaz |
+| Yükleme | Yalnızca gerçek PDF (dosya imzası kontrol edilir), en fazla 25 MB, diskte rastgele ad |
+| Anket | Tahmin edilemez bağlantı, cihaz başına tekrar ve hız sınırı |
+| CSV çıktısı | Formül olarak yorumlanabilecek hücreler etkisizleştirilir (Excel) |
+| Veritabanı | Tüm sorgular parametreli (SQL enjeksiyonuna kapalı) |
+| Tarayıcı | CSP, nosniff, çerçeveleme ve referrer başlıkları; dış kaynak yüklenmez |
+| Dosya izinleri | `.env` ve `data\` yalnızca SYSTEM ve yöneticilere açık |
+| İşlem kaydı | Girişler ve yönetim işlemleri `audit_log` tablosuna yazılır |
+
+`.env` dosyası oturumları imzalayan gizli anahtarı tutar: **paylaşmayın,**
+e-posta ile göndermeyin. Anahtar değişirse açık oturumlar düşer (zararsızdır).
+
+---
+
 ## Yedekleme
 
 Her şey `data\` klasöründedir: veritabanı, yüklenen PDF'ler ve oturum
 anahtarı. Yedek için bu klasörü kopyalamak yeterlidir.
+
+> Kurulum script'i bu klasörün izinlerini kısıtlar; yedek komutunu yönetici
+> olarak çalıştırın.
 
 ```powershell
 Copy-Item C:\seckportal\data "\\yedek-sunucu\seck\data-$(Get-Date -f yyyyMMdd)" -Recurse

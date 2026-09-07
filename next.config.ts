@@ -1,5 +1,37 @@
 import type { NextConfig } from "next";
 
+/**
+ * İçerik güvenliği politikası.
+ *
+ * Portal hiçbir dış kaynağa bağlanmıyor: yazı tipleri, betikler ve görseller
+ * kendi sunucusundan geliyor (intranette internet erişimi olmayabilir diye
+ * baştan böyle kurgulandı). Bu yüzden politika "yalnızca kendi kaynağım"
+ * diyebiliyor; olası bir metin sızması durumunda veriyi dışarı taşıyacak
+ * kanal kalmıyor.
+ *
+ * script-src'de 'unsafe-inline' bulunmasının nedeni Next'in sayfa durumunu
+ * satır içi betikle taşıması. React çıktıyı kendisi kaçırdığı ve kodda
+ * dangerouslySetInnerHTML kullanılmadığı için asıl koruma orada; bu başlık
+ * ek bir katman.
+ *
+ * QDMS bağlantıları bu politikadan etkilenmez: onlar alt kaynak değil,
+ * kullanıcının tıkladığı normal bağlantılardır.
+ */
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self'",
+  // PDF önizlemesi ve QR kodu aynı kaynaktan geliyor.
+  "frame-src 'self' blob:",
+  "object-src 'self'",
+  "connect-src 'self'",
+  "form-action 'self'",
+  "base-uri 'self'",
+  "frame-ancestors 'self'",
+].join("; ");
+
 const nextConfig: NextConfig = {
   // Sunucuya yayın için tek klasörlük çıktı üretir (.next/standalone).
   output: "standalone",
@@ -13,7 +45,10 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "30mb" },
   },
 
-  // Intranet portalı için temel güvenlik başlıkları.
+  // Sunucunun hangi çatıyı kullandığını duyurmanın faydası yok.
+  poweredByHeader: false,
+
+  // Intranet portalı için güvenlik başlıkları.
   async headers() {
     return [
       {
@@ -21,7 +56,12 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // frame-ancestors bunun modern karşılığı; X-Frame-Options eski
+          // tarayıcılar ve tarama araçları için duruyor.
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+          { key: "Content-Security-Policy", value: CSP },
         ],
       },
     ];
