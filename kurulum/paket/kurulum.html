@@ -139,10 +139,15 @@
   </ol>
 
   <div class="not">
-    <b>Modül kuramıyorsanız:</b> portal IIS olmadan da yayınlanabilir. Bu
-    durumda portal ayrılan portu kendisi dinler ve IIS sitesine gerek kalmaz.
-    Paket klasöründe <code class="inline">iis\IIS.md</code> dosyasındaki
-    <b>“B seçeneği”</b> bölümüne bakın — tek komuttur, ek modül gerekmez.
+    <b>Modülü indiremiyorsanız</b> (iis.net indirme düğmesi
+    <code class="inline">go.microsoft.com</code> adresine gider ve bu adres
+    bazı kurumsal ağlarda kapalıdır): portal IIS olmadan da yayınlanabilir.
+    Bu durumda portal ayrılan portu kendisi dinler, ek modül ve indirme
+    gerekmez. Yönetici PowerShell'de:
+<pre>powershell -ExecutionPolicy Bypass -File .\kur.ps1 -Port 9092 -PortuBosalt</pre>
+    <span class="neden">Portu tutan IIS sitesini durdurur, veritabanını kurar,
+    açılışta otomatik başlatma görevini oluşturur ve portalı başlatır.
+    Ayrıntı: <code class="inline">iis\IIS.md</code> → “B seçeneği”.</span>
   </div>
 
   <div class="not">

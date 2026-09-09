@@ -20,7 +20,12 @@ param(
 
     # Kullanilacak node.exe. Bos birakilirsa once paketteki node\node.exe,
     # yoksa sistemde kurulu Node kullanilir.
-    [string]$NodeExe
+    [string]$NodeExe,
+
+    # Port baska bir IIS sitesi tarafindan tutuluyorsa o siteyi durdur.
+    # Windows'ta portu HTTP.sys tutar; IIS sitesi acikken Node ayni
+    # IP:port ikilisini dinleyemez.
+    [switch]$PortuBosalt
 )
 
 $ErrorActionPreference = "Stop"
@@ -137,32 +142,64 @@ try {
     $portDolu = (& netstat -ano | Select-String ":${Port}\s" | Select-String "LISTENING") -ne $null
 }
 
+$appcmdYol = Join-Path $env:windir "system32\inetsrv\appcmd.exe"
+
+<# Portu bir IIS sitesi tutuyorsa o sitenin adini dondurur. #>
+function Get-PortuTutanSite {
+    if (-not (Test-Path -LiteralPath $appcmdYol)) { return $null }
+    $siteler = (& $appcmdYol list sites 2>&1) | ForEach-Object { "$_" }
+    $satir = $siteler | Where-Object { $_ -match ":${Port}:" } | Select-Object -First 1
+    if ($satir -and $satir -match 'SITE\s+"([^"]+)"') { return $matches[1] }
+    return $null
+}
+
 if ($portDolu) {
     Write-Warn2 "Port $Port su anda baska bir program tarafindan dinleniyor."
+    $iisSiteAdi = Get-PortuTutanSite
 
-    $iisSite = $null
-    $appcmdYol = Join-Path $env:windir "system32\inetsrv\appcmd.exe"
-    if (Test-Path -LiteralPath $appcmdYol) {
-        $siteler = (& $appcmdYol list sites 2>&1) | ForEach-Object { "$_" }
-        $iisSite = $siteler | Where-Object { $_ -match ":${Port}:" } | Select-Object -First 1
-    }
+    if ($iisSiteAdi) {
+        Write-Info "Portu IIS sitesi tutuyor: $iisSiteAdi"
 
-    if ($iisSite) {
-        Write-Info "Portu IIS tutuyor:"
-        Write-Info "  $($iisSite.Trim())"
-        Write-Info ""
-        Write-Info "Portal bu portu dinleyecekse IIS sitesini durdurmalisiniz."
-        if ($iisSite -match 'SITE\s+"([^"]+)"') {
-            Write-Info "  appcmd stop site `"$($matches[1])`""
+        if ($PortuBosalt) {
+            $r = & $appcmdYol stop site "$iisSiteAdi" 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                Write-Ok "'$iisSiteAdi' sitesi durduruldu."
+                Start-Sleep -Seconds 2
+
+                # Gercekten serbest kaldi mi?
+                $halaDolu = $false
+                try {
+                    if (Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue) { $halaDolu = $true }
+                } catch { }
+
+                if ($halaDolu) {
+                    Write-Warn2 "Port hala dolu. Ayni portu kullanan baska bir site olabilir:"
+                    Write-Info "  $appcmdYol list sites"
+                } else {
+                    Write-Ok "Port $Port serbest kaldi."
+                    $portDolu = $false
+                }
+            } else {
+                Write-Warn2 "Site durdurulamadi: $r"
+            }
+        } else {
+            Write-Info ""
+            Write-Info "Portal bu portu dinleyecekse siteyi durdurmalisiniz. Iki yol:"
+            Write-Info "  1) Bu script'i -PortuBosalt ile tekrar calistirin"
+            Write-Info "  2) Elle: appcmd stop site `"$iisSiteAdi`""
+            Write-Info ""
+            Write-Info "IIS'i on kapi olarak kullanmak isterseniz bunun yerine:"
+            Write-Info "  powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1"
         }
-        Write-Info ""
-        Write-Info "IIS'i on kapi olarak kullanmak isterseniz bunun yerine:"
-        Write-Info "  powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1"
     } else {
+        Write-Info "Portu tutan bir IIS sitesi bulunamadi."
         Write-Info "Farkli bir port secmek icin: .\kur.ps1 -Port 9093"
     }
-    Write-Info ""
-    Write-Info "Kuruluma devam ediliyor; portal baslatilirken hata verebilir."
+
+    if ($portDolu) {
+        Write-Info ""
+        Write-Info "Kuruluma devam ediliyor; portal baslatilirken hata verebilir."
+    }
 } else {
     Write-Ok "Port $Port musait."
 }

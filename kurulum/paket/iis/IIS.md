@@ -28,21 +28,65 @@ verebilirsiniz.
 > <https://nodejs.org/dist/v16.13.1/node-v16.13.1-x64.msi> adresinden indirip
 > "Use source" kutusuna dosyanın bulunduğu **klasörü** yazın.
 
-### B seçeneği (modül kuramıyorsanız): tek komut
+### B seçeneği (modül indiremiyorsanız): tek komut
 
-IIS sitesi ile aynı portu kullanacaksanız önce siteyi durdurun; Windows'ta
-portu HTTP.sys tutar ve IIS sitesi açıkken başka bir program o portu
-dinleyemez.
+Yönetici PowerShell'de:
 
 ```powershell
-appcmd stop site "TFS_SECKA"
 cd E:\TSF_DATA\TFS_SECKA
-powershell -ExecutionPolicy Bypass -File .\kur.ps1 -Port 9092 -BaseUrl "http://10.34.32.55:9092"
+powershell -ExecutionPolicy Bypass -File .\kur.ps1 `
+    -Port 9092 -BaseUrl "http://10.34.32.55:9092" -PortuBosalt
 ```
 
-Bu komut veritabanını kurar, oturum anahtarını üretir, izinleri kısıtlar,
-açılışta otomatik başlatma görevini oluşturur, güvenlik duvarında portu iç ağa
-açar ve portalı başlatır. Sonra `http://10.34.32.55:9092` adresi çalışır.
+`-PortuBosalt`, portu tutan IIS sitesini bulup durdurur. Bu gerekli çünkü
+Windows'ta portu HTTP.sys tutar; IIS sitesi açıkken başka bir program aynı
+IP:port ikilisini dinleyemez. Script durdurduktan sonra portun gerçekten
+serbest kaldığını da doğrular.
+
+Komut ayrıca veritabanını kurar, oturum anahtarını üretir, `.env` ve `data\`
+izinlerini kısıtlar, **sunucu açılışında portalı kendiliğinden başlatan** bir
+görev oluşturur, güvenlik duvarında portu iç ağa açar ve portalı başlatır.
+
+Sonuç: `http://10.34.32.55:9092` çalışır. Hiçbir IIS eklentisi, hiçbir
+indirme gerekmez — paketteki her şey yeterli.
+
+**Bu modda IIS Yöneticisi'ndeki *Browse* düğmesi kullanılmaz** (site
+durdurulmuş olur); adresi doğrudan açarsınız. Portalı kullanan personel
+açısından bir fark yoktur. Modülü sonradan temin ederseniz tek komutla
+A seçeneğine geçebilirsiniz:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1
+```
+
+Bu komut zamanlanmış görevi kaldırır, IIS sitesini geri devreye alır ve
+`web.config`'i çalışan sürümle değiştirir.
+
+### Modülü nasıl temin ederim
+
+`iis.net` üzerindeki indirme düğmesi `go.microsoft.com` adresine yönlendirir
+ve bu adres bazı kurumsal ağlarda kapalıdır (`ERR_CONNECTION_RESET`).
+Seçenekler:
+
+1. **Önce zaten kurulu mu diye bakın.** Sunucudaki diğer siteler için
+   URL Rewrite + ARR kurulmuş olabilir; bu ikisi varsa hiçbir şey indirmeniz
+   gerekmez, `iis-kur.ps1` ters vekil modunu kendisi seçer.
+   **Yönetici** komut isteminde:
+   ```
+   %windir%\system32\inetsrv\appcmd.exe list modules
+   ```
+   Çıktıda `RewriteModule` ve `ApplicationRequestRouting` (ya da
+   `httpPlatformHandler`) arayın.
+2. **İnternet erişimi olan başka bir bilgisayardan indirip kopyalayın.**
+   Dosyanın adı `httpPlatformHandler_amd64.msi` (~1 MB). Sunucuya kopyaladıktan
+   sonra çift tıklayıp kurun; kurulum internet gerektirmez.
+   Kopyaladığınız dosyanın sahiciliğini şöyle doğrulayın: sağ tık →
+   *Özellikler* → *Dijital İmzalar* sekmesinde **Microsoft Corporation**
+   yazmalı.
+3. **Ağ ekibinden `go.microsoft.com` / `download.microsoft.com` adreslerinin
+   geçici olarak açılmasını isteyin.**
+
+Hiçbiri olmuyorsa B seçeneği zaten çalışır durumdadır; modüle ihtiyaç yok.
 
 ---
 
