@@ -353,14 +353,44 @@ if (-not $GorevAtla) {
 
         Write-Step "Baslatiliyor"
         Start-ScheduledTask -TaskName $TaskName
-        Start-Sleep -Seconds 8
 
-        try {
-            $response = Invoke-WebRequest -Uri "http://localhost:$Port/" -UseBasicParsing -TimeoutSec 30
-            Write-Ok "Portal yanit veriyor (HTTP $($response.StatusCode))."
-        } catch {
-            Write-Warn2 "Portal henuz yanit vermedi. Ilk aciliste birkac saniye surebilir."
-            Write-Info "Kontrol: Invoke-WebRequest http://localhost:$Port/ -UseBasicParsing"
+        # Ilk acilisda Next sunucusu birkac saniye hazirlanir; 30 saniye
+        # boyunca deneyip sonucu net soyluyoruz.
+        $yanitVerdi = $false
+        $sonHata = $null
+        for ($deneme = 1; $deneme -le 10; $deneme += 1) {
+            Start-Sleep -Seconds 3
+            try {
+                $response = Invoke-WebRequest -Uri "http://localhost:$Port/" -UseBasicParsing -TimeoutSec 10
+                Write-Ok "Portal yanit veriyor (HTTP $($response.StatusCode))."
+                $yanitVerdi = $true
+                break
+            } catch {
+                $sonHata = $_.Exception.Message
+            }
+        }
+
+        if ($yanitVerdi) {
+            # Ag uzerinden de erisilebiliyor mu? (guvenlik duvari / dinlenen adres)
+            try {
+                $agAdres = "http://$($env:COMPUTERNAME):$Port/"
+                $r2 = Invoke-WebRequest -Uri $agAdres -UseBasicParsing -TimeoutSec 10
+                Write-Ok "Ag uzerinden de erisilebiliyor: $agAdres (HTTP $($r2.StatusCode))"
+            } catch {
+                Write-Warn2 "Yalnizca localhost yanit veriyor; agdan erisilemedi."
+                Write-Info "Guvenlik duvari kurali eklenmis olmali; .env icinde"
+                Write-Info "HOSTNAME=127.0.0.1 satiri varsa onu silin ve gorevi yeniden baslatin."
+            }
+        } else {
+            Write-Fail "Portal $Port portunda yanit vermiyor."
+            Write-Info "Son hata: $sonHata"
+            Write-Info ""
+            Write-Info "Sebebi gormenin en hizli yolu portali ON PLANDA calistirmak:"
+            Write-Info "  Stop-ScheduledTask -TaskName '$TaskName'"
+            Write-Info "  .\nodejs.cmd baslat.cjs"
+            Write-Info ""
+            Write-Info "Hata mesaji dogrudan ekrana yazilir (izin, port, veritabani...)."
+            Write-Info "Duzelttikten sonra: Start-ScheduledTask -TaskName '$TaskName'"
         }
     }
 }
@@ -375,17 +405,23 @@ Write-Info "Yerel adres  : http://localhost:$Port"
 Write-Info "Ag uzerinden : http://$($env:COMPUTERNAME):$Port"
 Write-Info ""
 
+Write-Info "Giris        : admin / Tfs2026...  (ilk giristen sonra degistirin)"
+Write-Info ""
+
 if ($taskCreated) {
+    Write-Info "Portal bir Windows gorevi olarak calisiyor; sunucu yeniden"
+    Write-Info "baslatildiginda kendiliginden aciliyor."
+    Write-Info ""
     Write-Info "Yonetim komutlari:"
     Write-Info "  Durdur  : Stop-ScheduledTask  -TaskName '$TaskName'"
     Write-Info "  Baslat  : Start-ScheduledTask -TaskName '$TaskName'"
     Write-Info "  Durum   : Get-ScheduledTask   -TaskName '$TaskName'"
 } else {
-    Write-Info "Portali baslatmak icin:  node baslat.cjs"
+    Write-Info "Portali baslatmak icin:  .\nodejs.cmd baslat.cjs"
 }
 
 Write-Info ""
-Write-Info "Sifre sifirlama : node komutlar\sifre.cjs"
-Write-Info "Ornek veri      : node komutlar\demo.cjs"
+Write-Info "Sifre sifirlama : .\nodejs.cmd komutlar\sifre.cjs"
+Write-Info "Ornek veri      : .\nodejs.cmd komutlar\demo.cjs"
 Write-Info "Ayrintili bilgi : KURULUM.md"
 Write-Host ""

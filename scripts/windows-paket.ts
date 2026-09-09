@@ -368,7 +368,9 @@ function writeBundleFiles(): void {
     // eklenti kurulmadan once "500.19" yerine ne yapilacagi yaziyor.
     { from: "web.config", to: "web.config" },
     { from: "kurulum.html", to: "kurulum.html" },
-    // Yonetim komutlarini paketteki node.exe ile calistiran sarmalayici.
+    // Cift tiklamayla calisan kurulum ve yonetim komutu sarmalayicisi.
+    // Ikisi de PowerShell bilgisi gerektirmeden calisir.
+    { from: "KUR.cmd", to: "KUR.cmd" },
     { from: "nodejs.cmd", to: "nodejs.cmd" },
     // IIS ile yayin: script'ler, sablonlar ve rehber.
     { from: path.join("iis", "iis-kur.ps1"), to: path.join("iis", "iis-kur.ps1") },

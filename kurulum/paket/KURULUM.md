@@ -34,18 +34,33 @@ Paketi kalıcı bir yere taşıyın — örneğin `C:\seckportal`. Şunlardan ka
   SYSTEM hesabıyla çalışır ve buralara yazamayabilir)
 - Yolunda parantez bulunan klasörler (`seckportal (1)` gibi)
 
-### 2. Kurulum script'ini çalıştırın
+### 2. `KUR.cmd` dosyasına sağ tıklayıp **"Yönetici olarak çalıştır"** seçin
 
-Yönetici olarak açılmış PowerShell'de:
+Başka bir şey indirmeniz veya kurmanız gerekmez. Kurulum size iki soru sorar:
+
+| Soru | Ne yazacaksınız |
+|---|---|
+| Port | Bu uygulama için ayrılan port, örneğin `9092` |
+| Adres | Ağdan erişilecek adres, örneğin `http://10.34.32.55:9092` |
+
+Sonra sırayla: portun boş olmasını sağlar (gerekirse o portu tutan IIS
+sitesini durdurur) → `.env` oluşturup oturum anahtarı üretir → veritabanını
+kurar ve admin hesabını açar → `.env` ve `data\` izinlerini kısıtlar →
+sunucu açılışında portalı başlatan bir Windows görevi kurar → güvenlik
+duvarında portu iç ağa açar → portalı başlatır ve yanıt verdiğini doğrular.
+
+PowerShell'den yapmayı tercih ederseniz aynı iş:
 
 ```powershell
 cd C:\seckportal
-powershell -ExecutionPolicy Bypass -File .\kur.ps1
+powershell -ExecutionPolicy Bypass -File .\kur.ps1 `
+    -Port 9092 -BaseUrl "http://10.34.32.55:9092" -PortuBosalt
 ```
 
-Script sırayla: `.env` oluşturup oturum anahtarı üretir → veritabanını kurar
-ve admin hesabını açar → açılışta otomatik başlatma görevini oluşturur →
-güvenlik duvarında portu iç ağa açar → portalı başlatır.
+> **Neden IIS'e ihtiyaç yok:** portal kendi web sunucusunu içinde taşır
+> (Node.js uygulamaları böyle çalışır). IIS'i yalnızca 80/443 üzerinden
+> yayın veya sertifika yönetimi isterseniz kullanırsınız — o zaman bir IIS
+> eklentisi gerekir, bkz. `iis\IIS.md`.
 
 ### Yönetim paneli giriş bilgileri
 
@@ -75,11 +90,18 @@ Seçenekler:
 
 ### 3. Açın
 
+Kurulumun sonunda yazdığı adresi açın — örneğin:
+
 ```
-http://localhost:3000
+http://10.34.32.55:9092
 ```
 
-Ağdaki diğer bilgisayarlardan: `http://<sunucu-adı>:3000`
+Sunucunun kendi üzerinden: `http://localhost:<port>`
+
+Kurulum, portalın gerçekten yanıt verdiğini kendisi doğrular ve hem yerel
+hem ağ adresini ekrana yazar. Yanıt vermezse sebebi görmek için portalı ön
+planda çalıştırmayı önerir (`nodejs.cmd baslat.cjs`) — hata mesajı doğrudan
+ekrana gelir.
 
 ---
 
