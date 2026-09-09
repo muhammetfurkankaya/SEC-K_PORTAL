@@ -55,7 +55,11 @@ param(
 
     # Portal yalnizca 127.0.0.1 dinlesin ve NodePort guvenlik duvarindan
     # kapatilsin (yalnizca vekil modunda).
-    [switch]$YalnizIIS
+    [switch]$YalnizIIS,
+
+    # Kullanilacak node.exe. Bos birakilirsa once paketteki node\node.exe,
+    # yoksa sistemde kurulu Node kullanilir.
+    [string]$NodeExe
 )
 
 $ErrorActionPreference = "Stop"
@@ -156,27 +160,75 @@ function Get-SitePool ([string]$Site) {
 
 # ————————————————————————————— Node.js —————————————————————————————
 
-Write-Step "Node.js kontrolu"
+Write-Step "Node.js"
 
+<#
+    Kullanilacak node.exe'yi sirayla ariyoruz:
+
+      1. -NodeExe ile verilen yol
+      2. PAKETTEKI node\node.exe  (varsayilan)
+      3. sistemde kurulu node
+
+    Paketle node.exe gelmesinin nedeni: sunucuya Node.js kurmak zorunda
+    kalmamak. MSI kurulumu eski bir surumu kaldirmaya calisip orijinal msi
+    paketini isteyebiliyor, ayrica ayni sunucudaki diger uygulamalar eski
+    surume bagli olabiliyor. Paketteki node.exe ile sistemdekine hic
+    dokunmuyoruz.
+#>
+function Test-NodeExe ([string]$Yol) {
+    if (-not $Yol -or -not (Test-Path -LiteralPath $Yol)) { return $null }
+    $s = $null
+    try { $s = (& $Yol -v 2>$null) } catch { return $null }
+    if (-not $s) { return $null }
+    $ana = [int](($s -replace '^v','') -split '\.')[0]
+    if ($ana -ne 20 -and $ana -ne 22) { return $null }
+    return $s
+}
+
+$nodeExe = $null
 $nodeSurum = $null
-try { $nodeSurum = (& node -v 2>$null) } catch { }
 
-if (-not $nodeSurum) {
-    Write-Fail "Node.js bulunamadi."
-    Write-Info "IIS portalin kodunu kendi basina calistiramaz; portal bir Node.js"
-    Write-Info "uygulamasidir. https://nodejs.org/en/download adresinden"
-    Write-Info "Node.js 20 LTS (.msi) kurup bu pencereyi kapatip yeniden acin."
-    exit 1
+if ($NodeExe) {
+    $nodeSurum = Test-NodeExe $NodeExe
+    if (-not $nodeSurum) {
+        Write-Fail "-NodeExe ile verilen dosya kullanilamadi: $NodeExe"
+        Write-Info "Dosya var mi ve surumu 20 ya da 22 mi? Kontrol: & `"$NodeExe`" -v"
+        exit 1
+    }
+    $nodeExe = $NodeExe
+    Write-Ok "Node.js $nodeSurum  (elle verildi: $nodeExe)"
+} else {
+    $paketNode = Join-Path $paket "node\node.exe"
+    $nodeSurum = Test-NodeExe $paketNode
+
+    if ($nodeSurum) {
+        $nodeExe = $paketNode
+        Write-Ok "Node.js $nodeSurum  (paketle geldi: node\node.exe)"
+        Write-Info "Sistemdeki Node surumune dokunulmuyor."
+    } else {
+        $sistem = $null
+        try { $sistem = (Get-Command node -ErrorAction Stop).Source } catch { }
+        $nodeSurum = Test-NodeExe $sistem
+
+        if ($nodeSurum) {
+            $nodeExe = $sistem
+            Write-Ok "Node.js $nodeSurum  (sistemde kurulu: $nodeExe)"
+        } else {
+            Write-Fail "Kullanilabilir Node.js bulunamadi."
+            Write-Info ""
+            Write-Info "Pakette node\node.exe olmali. Arsivi eksiksiz actiginizdan"
+            Write-Info "emin olun; dosya 70 MB civarindadir."
+            if ($sistem) {
+                $sv = $null
+                try { $sv = (& $sistem -v 2>$null) } catch { }
+                Write-Info "Sistemdeki surum: $sv (bu paket 20 veya 22 ister)"
+            }
+            Write-Info ""
+            Write-Info "Alternatif: -NodeExe `"C:\yol\node.exe`" ile elle gosterin."
+            exit 1
+        }
+    }
 }
-
-$nodeAna = [int](($nodeSurum -replace '^v','') -split '\.')[0]
-if ($nodeAna -ne 20 -and $nodeAna -ne 22) {
-    Write-Fail "Bu paket Node.js 20 veya 22 ile calisir (mevcut: $nodeSurum)."
-    exit 1
-}
-
-$nodeExe = (Get-Command node).Source
-Write-Ok "Node.js $nodeSurum  ($nodeExe)"
 
 # ————————————————————————————— Eklentiler ve mod secimi —————————————————————————————
 
@@ -376,7 +428,7 @@ if (Test-Path -LiteralPath (Join-Path $dataDir "portal.db")) {
 } else {
     Push-Location -LiteralPath $paket
     try {
-        & node "komutlar\seed.cjs"
+        & $nodeExe "komutlar\seed.cjs"
         if ($LASTEXITCODE -ne 0) {
             Write-Fail "Veritabani kurulumu basarisiz (cikis kodu $LASTEXITCODE)."
             exit 1
@@ -419,13 +471,9 @@ if ($Mod -eq "iis") {
 
     $icerik = Get-Content -LiteralPath $sablon -Raw
 
-    # node.exe beklenen yerde degilse processPath'i gercek yola cek.
-    $beklenenNode = $null
-    if ($env:ProgramFiles) { $beklenenNode = Join-Path $env:ProgramFiles "nodejs\node.exe" }
-    if ($beklenenNode -and $nodeExe -ne $beklenenNode) {
-        $icerik = $icerik.Replace('processPath="%ProgramFiles%\nodejs\node.exe"', "processPath=`"$nodeExe`"")
-        Write-Ok "processPath gercek Node.js yoluna ayarlandi: $nodeExe"
-    }
+    # processPath'i gercek node.exe yoluna cek (sablonda ornek yol duruyor).
+    $icerik = $icerik.Replace('processPath="C:\seckportal\node\node.exe"', "processPath=`"$nodeExe`"")
+    Write-Ok "processPath ayarlandi: $nodeExe"
 
     [IO.File]::WriteAllText($kokConfig, $icerik, (New-Object Text.UTF8Encoding($false)))
     Write-Ok "web.config calisan surumle degistirildi: $kokConfig"

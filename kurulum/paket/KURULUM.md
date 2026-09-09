@@ -3,26 +3,19 @@
 Bu klasör **derlenmiş yayın paketidir.** `npm install` gerekmez, internet
 gerekmez, Python veya Visual Studio derleyicisi gerekmez.
 
-**Tek gereksinim: Node.js 20 veya 22.**
+**Node.js kurmanız da gerekmez:** portalın çalıştırıcısı `node\node.exe`
+olarak paketin içinde geliyor (Node.js 20, nodejs.org'dan indirilip SHA-256
+ile doğrulanmış — ayrıntı `node\OKU.txt`). Sunucudaki Node sürümüne
+dokunulmaz, böylece aynı sunucudaki diğer uygulamalar etkilenmez.
+
+Sistemde kurulu Node'u kullanmak isterseniz script'lere
+`-NodeExe "C:\Program Files\nodejs\node.exe"` verebilirsiniz.
 
 ---
 
 ## Kurulum
 
-### 1. Node.js kurulu mu?
-
-```
-node -v
-```
-
-`v20.x` veya `v22.x` görüyorsanız hazırsınız. Aksi halde
-<https://nodejs.org/en/download> adresinden **Node.js 20 LTS** Windows
-Installer (.msi) kurun, sonra komut penceresini **kapatıp yeniden açın**.
-
-> Node 16 ile çalışmaz. Sunucunuzda Node 16 varsa MSI kurulumu onu
-> günceller; ayrıca kaldırmanız gerekmez.
-
-### 2. Klasörü yerine koyun
+### 1. Klasörü yerine koyun
 
 Paketi kalıcı bir yere taşıyın — örneğin `C:\seckportal`. Şunlardan kaçının:
 
@@ -30,7 +23,7 @@ Paketi kalıcı bir yere taşıyın — örneğin `C:\seckportal`. Şunlardan ka
   SYSTEM hesabıyla çalışır ve buralara yazamayabilir)
 - Yolunda parantez bulunan klasörler (`seckportal (1)` gibi)
 
-### 3. Kurulum script'ini çalıştırın
+### 2. Kurulum script'ini çalıştırın
 
 Yönetici olarak açılmış PowerShell'de:
 
@@ -69,7 +62,7 @@ Seçenekler:
 .\kur.ps1 -GorevAtla        # otomatik başlatma görevi kurulmasın
 ```
 
-### 4. Açın
+### 3. Açın
 
 ```
 http://localhost:3000
@@ -84,7 +77,7 @@ Ağdaki diğer bilgisayarlardan: `http://<sunucu-adı>:3000`
 Otomatik başlatma görevi kurmadıysanız veya elle çalıştırmak isterseniz:
 
 ```
-node baslat.cjs
+nodejs.cmd baslat.cjs
 ```
 
 Durdurmak için `Ctrl + C`.
@@ -98,10 +91,10 @@ Durdurmak için `Ctrl + C`.
 | Durdur | `Stop-ScheduledTask -TaskName 'SEC-K Portali'` |
 | Başlat | `Start-ScheduledTask -TaskName 'SEC-K Portali'` |
 | Durum | `Get-ScheduledTask -TaskName 'SEC-K Portali'` |
-| Şifre sıfırla | `node komutlar\sifre.cjs` |
-| Hesapları listele | `node komutlar\sifre.cjs --liste` |
-| Örnek veri ekle | `node komutlar\demo.cjs` |
-| Örnek veriyi sil | `node komutlar\demo.cjs --temizle` |
+| Şifre sıfırla | `nodejs.cmd komutlar\sifre.cjs` |
+| Hesapları listele | `nodejs.cmd komutlar\sifre.cjs --liste` |
+| Örnek veri ekle | `nodejs.cmd komutlar\demo.cjs` |
+| Örnek veriyi sil | `nodejs.cmd komutlar\demo.cjs --temizle` |
 
 Ayrıntı: `komutlar\OKU.txt`
 
@@ -164,15 +157,13 @@ Bu paket **doğrudan bir IIS uygulaması** olarak hazırlandı: kökünde `web.c
 dosyası var, yolları görecelidir, düzenleme gerektirmez. IIS'te bu klasörü
 gösteren bir site oluşturmak yeterlidir.
 
-**İki gereksinim, ikisi de tek MSI:**
-
-1. Node.js 20 LTS — <https://nodejs.org/en/download>
-2. HttpPlatformHandler 1.2 — <https://www.iis.net/downloads/microsoft/httpplatformhandler>
+**Kurulması gereken tek şey:** HttpPlatformHandler 1.2 —
+<https://www.iis.net/downloads/microsoft/httpplatformhandler>
 
 > IIS, PHP veya .NET uygulamalarını doğrudan çalıştırır ama **Node.js
-> uygulamalarını çalıştıramaz.** Portal bir Node.js uygulamasıdır; bu yüzden
-> hem Node.js hem de IIS ile Node arasındaki köprü modülü gerekir.
-> Sunucuda internet yoksa iki MSI'ı başka bir bilgisayara indirip kopyalayın.
+> uygulamalarını çalıştıramaz.** Portal bir Node.js uygulamasıdır; IIS ile
+> Node arasında bir köprü modülü gerekir. Node.js'in kendisi paketle geliyor.
+> Sunucuda internet yoksa MSI'ı başka bir bilgisayara indirip kopyalayın.
 
 Sonra:
 
@@ -235,8 +226,10 @@ Script'i şu biçimde çağırın:
 `powershell -ExecutionPolicy Bypass -File .\kur.ps1`
 
 **"Bu paket Node.js 20 veya 22 ile çalışır"**
-`node -v` ile sürümü kontrol edin. Node 16/18 veya 24+ ile paketteki SQLite
-ikilisi uyumsuzdur. Node 20 LTS kurun.
+Bu mesajı görüyorsanız pakette `node\node.exe` bulunamamış ve sistemdeki
+sürüm uyumsuz demektir. Arşivi eksiksiz açtığınızdan emin olun (`node.exe`
+yaklaşık 70 MB'dır). Farklı bir Node kullanmak için:
+`.\kur.ps1 -NodeExe "C:\yol\node.exe"`
 
 **Port 3000 kullanılıyor**
 `.\kur.ps1 -Port 8080` ile farklı port seçin. Kurulum yapıldıysa `.env`
@@ -249,7 +242,7 @@ Elle eklemek için:
 `New-NetFirewallRule -DisplayName "SEC-K" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000 -Profile Domain,Private`
 
 **Şifreyi kaybettim**
-`node komutlar\sifre.cjs` — bültenler ve anketler silinmez.
+`nodejs.cmd komutlar\sifre.cjs` — bültenler ve anketler silinmez.
 
 **Portal açılıyor ama logolar görünmüyor**
 `public\brand\` klasörünün paketle birlikte kopyalandığından emin olun.

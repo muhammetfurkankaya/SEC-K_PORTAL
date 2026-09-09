@@ -13,8 +13,20 @@ Portal bir **Node.js** uygulamasıdır. IIS, PHP ve .NET uygulamalarını doğru
 | IIS Yöneticisi'nde *Browse* | Portalı açar | Kullanılmaz; adrese doğrudan gidilir |
 | HTTPS | IIS'in sertifika yönetimi | Ters vekil veya ayrı yapılandırma gerekir |
 
-**Her iki seçenekte de Node.js 20 LTS kurulu olmalıdır** — portalın kodunu
-çalıştıran program budur, alternatifi yok.
+**Node.js kurmanız gerekmiyor.** Portalın çalıştırıcısı `node\node.exe` olarak
+paketin içinde geliyor (Node.js 20, nodejs.org'dan indirilip SHA-256 ile
+doğrulanmış; ayrıntı `node\OKU.txt`). Sunucudaki Node sürümüne dokunulmaz —
+aynı sunucudaki diğer uygulamalar etkilenmez. Sistemdeki Node'u kullanmak
+isterseniz script'lere `-NodeExe "C:\Program Files\nodejs\node.exe"`
+verebilirsiniz.
+
+> Node.js MSI kurulumu **"The feature you are trying to use is on a network
+> resource that is unavailable"** hatası veriyorsa: Windows Installer eski
+> sürümü kaldırmak için orijinal `node-v16.13.1-x64.msi` dosyasını arıyor,
+> önbelleği silinmiş. Artık bu kuruluma hiç gerek yok — paketteki node.exe
+> yeterli. Yine de sistem geneline kurmak isterseniz eksik dosyayı
+> <https://nodejs.org/dist/v16.13.1/node-v16.13.1-x64.msi> adresinden indirip
+> "Use source" kutusuna dosyanın bulunduğu **klasörü** yazın.
 
 ### B seçeneği (modül kuramıyorsanız): tek komut
 
@@ -55,15 +67,13 @@ kurulumdaki görevi ön kapı olmaktır: 80/443'ü dinler, sertifikayı sunar,
 isteği portala iletir. Bunun için IIS ile Node arasında bir köprü modülü
 gerekir.
 
-**İki gereksinim var, ikisi de tek MSI dosyası:**
+**Kurulması gereken tek şey:** HttpPlatformHandler 1.2 —
+<https://www.iis.net/downloads/microsoft/httpplatformhandler>
 
-| | Nereden |
-|---|---|
-| Node.js 20 LTS | <https://nodejs.org/en/download> |
-| HttpPlatformHandler 1.2 | <https://www.iis.net/downloads/microsoft/httpplatformhandler> |
+Node.js paketle geliyor (`node\node.exe`), ayrıca kurmanız gerekmez.
 
-> Sunucuda internet yoksa iki MSI'ı internet erişimi olan bir bilgisayara
-> indirip kopyalayın. Kurulumların kendisi internet gerektirmez.
+> Sunucuda internet yoksa MSI'ı internet erişimi olan bir bilgisayara indirip
+> kopyalayın. Kurulumun kendisi internet gerektirmez.
 
 Kurulu olup olmadığını görmek için:
 
@@ -86,10 +96,8 @@ dosyası var, yolları görecelidir, düzenleme gerektirmez.
 
 ### 1. Hazırlık
 
-- Paketi `C:\seckportal` gibi kalıcı bir yere açın (kullanıcı klasörleri ve
-  OneDrive'dan kaçının)
-- Node.js 20 LTS kurun
-- HttpPlatformHandler kurun
+- Paketi kalıcı bir yere açın (kullanıcı klasörleri ve OneDrive'dan kaçının)
+- HttpPlatformHandler kurun — **tek gereksinim bu**
 - Komut penceresini kapatıp yeniden açın
 
 ### 2. Tek komut
@@ -170,8 +178,11 @@ icacls "C:\seckportal\data" /grant "IIS AppPool\SEC-K Portali:(OI)(CI)(M)" /T
 
 ```powershell
 cd C:\seckportal
-node komutlar\seed.cjs
+nodejs.cmd komutlar\seed.cjs
 ```
+
+`nodejs.cmd`, paketteki `node\node.exe` dosyasını kullanır; sistemde Node
+kurulu olmasa da çalışır.
 
 **HTTPS bağlaması:** Site → *Bağlamalar* → **Ekle** → tür `https`, port 443,
 ana bilgisayar adı, *Sunucu Adı Belirtme Gerektir* işaretli, sertifikayı
@@ -257,7 +268,7 @@ IIS'in kendi günlükleri: `%SystemDrive%\inetpub\logs\LogFiles`
 | Durdur | `appcmd stop site "SEC-K Portali"` | `Stop-ScheduledTask -TaskName 'SEC-K Portali'` |
 | Başlat | `appcmd start site "SEC-K Portali"` | `Start-ScheduledTask -TaskName 'SEC-K Portali'` |
 | Yeniden başlat | `appcmd recycle apppool "SEC-K Portali"` | görevi durdur + başlat |
-| Şifre sıfırla | `node komutlar\sifre.cjs` | (aynı) |
+| Şifre sıfırla | `nodejs.cmd komutlar\sifre.cjs` | (aynı) |
 | Tanı | `.\iis\iis-kontrol.ps1` | (aynı) |
 
 `.env` dosyasını değiştirdikten sonra süreç **yeniden başlamalıdır**, aksi

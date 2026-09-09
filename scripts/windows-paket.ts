@@ -28,6 +28,7 @@ import { build as esbuild } from "esbuild";
 import fs from "node:fs";
 import path from "node:path";
 import https from "node:https";
+import crypto from "node:crypto";
 import { createGunzip } from "node:zlib";
 import { spawn } from "node:child_process";
 
@@ -45,6 +46,9 @@ const ABIS = [
   { node: "20", abi: "115" },
   { node: "22", abi: "127" },
 ];
+
+/** Pakete konulacak Windows Node çalıştırıcısının kaynağı. */
+const NODE_DIST = "https://nodejs.org/dist/latest-v20.x";
 
 // Yayın paketinde işi olmayan klasörler.
 const DROP = [
@@ -134,6 +138,81 @@ async function extractFromTarGz(archive: Buffer, fileSuffix: string): Promise<Bu
   }
 
   throw new Error(`Arşivde ${fileSuffix} bulunamadı`);
+}
+
+/**
+ * Windows için node.exe indirip pakete koyar.
+ *
+ * Sunucuya Node.js kurmayı zorunlu kılmamak için:
+ *
+ *  1. MSI kurulumu, sunucuda eski bir Node sürümü varsa onu kaldırmaya
+ *     çalışıyor ve Windows Installer bunun için ORİJİNAL msi paketini
+ *     istiyor. Önbelleği silinmişse kurulum "The feature you are trying to
+ *     use is on a network resource that is unavailable" ile duruyor.
+ *  2. Sunucuda başka uygulamalar eski Node sürümüne bağlı olabiliyor;
+ *     sistem genelinde yükseltmek onları bozabilir.
+ *
+ * Paketle gelen node.exe ikisini de aşıyor: sistemdeki Node'a hiç
+ * dokunmuyoruz. İndirilen dosya nodejs.org'un SHASUMS256.txt listesindeki
+ * özetle doğrulanıyor; eşleşmezse paket üretilmiyor.
+ */
+async function bundleNode(): Promise<void> {
+  step("Windows icin node.exe indiriliyor");
+
+  const sums = (await download(`${NODE_DIST}/SHASUMS256.txt`)).toString("utf8");
+
+  const line = sums
+    .split("\n")
+    .find((row) => row.trim().endsWith("win-x64/node.exe"));
+  if (!line) {
+    throw new Error("SHASUMS256.txt icinde win-x64/node.exe satiri yok");
+  }
+  const expected = line.trim().split(/\s+/)[0];
+  const version = (sums.match(/node-v(\d+\.\d+\.\d+)-win-x64\.zip/) ?? [])[1] ?? "20.x";
+
+  log(`  Node ${version} indiriliyor…`);
+  const exe = await download(`${NODE_DIST}/win-x64/node.exe`);
+
+  const actual = crypto.createHash("sha256").update(exe).digest("hex");
+  if (actual !== expected) {
+    throw new Error(
+      `node.exe SHA256 uyusmuyor.\n  beklenen: ${expected}\n  gelen   : ${actual}`,
+    );
+  }
+
+  const dir = path.join(OUT, "node");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "node.exe"), exe);
+  log(`  + node/node.exe (${Math.round(exe.length / 1024 / 1024)} MB, SHA256 dogrulandi)`);
+
+  // Yeniden dağıtım için lisans metnini de koyuyoruz (Node.js MIT).
+  let license = "";
+  try {
+    license = (await download(`${NODE_DIST}/LICENSE`)).toString("utf8");
+  } catch {
+    log("  ! LICENSE indirilemedi, yalnizca kaynak bilgisi yazilacak");
+  }
+
+  const notice = [
+    "Bu klasordeki node.exe, portali calistiran Node.js surumudur.",
+    "",
+    `Surum      : v${version} (win-x64)`,
+    `Kaynak     : ${NODE_DIST}/win-x64/node.exe`,
+    `SHA-256    : ${expected}`,
+    "",
+    "Paketle birlikte gelmesinin nedeni: sunucuya Node.js kurmak zorunda",
+    "kalmamak. Sistemdeki Node surumune dokunulmaz, boylece ayni sunucudaki",
+    "diger uygulamalar etkilenmez.",
+    "",
+    "Node.js MIT lisansliyla dagitilir; lisans metni asagidadir.",
+    "https://github.com/nodejs/node/blob/main/LICENSE",
+    "",
+    license ? "----------------------------------------------------------" : "",
+    license,
+  ].join("\n");
+
+  fs.writeFileSync(path.join(dir, "OKU.txt"), notice, "utf8");
+  log("  + node/OKU.txt (surum, kaynak, SHA-256 ve lisans)");
 }
 
 /** Yönetim komutlarını tsx gerektirmeyecek şekilde düz JS'e derler. */
@@ -240,6 +319,8 @@ async function main(): Promise<void> {
     log("  - Linux ikilisi çıkarıldı (baslat.cjs doğrusunu yerleştirir)");
   }
 
+  await bundleNode();
+
   step("Yönetim komutları düz JS'e derleniyor");
   await bundleAdminScripts();
 
@@ -250,7 +331,8 @@ async function main(): Promise<void> {
   step("Hazır");
   log(`  Klasör : yayin-paketi/`);
   log(`  Boyut  : ${size}`);
-  log(`  Sunucuda gereken: yalnızca Node.js 20 veya 22`);
+  log(`  Node.js paketle geliyor: sunucuya kurulum gerekmez`);
+  log(`  IIS ile yayın için tek eklenti: HttpPlatformHandler 1.2`);
   log("");
 }
 
@@ -286,6 +368,8 @@ function writeBundleFiles(): void {
     // eklenti kurulmadan once "500.19" yerine ne yapilacagi yaziyor.
     { from: "web.config", to: "web.config" },
     { from: "kurulum.html", to: "kurulum.html" },
+    // Yonetim komutlarini paketteki node.exe ile calistiran sarmalayici.
+    { from: "nodejs.cmd", to: "nodejs.cmd" },
     // IIS ile yayin: script'ler, sablonlar ve rehber.
     { from: path.join("iis", "iis-kur.ps1"), to: path.join("iis", "iis-kur.ps1") },
     { from: path.join("iis", "iis-kontrol.ps1"), to: path.join("iis", "iis-kontrol.ps1") },

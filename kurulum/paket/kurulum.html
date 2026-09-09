@@ -108,20 +108,19 @@
      köprü modülü gerekir. Bu modül kurulana kadar IIS bu klasörden yalnızca
      bu bilgi sayfasını sunar; veritabanı, ayar dosyası ve PDF'ler dışarıya
      kapalıdır.</p>
+  <p><b>Node.js kurmanız gerekmez:</b> portalın çalıştırıcısı
+     <code class="inline">node\node.exe</code> olarak paketin içinde geliyor.
+     Sunucudaki Node sürümüne dokunulmaz — aynı sunucudaki diğer uygulamalar
+     etkilenmez.</p>
 
   <h2>Yapılacaklar</h2>
   <ol>
     <li>
-      <b>Node.js 20 LTS kurun</b>
-      <span class="neden">Portalın kodunu çalıştıran program budur. Sunucudaki
-      sürüm çok eskiyse portal başlamaz. Kurulum tek bir MSI dosyasıdır ve
-      mevcut sürümü kendisi günceller; ayrıca kaldırmanız gerekmez.
-      <a href="https://nodejs.org/en/download">nodejs.org/en/download</a></span>
-    </li>
-    <li>
       <b>HttpPlatformHandler 1.2 kurun</b>
-      <span class="neden">IIS ile Node.js arasındaki köprü. Bu modül kurulduğunda
-      IIS portalı kendisi başlatır, çökerse yeniden başlatır.
+      <span class="neden">IIS ile Node.js arasındaki köprü — <b>kurulması
+      gereken tek şey budur.</b> Bu modül kurulduğunda IIS portalı kendisi
+      başlatır, çökerse yeniden başlatır. Tek MSI dosyasıdır; sunucuda internet
+      yoksa başka bir bilgisayara indirip kopyalayın.
       <a href="https://www.iis.net/downloads/microsoft/httpplatformhandler">iis.net → HttpPlatformHandler</a></span>
     </li>
     <li>

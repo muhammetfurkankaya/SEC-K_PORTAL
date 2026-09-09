@@ -14,9 +14,13 @@
   DIKKAT: Bu eklenti kurulu DEGILSE IIS <httpPlatform> bolumunu tanimaz ve
   site "HTTP 500.19 - 0x8007000d" hatasi verir. Once eklentiyi kurun.
 
-  Yollar goreceli: paket hangi klasorde olursa olsun calisir. Node.js baska
-  bir yere kuruluysa yalnizca processPath satirini duzeltin (iis-kur.ps1
-  bunu kendisi de yapar).
+  processPath: pakette gelen node.exe'yi gosterir, boylece sunucuya Node.js
+  kurmak gerekmez. Paket baska bir klasordeyse iis-kur.ps1 bu yolu kendisi
+  duzeltir; elle kuruyorsaniz asagidaki C:\seckportal kismini paketin
+  gercek yoluyla degistirin.
+
+  Sistemde kurulu Node.js'i kullanmak isterseniz asagidaki processPath
+  degerini su yolla degistirin:  %ProgramFiles%\nodejs\node.exe
 -->
 <configuration>
   <system.webServer>
@@ -39,7 +43,7 @@
       gercek hata data\iis-log\ altindaki dosyaya yazilir. Sorun ararken
       ilk bakilacak yer orasi.
     -->
-    <httpPlatform processPath="%ProgramFiles%\nodejs\node.exe"
+    <httpPlatform processPath="C:\seckportal\node\node.exe"
                   arguments=".\baslat.cjs"
                   stdoutLogEnabled="true"
                   stdoutLogFile=".\data\iis-log\portal"

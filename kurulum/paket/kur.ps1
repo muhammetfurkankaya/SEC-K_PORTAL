@@ -16,7 +16,11 @@ param(
     [int]$Port = 3000,
     [string]$AdminSifre,
     [string]$BaseUrl,
-    [switch]$GorevAtla
+    [switch]$GorevAtla,
+
+    # Kullanilacak node.exe. Bos birakilirsa once paketteki node\node.exe,
+    # yoksa sistemde kurulu Node kullanilir.
+    [string]$NodeExe
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,32 +41,71 @@ if (-not (Test-Path -LiteralPath (Join-Path $root "baslat.cjs"))) {
     exit 1
 }
 
-# ————————————————————————————— Node kontrolü —————————————————————————————
-Write-Step "Node.js kontrolu"
+# ————————————————————————————— Node.js —————————————————————————————
+Write-Step "Node.js"
 
+<#
+    Kullanilacak node.exe: once -NodeExe, sonra PAKETTEKI node\node.exe,
+    sonra sistemde kurulu node.
+
+    Paketle node.exe gelmesinin nedeni: sunucuya Node.js kurmak zorunda
+    kalmamak. MSI kurulumu eski bir surumu kaldirmaya calisip orijinal msi
+    paketini isteyebiliyor; ayrica ayni sunucudaki diger uygulamalar eski
+    Node surumune bagli olabiliyor.
+#>
+function Test-NodeExe ([string]$Yol) {
+    if (-not $Yol -or -not (Test-Path -LiteralPath $Yol)) { return $null }
+    $s = $null
+    try { $s = (& $Yol -v 2>$null) } catch { return $null }
+    if (-not $s) { return $null }
+    $ana = [int](($s -replace '^v','') -split '\.')[0]
+    if ($ana -ne 20 -and $ana -ne 22) { return $null }
+    return $s
+}
+
+$nodeExe = $null
 $nodeVersion = $null
-try { $nodeVersion = (& node -v 2>$null) } catch { $nodeVersion = $null }
 
-if (-not $nodeVersion) {
-    Write-Fail "Node.js bulunamadi."
-    Write-Info ""
-    Write-Info "https://nodejs.org/en/download adresinden Node.js 20 LTS"
-    Write-Info "Windows Installer (.msi) kurun, sonra bu pencereyi KAPATIP"
-    Write-Info "yeniden acin ve script'i tekrar calistirin."
-    exit 1
+if ($NodeExe) {
+    $nodeVersion = Test-NodeExe $NodeExe
+    if (-not $nodeVersion) {
+        Write-Fail "-NodeExe ile verilen dosya kullanilamadi: $NodeExe"
+        exit 1
+    }
+    $nodeExe = $NodeExe
+    Write-Ok "Node.js $nodeVersion  (elle verildi)"
+} else {
+    $paketNode = Join-Path $root "node\node.exe"
+    $nodeVersion = Test-NodeExe $paketNode
+
+    if ($nodeVersion) {
+        $nodeExe = $paketNode
+        Write-Ok "Node.js $nodeVersion  (paketle geldi: node\node.exe)"
+        Write-Info "Sistemdeki Node surumune dokunulmuyor."
+    } else {
+        $sistem = $null
+        try { $sistem = (Get-Command node -ErrorAction Stop).Source } catch { }
+        $nodeVersion = Test-NodeExe $sistem
+
+        if ($nodeVersion) {
+            $nodeExe = $sistem
+            Write-Ok "Node.js $nodeVersion  (sistemde kurulu)"
+        } else {
+            Write-Fail "Kullanilabilir Node.js bulunamadi."
+            Write-Info ""
+            Write-Info "Pakette node\node.exe olmali (yaklasik 70 MB). Arsivi"
+            Write-Info "eksiksiz actiginizdan emin olun."
+            if ($sistem) {
+                $sv = $null
+                try { $sv = (& $sistem -v 2>$null) } catch { }
+                Write-Info "Sistemdeki surum: $sv (bu paket 20 veya 22 ister)"
+            }
+            Write-Info ""
+            Write-Info "Alternatif: .\kur.ps1 -NodeExe `"C:\yol\node.exe`""
+            exit 1
+        }
+    }
 }
-
-$major = [int](($nodeVersion -replace '^v', '') -split '\.')[0]
-Write-Info "Node.js: $nodeVersion"
-
-if ($major -ne 20 -and $major -ne 22) {
-    Write-Fail "Bu paket Node.js 20 veya 22 ile calisir (mevcut: $nodeVersion)."
-    Write-Info ""
-    Write-Info "Paketteki SQLite dosyasi bu iki surum icin derlenmis hazir ikili"
-    Write-Info "iceriyor. Node.js 20 LTS kurun: https://nodejs.org/en/download"
-    exit 1
-}
-Write-Ok "Node.js surumu uygun."
 
 # Yol uyarıları — SYSTEM hesabı kullanıcı klasörlerine yazamayabilir.
 if ($root -match '[()]') {
@@ -169,7 +212,7 @@ if (Test-Path -LiteralPath (Join-Path $root "data\portal.db")) {
 } else {
     if ($AdminSifre) { $env:SECK_ADMIN_PASSWORD = $AdminSifre }
 
-    & node "komutlar\seed.cjs"
+    & $nodeExe "komutlar\seed.cjs"
     if ($LASTEXITCODE -ne 0) {
         Write-Fail "Veritabani kurulumu basarisiz (cikis kodu $LASTEXITCODE)."
         exit 1
@@ -244,7 +287,6 @@ if (-not $GorevAtla) {
             Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
         }
 
-        $nodeExe = (Get-Command node).Source
         $action  = New-ScheduledTaskAction -Execute $nodeExe -Argument "baslat.cjs" -WorkingDirectory $root
         $trigger = New-ScheduledTaskTrigger -AtStartup
 

@@ -4,7 +4,11 @@ Yonetim komutlari
 Bu klasordeki dosyalar duz JavaScript'e derlenmistir; calistirmak icin
 yalnizca Node.js yeterlidir (TypeScript veya tsx gerekmez).
 
-Komutlari paketin KOK klasorunden calistirin.
+Komutlari paketin KOK klasorunden calistirin. Sunucuya Node.js kurmadiysaniz
+"node" yerine "nodejs.cmd" yazin: bu sarmalayici paketle gelen
+node\node.exe dosyasini kullanir.
+
+  ornek:  nodejs.cmd komutlar\sifre.cjs --liste
 
 
   node komutlar\seed.cjs

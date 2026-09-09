@@ -68,37 +68,96 @@ Bilgi "PowerShell: $($PSVersionTable.PSVersion)"
 
 Baslik "Node.js"
 
-$nodeExe = $null
-$nodeSurum = $null
-try {
-    $cmd = Get-Command node -ErrorAction Stop
-    $nodeExe = $cmd.Source
-    $nodeSurum = (& node -v 2>$null)
-} catch { }
+<#
+    Portal, PAKETTEKI node\node.exe ile calisir; sunucuya Node.js kurmak
+    gerekmez. Sistemde kurulu surum yalnizca bilgi olarak yaziliyor.
+#>
+function Get-NodeSurum ([string]$Yol) {
+    if (-not $Yol -or -not (Test-Path -LiteralPath $Yol)) { return $null }
+    try { return (& $Yol -v 2>$null) } catch { return $null }
+}
 
-if (-not $nodeSurum) {
-    Yok "Node.js bulunamadi (PATH icinde yok)."
-    Bilgi "IIS portalin kodunu kendi basina calistiramaz; portal bir Node.js"
-    Bilgi "uygulamasidir. https://nodejs.org/en/download -> Node.js 20 LTS (.msi)"
-    Sorun "Node.js kurulu degil. Node.js 20 LTS MSI kurun ve pencereyi yeniden acin."
-} else {
-    $ana = [int](($nodeSurum -replace '^v','') -split '\.')[0]
+$paketNode = Join-Path $paket "node\node.exe"
+$paketSurum = Get-NodeSurum $paketNode
+
+$sistemNode = $null
+try { $sistemNode = (Get-Command node -ErrorAction Stop).Source } catch { }
+$sistemSurum = Get-NodeSurum $sistemNode
+
+$kullanilacak = $null
+
+if ($paketSurum) {
+    $ana = [int](($paketSurum -replace '^v','') -split '\.')[0]
     if ($ana -eq 20 -or $ana -eq 22) {
-        Ok "Node.js $nodeSurum"
+        Ok "Paketteki Node.js $paketSurum  (node\node.exe) - portal bunu kullanir"
+        $kullanilacak = $paketNode
     } else {
-        Yok "Node.js $nodeSurum - bu paket 20 veya 22 ile calisir."
-        Sorun "Node.js surumu uyumsuz ($nodeSurum). Node.js 20 LTS kurun."
+        Yok "Paketteki node.exe surumu uyumsuz: $paketSurum"
     }
-    Bilgi "Yol: $nodeExe"
+} elseif (Test-Path -LiteralPath $paketNode) {
+    # Dosya duruyor ama surum sorulamadi: eksik indirilmis, virus tarayici
+    # engellemis veya bloke isaretli (Windows "unblock") olabilir.
+    $boyut = [math]::Round((Get-Item -LiteralPath $paketNode).Length / 1MB)
+    Yok "Pakette node\node.exe var ama CALISTIRILAMADI ($boyut MB)"
+    Bilgi "Beklenen boyut ~70 MB. Kucukse arsiv eksik acilmis demektir."
+    Bilgi "Virus tarayici engelliyor olabilir; ayrica dosyayi 'engeli kaldir'"
+    Bilgi "ile serbest birakmayi deneyin:"
+    Bilgi "  Unblock-File `"$paketNode`""
+    Sorun "Paketteki node.exe calistirilamiyor. Arsivi yeniden acin veya Unblock-File deneyin."
+} else {
+    Yok "Pakette node\node.exe YOK"
+    Bilgi "Bu dosya yaklasik 70 MB'dir; arsiv eksik acilmis olabilir."
+    Sorun "Pakette node\node.exe yok. Arsivi yeniden ve eksiksiz acin."
+}
 
-    # web.config icindeki %ProgramFiles% bu yola cozulmeli.
-    $beklenen = $null
-    if ($env:ProgramFiles) { $beklenen = Join-Path $env:ProgramFiles "nodejs\node.exe" }
-    if ($nodeExe -and $beklenen -and ($nodeExe -ne $beklenen)) {
-        Uyari "web.config '%ProgramFiles%\nodejs\node.exe' bekliyor."
-        Bilgi "Gercek yol farkli. web.config icindeki processPath satirini su hale getirin:"
-        Bilgi "  processPath=`"$nodeExe`""
-        Sorun "web.config processPath yolu Node.js'in gercek yeriyle uyusmuyor ($nodeExe)."
+if ($sistemSurum) {
+    Bilgi "Sistemde kurulu Node.js: $sistemSurum  ($sistemNode)"
+    $sAna = [int](($sistemSurum -replace '^v','') -split '\.')[0]
+    if (-not $kullanilacak) {
+        if ($sAna -eq 20 -or $sAna -eq 22) {
+            Ok "Sistemdeki surum uygun; portal onu kullanabilir."
+            $kullanilacak = $sistemNode
+        } else {
+            Yok "Sistemdeki surum de uyumsuz (20 veya 22 gerekir)."
+        }
+    } elseif ($sAna -ne 20 -and $sAna -ne 22) {
+        Bilgi "(Uyumsuz ama sorun degil: portal paketteki node.exe ile calisir,"
+        Bilgi " sistemdeki surume dokunulmaz.)"
+    }
+} else {
+    Bilgi "Sistemde kurulu Node.js yok - paketteki yeterli."
+}
+
+# Calisan web.config'in processPath'i gercekten var olan bir node.exe mi?
+#
+# Dosyayi metin olarak taramiyoruz: web.config yorumlarinda ornek processPath
+# satirlari da bulunuyor ve duz arama once onlari yakaliyor. XML olarak
+# okumak yorumlari atliyor.
+$kokConfig = Join-Path $paket "web.config"
+if (Test-Path -LiteralPath $kokConfig) {
+    $cfgYol = $null
+    try {
+        [xml]$cfg = Get-Content -LiteralPath $kokConfig -Raw
+        $hp = $cfg.configuration.'system.webServer'.httpPlatform
+        if ($hp) { $cfgYol = $hp.processPath }
+    } catch {
+        Yok "web.config okunamadi (bozuk XML?): $($_.Exception.Message)"
+        Sorun "web.config bozuk. iis\web.config.iis dosyasini kopyalayin veya iis-kur.ps1 calistirin."
+    }
+
+    if (-not $cfgYol) {
+        Bilgi "web.config henuz KURULUM ONCESI surum (portali baslatmiyor)."
+        Bilgi "Kurulum tamamlaninca iis-kur.ps1 bunu calisan surumle degistirir."
+    } else {
+        Bilgi "web.config processPath: $cfgYol"
+        $cozulen = [Environment]::ExpandEnvironmentVariables($cfgYol)
+        if (Test-Path -LiteralPath $cozulen) {
+            Ok "processPath gecerli bir dosyayi gosteriyor."
+        } else {
+            Yok "processPath dosyasi yok: $cozulen"
+            Bilgi "Duzeltmek icin: powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1"
+            Sorun "web.config processPath yolu gecersiz. iis-kur.ps1 bunu duzeltir."
+        }
     }
 }
 
