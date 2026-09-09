@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEÇ-K Portalı — kurulum tamamlanmadı</title>
+<style>
+  :root {
+    --dark: #1D252D;
+    --red: #CE2028;
+    --grey: #D6D1CA;
+    --green: #9ED660;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #F4F2EF;
+    color: var(--dark);
+    font: 400 15px/1.6 "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  header {
+    background: var(--dark);
+    color: #fff;
+    padding: 22px 28px;
+  }
+  header .mark {
+    display: inline-block;
+    border-left: 4px solid var(--red);
+    padding-left: 12px;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: .02em;
+  }
+  header .sub { display: block; font-size: 12px; font-weight: 400; color: var(--grey); letter-spacing: .06em; text-transform: uppercase; margin-top: 3px; }
+  main { max-width: 780px; margin: 0 auto; padding: 32px 24px 64px; }
+  .banner {
+    border: 1px solid var(--grey);
+    border-left: 4px solid var(--red);
+    background: #fff;
+    padding: 18px 20px;
+    margin-bottom: 28px;
+  }
+  .banner h1 { margin: 0 0 6px; font-size: 20px; font-weight: 600; }
+  .banner p { margin: 0; color: #4a5560; }
+  h2 { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--red); margin: 32px 0 12px; }
+  ol { margin: 0; padding: 0; list-style: none; counter-reset: adim; }
+  li {
+    counter-increment: adim;
+    background: #fff;
+    border: 1px solid var(--grey);
+    padding: 16px 20px 16px 58px;
+    position: relative;
+    margin-bottom: 10px;
+  }
+  li::before {
+    content: counter(adim);
+    position: absolute;
+    left: 18px; top: 15px;
+    width: 26px; height: 26px;
+    background: var(--dark);
+    color: #fff;
+    font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  li b { display: block; font-weight: 600; margin-bottom: 4px; }
+  li .neden { color: #5c6672; font-size: 14px; }
+  code, pre {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13px;
+  }
+  pre {
+    background: var(--dark);
+    color: #eef1f3;
+    padding: 12px 14px;
+    overflow-x: auto;
+    margin: 10px 0 0;
+    border-left: 3px solid var(--red);
+  }
+  code.inline { background: #ebe8e3; padding: 1px 5px; }
+  a { color: var(--red); }
+  .not { margin-top: 28px; padding: 16px 20px; background: #fff; border: 1px solid var(--grey); }
+  .not b { color: var(--dark); }
+  footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--grey); font-size: 13px; color: #6b7480; }
+  .plaka {
+    display: inline-block; background: var(--dark); color: #fff;
+    font-family: Consolas, monospace; font-variant-numeric: tabular-nums;
+    letter-spacing: .1em; padding: 2px 8px; font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="mark">SEÇ-K Portalı<span class="sub">Sağlık · Emniyet · Çevre · Kalite</span></span>
+</header>
+
+<main>
+
+  <div class="banner">
+    <h1>Dosyalar yerinde, kurulum henüz tamamlanmadı</h1>
+    <p>Bu sayfayı görüyorsanız IIS sitesi doğru klasörü gösteriyor. Portalın
+       çalışması için aşağıdaki adımlar kaldı.</p>
+  </div>
+
+  <h2>Neden bu sayfa çıkıyor</h2>
+  <p>Portal bir <b>Node.js</b> uygulamasıdır. IIS, PHP ve .NET uygulamalarını
+     doğrudan çalıştırır ama Node.js uygulamalarını çalıştıramaz — arada bir
+     köprü modülü gerekir. Bu modül kurulana kadar IIS bu klasörden yalnızca
+     bu bilgi sayfasını sunar; veritabanı, ayar dosyası ve PDF'ler dışarıya
+     kapalıdır.</p>
+
+  <h2>Yapılacaklar</h2>
+  <ol>
+    <li>
+      <b>Node.js 20 LTS kurun</b>
+      <span class="neden">Portalın kodunu çalıştıran program budur. Sunucudaki
+      sürüm çok eskiyse portal başlamaz. Kurulum tek bir MSI dosyasıdır ve
+      mevcut sürümü kendisi günceller; ayrıca kaldırmanız gerekmez.
+      <a href="https://nodejs.org/en/download">nodejs.org/en/download</a></span>
+    </li>
+    <li>
+      <b>HttpPlatformHandler 1.2 kurun</b>
+      <span class="neden">IIS ile Node.js arasındaki köprü. Bu modül kurulduğunda
+      IIS portalı kendisi başlatır, çökerse yeniden başlatır.
+      <a href="https://www.iis.net/downloads/microsoft/httpplatformhandler">iis.net → HttpPlatformHandler</a></span>
+    </li>
+    <li>
+      <b>Kurulumu tamamlayın</b>
+      <span class="neden">Aşağıdaki komut veritabanını oluşturur, yönetici
+      hesabını açar, izinleri verir ve IIS yapılandırmasını devreye alır.
+      Yönetici olarak açılmış PowerShell'de, paket klasöründe çalıştırın:</span>
+<pre>powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1</pre>
+    </li>
+    <li>
+      <b>Sayfayı yenileyin</b>
+      <span class="neden">Portal açılır. Giriş bilgileri:
+      <span class="plaka">admin</span> / <span class="plaka">Tfs2026...</span>
+      — ilk girişten sonra Ayarlar → Şifre Değiştir'den değiştirin.</span>
+    </li>
+  </ol>
+
+  <div class="not">
+    <b>Modül kuramıyorsanız:</b> portal IIS olmadan da yayınlanabilir. Bu
+    durumda portal ayrılan portu kendisi dinler ve IIS sitesine gerek kalmaz.
+    Paket klasöründe <code class="inline">iis\IIS.md</code> dosyasındaki
+    <b>“B seçeneği”</b> bölümüne bakın — tek komuttur, ek modül gerekmez.
+  </div>
+
+  <div class="not">
+    <b>Bir şey ters giderse:</b> aşağıdaki komut hiçbir şeyi değiştirmez,
+    neyin eksik olduğunu sırayla söyler ve çıktıyı
+    <code class="inline">iis-tani.txt</code> dosyasına yazar.
+<pre>powershell -ExecutionPolicy Bypass -File .\iis\iis-kontrol.ps1</pre>
+    <span class="neden">Yönetici olarak açılmış bir pencerede çalıştırın;
+    aksi halde IIS ayarlarını okuyamaz.</span>
+  </div>
+
+  <footer>
+    Turkish Fuel Services · SEÇ-K Portalı · kurulum bilgi sayfası
+  </footer>
+
+</main>
+
+</body>
+</html>

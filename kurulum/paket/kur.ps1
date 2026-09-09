@@ -74,6 +74,56 @@ if ($root -match '\\Users\\' -or $root -match 'OneDrive') {
     Write-Info "Onerilen: paketi C:\seckportal altina tasiyip script'i tekrar calistirin."
 }
 
+# ————————————————————————————— Port kontrolü —————————————————————————————
+Write-Step "Port kontrolu"
+
+<#
+    Portu baska bir program tutuyorsa portal baslayamaz ve hata mesaji
+    ("EADDRINUSE") kullaniciya bir sey anlatmaz.
+
+    En sik durum: ayni port icin IIS'te bir site tanimli. Windows'ta portu
+    HTTP.sys tutar, dolayisiyla IIS sitesi durdurulmadan Node o portu
+    dinleyemez.
+#>
+$portDolu = $false
+try {
+    $dinleyen = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
+    if ($dinleyen) { $portDolu = $true }
+} catch {
+    # Get-NetTCPConnection eski sunucularda olmayabilir; netstat ile bak.
+    $portDolu = (& netstat -ano | Select-String ":${Port}\s" | Select-String "LISTENING") -ne $null
+}
+
+if ($portDolu) {
+    Write-Warn2 "Port $Port su anda baska bir program tarafindan dinleniyor."
+
+    $iisSite = $null
+    $appcmdYol = Join-Path $env:windir "system32\inetsrv\appcmd.exe"
+    if (Test-Path -LiteralPath $appcmdYol) {
+        $siteler = (& $appcmdYol list sites 2>&1) | ForEach-Object { "$_" }
+        $iisSite = $siteler | Where-Object { $_ -match ":${Port}:" } | Select-Object -First 1
+    }
+
+    if ($iisSite) {
+        Write-Info "Portu IIS tutuyor:"
+        Write-Info "  $($iisSite.Trim())"
+        Write-Info ""
+        Write-Info "Portal bu portu dinleyecekse IIS sitesini durdurmalisiniz."
+        if ($iisSite -match 'SITE\s+"([^"]+)"') {
+            Write-Info "  appcmd stop site `"$($matches[1])`""
+        }
+        Write-Info ""
+        Write-Info "IIS'i on kapi olarak kullanmak isterseniz bunun yerine:"
+        Write-Info "  powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1"
+    } else {
+        Write-Info "Farkli bir port secmek icin: .\kur.ps1 -Port 9093"
+    }
+    Write-Info ""
+    Write-Info "Kuruluma devam ediliyor; portal baslatilirken hata verebilir."
+} else {
+    Write-Ok "Port $Port musait."
+}
+
 # ————————————————————————————— .env —————————————————————————————
 Write-Step "Ortam ayarlari"
 

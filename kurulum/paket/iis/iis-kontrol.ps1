@@ -47,7 +47,10 @@ try {
 } catch { }
 
 if (-not $yonetici) {
-    Uyari "Bu pencere yonetici degil; bazi kontroller eksik kalabilir."
+    Uyari "Bu pencere YONETICI olarak acilmamis."
+    Bilgi "IIS ayarlari (moduller, siteler, havuzlar) bu durumda okunamaz ve"
+    Bilgi "asagidaki sonuclar yaniltici olabilir."
+    Sorun "Tanıyı yonetici olarak acilmis bir PowerShell penceresinde tekrar calistirin."
 }
 
 # ————————————————————————————— Isletim sistemi —————————————————————————————
@@ -129,26 +132,39 @@ if (-not $iisVar) {
 
 Baslik "IIS eklentileri"
 
-$moduller = @()
+$modMetin = ""
+$modOkundu = $false
 if ($iisVar) {
-    try {
-        $cikti = & $appcmd list modules 2>&1
-        $moduller = @($cikti | ForEach-Object { "$_" })
-    } catch { }
+    $cikti = & $appcmd list modules 2>&1
+    $modMetin = ($cikti | ForEach-Object { "$_" }) -join "`n"
+    # appcmd yetki yetersizliginde de 0 disi kod dondurup hata metni yaziyor.
+    # Bunu "modul kurulu degil" ile karistirmamak onemli: aksi halde kurulu
+    # bir eklenti "YOK" gorunur ve yanlis yola sapariz.
+    $modOkundu = ($LASTEXITCODE -eq 0) -and ($modMetin -notmatch "ERROR|insufficient permissions")
 }
-$modMetin = ($moduller -join "`n")
 
-$hpVar  = $modMetin -match "httpPlatformHandler"
-$rwVar  = $modMetin -match "RewriteModule"
-$arrVar = $modMetin -match "ApplicationRequestRouting|RequestRouter"
+if (-not $modOkundu) {
+    Uyari "IIS modul listesi OKUNAMADI - eklenti durumu bilinmiyor."
+    if ($modMetin) { Bilgi (($modMetin -split "`n" | Where-Object { $_.Trim() } | Select-Object -First 3) -join " ") }
+    Bilgi "Neredeyse her zaman nedeni: bu pencere yonetici olarak acilmamis."
+    Sorun "Tanıyı YONETICI olarak acilmis PowerShell'de tekrar calistirin: eklenti durumu okunamadi."
+}
 
-if ($hpVar) { Ok "HttpPlatformHandler kurulu  (dogrudan IIS uygulamasi mumkun)" }
-else        { Yok "HttpPlatformHandler YOK" }
+$hpVar  = $modOkundu -and ($modMetin -match "httpPlatformHandler")
+$rwVar  = $modOkundu -and ($modMetin -match "RewriteModule")
+$arrVar = $modOkundu -and ($modMetin -match "ApplicationRequestRouting|RequestRouter")
+$inVar  = $modOkundu -and ($modMetin -match "iisnode")
 
-if ($rwVar) { Ok "URL Rewrite kurulu" } else { Yok "URL Rewrite YOK" }
-if ($arrVar) { Ok "Application Request Routing (ARR) kurulu" } else { Yok "ARR YOK" }
+if ($modOkundu) {
+    if ($hpVar) { Ok "HttpPlatformHandler kurulu  (dogrudan IIS uygulamasi mumkun)" }
+    else        { Yok "HttpPlatformHandler YOK" }
 
-if (-not $hpVar -and -not ($rwVar -and $arrVar)) {
+    if ($rwVar) { Ok "URL Rewrite kurulu" } else { Yok "URL Rewrite YOK" }
+    if ($arrVar) { Ok "Application Request Routing (ARR) kurulu" } else { Yok "ARR YOK" }
+    if ($inVar) { Bilgi "(iisnode kurulu - bu paket iisnode kullanmiyor)" }
+}
+
+if ($modOkundu -and -not $hpVar -and -not ($rwVar -and $arrVar)) {
     Yaz ""
     Uyari "IIS bir Node.js uygulamasini ancak bu eklentilerden biriyle yayinlar."
     Bilgi "EN KISA YOL - tek kurulum dosyasi:"
@@ -261,6 +277,26 @@ if ($iisVar) {
     else {
         Bilgi "Tanimli siteler:"
         foreach ($s in $siteler) { Bilgi "  $s" }
+    }
+
+    # Siteyi ADIYLA degil, FIZIKSEL YOLUYLA ariyoruz: yonetici siteyi kendi
+    # adiyla olusturmus olabilir (ornegin TFS_SECKA).
+    $vdirMetin = ((& $appcmd list vdirs 2>&1) | ForEach-Object { "$_" }) -join "`n"
+    foreach ($satir in ($vdirMetin -split "`n")) {
+        if ($satir -match 'VDIR\s+"([^"]+)"\s+\(physicalPath:(.*)\)\s*$') {
+            $fizik = $matches[2].Trim()
+            if ($fizik.TrimEnd('\') -ieq $paket.TrimEnd('\') -or
+                $fizik.TrimEnd('\') -ieq (Join-Path $paket "iis-site").TrimEnd('\')) {
+                $SiteAdi = ($matches[1] -split "/")[0]
+                Ok "Bu klasoru gosteren site: $SiteAdi"
+                $bulunanPool = ((& $appcmd list app "$SiteAdi/" /text:applicationPool 2>&1) | ForEach-Object { "$_" }) -join ""
+                if ($bulunanPool.Trim()) {
+                    $Havuz = $bulunanPool.Trim()
+                    Bilgi "Uygulama havuzu: $Havuz"
+                }
+                break
+            }
+        }
     }
 
     $bizimSite = $siteler | Where-Object { $_ -match [regex]::Escape($SiteAdi) } | Select-Object -First 1

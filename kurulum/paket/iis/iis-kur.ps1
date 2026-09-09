@@ -27,7 +27,18 @@ param(
     [ValidateSet("otomatik", "iis", "vekil")]
     [string]$Mod = "otomatik",
 
-    [string]$SiteAdi = "SEC-K Portali",
+    # Bos birakilirsa: bu paket klasorunu gosteren mevcut IIS sitesi bulunur
+    # ve o kullanilir. Boylece IIS Yoneticisi'nde elle olusturulmus bir site
+    # (ornegin TFS_SECKA) oldugu gibi devam eder.
+    [string]$SiteAdi,
+
+    # Bos birakilirsa sitenin kendi uygulama havuzu kullanilir.
+    [string]$Havuz,
+
+    # Anketlerin QR kodlarina gomulecek dis adres. Bos birakilirsa host adi
+    # ve porttan uretilir. Ornek: -BaseUrl "http://10.34.32.55:9092"
+    [string]$BaseUrl,
+
     [string]$HostAdi,
     [int]$HttpPort = 80,
     [int]$HttpsPort = 443,
@@ -112,6 +123,37 @@ function Test-IisNesne ([string]$Tur, [string]$Ad) {
     return ($r.Ok -and $r.Metin -match [regex]::Escape($Ad))
 }
 
+<#
+    Bu paket klasorunu gosteren IIS sitesini bulur.
+
+    Kullanici siteyi IIS Yoneticisi'nden kendi adiyla olusturmus olabilir
+    (ornegin TFS_SECKA). Ad tahmin etmek yerine fiziksel yola bakiyoruz:
+    boylece var olan site, baglantilari ve havuzuyla oldugu gibi kullanilir.
+#>
+function Find-SiteByPath ([string]$Yol) {
+    $r = Invoke-AppCmd "list" "vdirs"
+    if (-not $r.Ok) { return $null }
+
+    foreach ($satir in ($r.Metin -split "`n")) {
+        # Ornek satir: VDIR "TFS_SECKA/" (physicalPath:E:\TSF_DATA\TFS_SECKA)
+        if ($satir -match 'VDIR\s+"([^"]+)"\s+\(physicalPath:(.*)\)\s*$') {
+            $vdir = $matches[1]
+            $fizik = $matches[2].Trim()
+            if ($fizik.TrimEnd('\') -ieq $Yol.TrimEnd('\')) {
+                # "TFS_SECKA/" -> "TFS_SECKA"
+                return ($vdir -split "/")[0]
+            }
+        }
+    }
+    return $null
+}
+
+function Get-SitePool ([string]$Site) {
+    $r = Invoke-AppCmd "list" "app" "$Site/" "/text:applicationPool"
+    if ($r.Ok -and $r.Metin.Trim()) { return $r.Metin.Trim() }
+    return $null
+}
+
 # ————————————————————————————— Node.js —————————————————————————————
 
 Write-Step "Node.js kontrolu"
@@ -140,7 +182,15 @@ Write-Ok "Node.js $nodeSurum  ($nodeExe)"
 
 Write-Step "IIS eklentileri"
 
-$modMetin = (Invoke-AppCmd "list" "modules").Metin
+$modSonuc = Invoke-AppCmd "list" "modules"
+if (-not $modSonuc.Ok) {
+    Write-Fail "IIS modul listesi okunamadi."
+    Write-Info $modSonuc.Metin
+    Write-Info "Bu pencere yonetici olarak acilmis olmali."
+    exit 1
+}
+
+$modMetin = $modSonuc.Metin
 $hpVar  = $modMetin -match "httpPlatformHandler"
 $rwVar  = $modMetin -match "RewriteModule"
 $arrVar = $modMetin -match "ApplicationRequestRouting|RequestRouter"
@@ -182,6 +232,61 @@ if ($Mod -eq "otomatik") {
         exit 1
     }
     Write-Ok "Mod: $Mod"
+}
+
+# ————————————————————————————— Site ve havuz tespiti —————————————————————————————
+
+Write-Step "IIS sitesi"
+
+$mevcutSite = $null
+if (-not $SiteAdi) {
+    # Ters vekilde site paketin kokunu degil iis-site\ klasorunu gosterir.
+    $aranan = if ($Mod -eq "vekil") { Join-Path $paket "iis-site" } else { $paket }
+    $mevcutSite = Find-SiteByPath $aranan
+    if (-not $mevcutSite -and $Mod -eq "vekil") { $mevcutSite = Find-SiteByPath $paket }
+
+    if ($mevcutSite) {
+        $SiteAdi = $mevcutSite
+        Write-Ok "Bu klasoru gosteren site bulundu: $SiteAdi"
+    } else {
+        $SiteAdi = "SEC-K Portali"
+        Write-Info "Bu klasoru gosteren site yok; '$SiteAdi' adiyla olusturulacak."
+    }
+} else {
+    if (Test-IisNesne "site" $SiteAdi) {
+        $mevcutSite = $SiteAdi
+        Write-Ok "Site: $SiteAdi (mevcut)"
+    } else {
+        Write-Info "Site: $SiteAdi (olusturulacak)"
+    }
+}
+
+if (-not $Havuz) {
+    if ($mevcutSite) {
+        $Havuz = Get-SitePool $mevcutSite
+        if ($Havuz) { Write-Ok "Sitenin uygulama havuzu: $Havuz" }
+    }
+    if (-not $Havuz) { $Havuz = $SiteAdi }
+}
+Write-Info "Uygulama havuzu: $Havuz"
+
+# Mevcut sitenin baglantilarini ogren: bunlara dokunmayacagiz, yalnizca
+# hicbir HTTP baglantisi yoksa ekleyecegiz.
+$mevcutBaglantilar = ""
+if ($mevcutSite) {
+    $mevcutBaglantilar = (Invoke-AppCmd "list" "site" $mevcutSite "/text:bindings").Metin.Trim()
+    if ($mevcutBaglantilar) {
+        Write-Info "Mevcut baglantilar: $mevcutBaglantilar"
+
+        # Dis adresi mevcut baglantidan cikar: kullanici -HostAdi/-HttpPort
+        # vermediyse QR kodlarina dogru adres gitsin.
+        if (-not $BaseUrl -and $mevcutBaglantilar -match 'http/([^:]*):(\d+):([^,]*)') {
+            $bIp = $matches[1]; $bPort = $matches[2]; $bHost = $matches[3]
+            $adresHost = if ($bHost) { $bHost } elseif ($bIp -and $bIp -ne "*") { $bIp } else { $env:COMPUTERNAME }
+            $BaseUrl = if ($bPort -eq "80") { "http://$adresHost" } else { "http://${adresHost}:$bPort" }
+            Write-Info "Dis adres baglantidan cikarildi: $BaseUrl"
+        }
+    }
 }
 
 # ————————————————————————————— .env —————————————————————————————
@@ -228,13 +333,19 @@ if (-not (Test-Path -LiteralPath $envPath)) {
 }
 
 $https = [bool]$Sertifika -or $HttpsZorla
-$scheme = if ($https) { "https" } else { "http" }
-$publicHost = if ($HostAdi) { $HostAdi } else { $env:COMPUTERNAME }
-$publicPort = if ($https) { $HttpsPort } else { $HttpPort }
 
-$baseUrl = "${scheme}://${publicHost}"
-if (($https -and $HttpsPort -ne 443) -or ((-not $https) -and $HttpPort -ne 80)) {
-    $baseUrl = "${scheme}://${publicHost}:${publicPort}"
+if ($BaseUrl) {
+    # Kullanici verdi ya da mevcut IIS baglantisindan cikarildi.
+    $baseUrl = $BaseUrl.TrimEnd("/")
+} else {
+    $scheme = if ($https) { "https" } else { "http" }
+    $publicHost = if ($HostAdi) { $HostAdi } else { $env:COMPUTERNAME }
+    $publicPort = if ($https) { $HttpsPort } else { $HttpPort }
+
+    $baseUrl = "${scheme}://${publicHost}"
+    if (($https -and $HttpsPort -ne 443) -or ((-not $https) -and $HttpPort -ne 80)) {
+        $baseUrl = "${scheme}://${publicHost}:${publicPort}"
+    }
 }
 
 Set-EnvValue $envPath "SECK_BASE_URL" $baseUrl
@@ -286,30 +397,39 @@ if (-not (Test-Path -LiteralPath $logDir)) {
 Write-Step "Site klasoru ve web.config"
 
 if ($Mod -eq "iis") {
-    # Site dogrudan paket klasorunu gosterir ve paketle gelen web.config
-    # kullanilir. Yollari goreceli oldugu icin duzenleme gerekmez; tum
-    # istekler handler'a gittigi ve request filtering data\ gibi yollari
-    # gizledigi icin statik dosya sizmasi olmuyor.
+    # Site dogrudan paket klasorunu gosterir. Kokte duran web.config kurulum
+    # oncesi hicbir eklenti istemeyen "bilgi sayfasi" surumudur; simdi onu
+    # calisan surumle degistiriyoruz. Boylece HttpPlatformHandler kurulmadan
+    # once site 500.19 vermek yerine kurulum sayfasini gosteriyor.
     $siteDir = $paket
     $kokConfig = Join-Path $paket "web.config"
+    $sablon = Join-Path $PSScriptRoot "web.config.iis"
 
-    if (-not (Test-Path -LiteralPath $kokConfig)) {
-        Write-Fail "web.config bulunamadi: $kokConfig"
+    if (-not (Test-Path -LiteralPath $sablon)) {
+        Write-Fail "Sablon bulunamadi: $sablon"
         Write-Info "Arsivi yeniden acin."
         exit 1
     }
 
-    Write-Ok "Paketle gelen web.config kullanilacak."
-    Write-Info "Site yolu: $siteDir"
+    # Kurulum oncesi surumu bir kez yedekle; geri donmek gerekebilir.
+    if ((Test-Path -LiteralPath $kokConfig) -and
+        -not (Test-Path -LiteralPath (Join-Path $paket "web.config.kurulum-oncesi"))) {
+        Copy-Item -LiteralPath $kokConfig -Destination (Join-Path $paket "web.config.kurulum-oncesi") -Force
+    }
+
+    $icerik = Get-Content -LiteralPath $sablon -Raw
 
     # node.exe beklenen yerde degilse processPath'i gercek yola cek.
-    $beklenenNode = Join-Path $env:ProgramFiles "nodejs\node.exe"
-    if ($nodeExe -ne $beklenenNode) {
-        $icerik = Get-Content -LiteralPath $kokConfig -Raw
+    $beklenenNode = $null
+    if ($env:ProgramFiles) { $beklenenNode = Join-Path $env:ProgramFiles "nodejs\node.exe" }
+    if ($beklenenNode -and $nodeExe -ne $beklenenNode) {
         $icerik = $icerik.Replace('processPath="%ProgramFiles%\nodejs\node.exe"', "processPath=`"$nodeExe`"")
-        [IO.File]::WriteAllText($kokConfig, $icerik, (New-Object Text.UTF8Encoding($false)))
-        Write-Ok "processPath gercek Node.js yoluna guncellendi: $nodeExe"
+        Write-Ok "processPath gercek Node.js yoluna ayarlandi: $nodeExe"
     }
+
+    [IO.File]::WriteAllText($kokConfig, $icerik, (New-Object Text.UTF8Encoding($false)))
+    Write-Ok "web.config calisan surumle degistirildi: $kokConfig"
+    Write-Info "Site yolu: $siteDir"
 } else {
     # Ters vekilde site, yalnizca web.config iceren ayri bir klasoru gosterir.
     $siteDir = Join-Path $paket "iis-site"
@@ -378,16 +498,16 @@ if ($Mod -eq "iis") {
 
 Write-Step "Uygulama havuzu"
 
-if (-not (Test-IisNesne "apppool" $SiteAdi)) {
-    $r = Invoke-AppCmd "add" "apppool" "/name:$SiteAdi"
+if (-not (Test-IisNesne "apppool" $Havuz)) {
+    $r = Invoke-AppCmd "add" "apppool" "/name:$Havuz"
     if (-not $r.Ok) {
         Write-Fail "Uygulama havuzu olusturulamadi."
         Write-Info $r.Metin
         exit 1
     }
-    Write-Ok "Havuz olusturuldu: $SiteAdi"
+    Write-Ok "Havuz olusturuldu: $Havuz"
 } else {
-    Write-Ok "Havuz zaten var: $SiteAdi"
+    Write-Ok "Havuz zaten var: $Havuz"
 }
 
 # .NET calistirmiyoruz; 32 bit mod %ProgramFiles% degiskenini yanlis klasore
@@ -399,33 +519,46 @@ $ayarlar = @(
     "/recycling.periodicRestart.time:00:00:00"
 )
 foreach ($a in $ayarlar) {
-    $r = Invoke-AppCmd "set" "apppool" $SiteAdi $a
+    $r = Invoke-AppCmd "set" "apppool" $Havuz $a
     if (-not $r.Ok) { Write-Warn2 "Havuz ayari uygulanamadi: $a" }
 }
 # startMode yalnizca IIS 8+ da var; basarisiz olursa onemli degil.
-Invoke-AppCmd "set" "apppool" $SiteAdi "/startMode:AlwaysRunning" | Out-Null
+Invoke-AppCmd "set" "apppool" $Havuz "/startMode:AlwaysRunning" | Out-Null
 Write-Ok "Havuz ayarlandi (yonetilen kod yok, 64 bit, bosta kapatma kapali)."
 
 # ————————————————————————————— Site ve baglantilar —————————————————————————————
 
 Write-Step "Site ve baglantilar"
 
-$httpBinding = "http/*:${HttpPort}:$HostAdi"
 $bindingInfo = "*:${HttpPort}:$HostAdi"
 
-# Ayni port + host adini kullanan baska bir site varsa ikisi birlikte calismaz.
-$tumSiteler = (Invoke-AppCmd "list" "sites").Metin
-foreach ($satir in ($tumSiteler -split "`n")) {
-    if ($satir -match [regex]::Escape($bindingInfo) -and $satir -notmatch [regex]::Escape($SiteAdi)) {
-        Write-Fail "Su baglanti baska bir sitede kullaniliyor: $bindingInfo"
-        Write-Info $satir.Trim()
-        Write-Info "Cozum: -HostAdi seck.turkishfuel.com verin (ayni portu host adiyla"
-        Write-Info "paylasabilirsiniz) veya -HttpPort 8080 gibi bos bir port secin."
-        exit 1
-    }
-}
+if ($mevcutSite) {
+    # Var olan siteye dokunmuyoruz: baglantilari (ornegin 10.34.32.55:9092)
+    # yoneticinin kurdugu gibi kalsin. Yalnizca klasoru ve havuzu bagliyoruz.
+    Write-Ok "Mevcut site kullaniliyor: $SiteAdi"
+    Invoke-AppCmd "set" "vdir" "$SiteAdi/" "/physicalPath:$siteDir" | Out-Null
+    Invoke-AppCmd "set" "app"  "$SiteAdi/" "/applicationPool:$Havuz" | Out-Null
+    Write-Info "Klasor ve havuz baglandi; baglantilar degistirilmedi."
 
-if (-not (Test-IisNesne "site" $SiteAdi)) {
+    if (-not $mevcutBaglantilar) {
+        $r = Invoke-AppCmd "set" "site" $SiteAdi "/+bindings.[protocol='http',bindingInformation='$bindingInfo']"
+        if ($r.Ok) { Write-Ok "Site baglantisiz oldugu icin eklendi: $bindingInfo" }
+    }
+} else {
+    # Ayni port + host adini kullanan baska bir site varsa ikisi birlikte
+    # calismaz; ucu acik bir hataya birakmak yerine simdi soyluyoruz.
+    $tumSiteler = (Invoke-AppCmd "list" "sites").Metin
+    foreach ($satir in ($tumSiteler -split "`n")) {
+        if ($satir -match [regex]::Escape($bindingInfo) -and $satir -notmatch [regex]::Escape($SiteAdi)) {
+            Write-Fail "Su baglanti baska bir sitede kullaniliyor: $bindingInfo"
+            Write-Info $satir.Trim()
+            Write-Info "Cozum: -HostAdi seck.turkishfuel.com verin (ayni portu host adiyla"
+            Write-Info "paylasabilirsiniz) veya -HttpPort 9092 gibi bos bir port secin."
+            exit 1
+        }
+    }
+
+    $httpBinding = "http/*:${HttpPort}:$HostAdi"
     $r = Invoke-AppCmd "add" "site" "/name:$SiteAdi" "/physicalPath:$siteDir" "/bindings:$httpBinding"
     if (-not $r.Ok) {
         Write-Fail "Site olusturulamadi."
@@ -434,18 +567,8 @@ if (-not (Test-IisNesne "site" $SiteAdi)) {
     }
     Write-Ok "Site olusturuldu: $SiteAdi  ($bindingInfo)"
 
-    $r = Invoke-AppCmd "set" "app" "$SiteAdi/" "/applicationPool:$SiteAdi"
+    $r = Invoke-AppCmd "set" "app" "$SiteAdi/" "/applicationPool:$Havuz"
     if (-not $r.Ok) { Write-Warn2 "Site havuza baglanamadi; IIS Yoneticisi'nden secin." }
-} else {
-    Write-Ok "Site zaten var, ayarlari guncelleniyor."
-    Invoke-AppCmd "set" "vdir" "$SiteAdi/" "/physicalPath:$siteDir" | Out-Null
-    Invoke-AppCmd "set" "app" "$SiteAdi/" "/applicationPool:$SiteAdi" | Out-Null
-
-    if ($tumSiteler -notmatch [regex]::Escape($bindingInfo)) {
-        $r = Invoke-AppCmd "set" "site" $SiteAdi "/+bindings.[protocol='http',bindingInformation='$bindingInfo']"
-        if ($r.Ok) { Write-Ok "HTTP baglantisi eklendi: $bindingInfo" }
-        else { Write-Warn2 "HTTP baglantisi eklenemedi." }
-    }
 }
 
 # ————————————————————————————— HTTPS —————————————————————————————
@@ -516,7 +639,7 @@ Write-Step "Klasor izinleri"
 $SID_SYSTEM = "*S-1-5-18"
 $SID_ADMINS = "*S-1-5-32-544"
 $SID_IISUSR = "*S-1-5-32-568"
-$poolUser = "IIS AppPool\$SiteAdi"
+$poolUser = "IIS AppPool\$Havuz"
 
 <#
     .env oturum imza anahtarini, data\ ise veritabanini ve PDF'leri tutuyor.
@@ -628,7 +751,7 @@ foreach ($p in $portlar) {
     }
 }
 
-Invoke-AppCmd "start" "apppool" $SiteAdi | Out-Null
+Invoke-AppCmd "start" "apppool" $Havuz | Out-Null
 $r = Invoke-AppCmd "start" "site" $SiteAdi
 if ($r.Ok) { Write-Ok "Site baslatildi." } else { Write-Warn2 "Site baslatilamadi: $($r.Metin)" }
 
@@ -701,7 +824,7 @@ if ($Mod -eq "iis") {
     Write-Info "Yonetim:"
     Write-Info "  Durdur  : appcmd stop site `"$SiteAdi`""
     Write-Info "  Baslat  : appcmd start site `"$SiteAdi`""
-    Write-Info "  Yeniden : appcmd recycle apppool `"$SiteAdi`""
+    Write-Info "  Yeniden : appcmd recycle apppool `"$Havuz`""
     Write-Info "  Gunluk  : $logDir"
 } else {
     Write-Info "Yonetim:"

@@ -281,13 +281,16 @@ function writeBundleFiles(): void {
     { from: "kur.ps1", to: "kur.ps1" },
     { from: "KURULUM.md", to: "KURULUM.md" },
     { from: "komutlar-OKU.txt", to: path.join("komutlar", "OKU.txt") },
-    // Paketi dogrudan bir IIS uygulamasi yapan yapilandirma. Kokte durmasi
-    // gerekiyor: IIS sitesi bu klasoru gosterince duzenleme olmadan calisir.
+    // Kurulum oncesi web.config: hicbir IIS eklentisi gerektirmez, siteyi
+    // her zaman acar ve kurulum.html bilgi sayfasini gosterir. Boylece
+    // eklenti kurulmadan once "500.19" yerine ne yapilacagi yaziyor.
     { from: "web.config", to: "web.config" },
-    // IIS ile 80/443 uzerinden yayin: script'ler, sablon ve rehber.
+    { from: "kurulum.html", to: "kurulum.html" },
+    // IIS ile yayin: script'ler, sablonlar ve rehber.
     { from: path.join("iis", "iis-kur.ps1"), to: path.join("iis", "iis-kur.ps1") },
     { from: path.join("iis", "iis-kontrol.ps1"), to: path.join("iis", "iis-kontrol.ps1") },
     { from: path.join("iis", "iis-izin.ps1"), to: path.join("iis", "iis-izin.ps1") },
+    { from: path.join("iis", "web.config.iis"), to: path.join("iis", "web.config.iis") },
     { from: path.join("iis", "web.config.vekil"), to: path.join("iis", "web.config.vekil") },
     { from: path.join("iis", "IIS.md"), to: path.join("iis", "IIS.md") },
   ];

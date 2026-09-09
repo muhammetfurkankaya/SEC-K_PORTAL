@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SEC-K Portali - CALISAN yapilandirma (kurulum sonrasi)
+  ======================================================
+
+  iis-kur.ps1 bu dosyayi paketin kokune "web.config" adiyla kopyalar.
+  Elle yapmak isterseniz paket klasorunde:
+
+    copy iis\web.config.iis web.config
+
+  GEREKEN IIS EKLENTISI: HttpPlatformHandler 1.2
+    https://www.iis.net/downloads/microsoft/httpplatformhandler
+
+  DIKKAT: Bu eklenti kurulu DEGILSE IIS <httpPlatform> bolumunu tanimaz ve
+  site "HTTP 500.19 - 0x8007000d" hatasi verir. Once eklentiyi kurun.
+
+  Yollar goreceli: paket hangi klasorde olursa olsun calisir. Node.js baska
+  bir yere kuruluysa yalnizca processPath satirini duzeltin (iis-kur.ps1
+  bunu kendisi de yapar).
+-->
+<configuration>
+  <system.webServer>
+
+    <!-- Tum istekler portal surecine gider; IIS statik dosya sunmaz.
+         Bu yuzden .env veya data\ altindaki dosyalar dis dunyaya acilmaz. -->
+    <handlers>
+      <remove name="httpPlatformHandler" />
+      <add name="httpPlatformHandler" path="*" verb="*"
+           modules="httpPlatformHandler" resourceType="Unspecified"
+           requireAccess="Script" />
+    </handlers>
+
+    <!--
+      arguments goreceli: HttpPlatformHandler surecin calisma klasorunu
+      uygulamanin fiziksel yoluna ayarlar. baslat.cjs ayrica kendi klasorune
+      gecerek bunu garanti altina alir.
+
+      stdoutLogEnabled: portal acilamazsa tarayici yalnizca 502.5 gosterir;
+      gercek hata data\iis-log\ altindaki dosyaya yazilir. Sorun ararken
+      ilk bakilacak yer orasi.
+    -->
+    <httpPlatform processPath="%ProgramFiles%\nodejs\node.exe"
+                  arguments=".\baslat.cjs"
+                  stdoutLogEnabled="true"
+                  stdoutLogFile=".\data\iis-log\portal"
+                  startupTimeLimit="120"
+                  startupRetryCount="3"
+                  requestTimeout="00:04:00">
+      <environmentVariables>
+        <environmentVariable name="NODE_ENV" value="production" />
+      </environmentVariables>
+    </httpPlatform>
+
+    <security>
+      <requestFiltering>
+        <!-- Bulten PDF'leri icin 25 MB sinir var; IIS varsayilani (~28 MB)
+             cok yakin oldugu icin yukseltiyoruz. -->
+        <requestLimits maxAllowedContentLength="52428800" />
+
+        <!-- Ikinci katman: handler devre disi kalsa bile bu yollar sunulmaz. -->
+        <hiddenSegments>
+          <add segment="data" />
+          <add segment="komutlar" />
+          <add segment="sqlite-ikili" />
+          <add segment="node_modules" />
+          <add segment="iis" />
+        </hiddenSegments>
+      </requestFiltering>
+    </security>
+
+    <directoryBrowse enabled="false" />
+
+    <httpProtocol>
+      <customHeaders>
+        <remove name="X-Powered-By" />
+      </customHeaders>
+    </httpProtocol>
+
+    <!-- Portalin kendi hata sayfalari gorunsun; IIS araya girmesin. -->
+    <httpErrors existingResponse="PassThrough" />
+
+  </system.webServer>
+</configuration>

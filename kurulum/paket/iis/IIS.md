@@ -1,5 +1,39 @@
 # SEÇ-K Portalı — IIS üzerinden HTTP/HTTPS yayını
 
+## İki seçenek var — önce bunu okuyun
+
+Portal bir **Node.js** uygulamasıdır. IIS, PHP ve .NET uygulamalarını doğrudan
+çalıştırır ama Node.js uygulamalarını çalıştıramaz. Bu yüzden iki yol var:
+
+| | **A seçeneği — IIS barındırır** | **B seçeneği — portal kendi portunu dinler** |
+|---|---|---|
+| Ek IIS modülü | HttpPlatformHandler 1.2 (tek MSI) | **gerekmez** |
+| IIS sitesi | Kalır, klasörü gösterir | Gerekmez (varsa durdurulur) |
+| Süreci kim yönetir | IIS (çökerse yeniden başlatır) | Windows zamanlanmış görevi |
+| IIS Yöneticisi'nde *Browse* | Portalı açar | Kullanılmaz; adrese doğrudan gidilir |
+| HTTPS | IIS'in sertifika yönetimi | Ters vekil veya ayrı yapılandırma gerekir |
+
+**Her iki seçenekte de Node.js 20 LTS kurulu olmalıdır** — portalın kodunu
+çalıştıran program budur, alternatifi yok.
+
+### B seçeneği (modül kuramıyorsanız): tek komut
+
+IIS sitesi ile aynı portu kullanacaksanız önce siteyi durdurun; Windows'ta
+portu HTTP.sys tutar ve IIS sitesi açıkken başka bir program o portu
+dinleyemez.
+
+```powershell
+appcmd stop site "TFS_SECKA"
+cd E:\TSF_DATA\TFS_SECKA
+powershell -ExecutionPolicy Bypass -File .\kur.ps1 -Port 9092 -BaseUrl "http://10.34.32.55:9092"
+```
+
+Bu komut veritabanını kurar, oturum anahtarını üretir, izinleri kısıtlar,
+açılışta otomatik başlatma görevini oluşturur, güvenlik duvarında portu iç ağa
+açar ve portalı başlatır. Sonra `http://10.34.32.55:9092` adresi çalışır.
+
+---
+
 ## Çalışmadıysa önce bunu yapın
 
 ```powershell
@@ -188,7 +222,7 @@ Her durumda ilk adım: `.\iis\iis-kontrol.ps1`
 
 | Ne görüyorsunuz | Nedeni | Çözüm |
 |---|---|---|
-| **500.19** "yapılandırma bölümü okunamıyor" | IIS eklentisi kurulu değil — `web.config` tanımadığı bir bölüm içeriyor | HttpPlatformHandler kurun (ters vekilde URL Rewrite) |
+| **500.19** `0x8007000d` | `web.config` IIS'in tanımadığı bir bölüm içeriyor — neredeyse her zaman HttpPlatformHandler kurulu değildir | Modülü kurun; kurulumu bitirene kadar `copy web.config.kurulum-oncesi web.config` ile bilgi sayfasına dönebilirsiniz |
 | **502.5** / "Process failure" | Node süreci başlamıyor | `data\iis-log\` içindeki son `.log` dosyasını okuyun; genellikle izin sorunu → `.\iis\iis-izin.ps1` |
 | **502.3** (ters vekil) | Portal süreci ayakta değil | `Start-ScheduledTask -TaskName 'SEC-K Portali'` |
 | **500.52** veya boş sayfa (ters vekil) | ARR vekil modu kapalı | `appcmd set config -section:system.webServer/proxy /enabled:"True" /commit:apphost` |
