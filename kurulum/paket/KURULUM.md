@@ -17,6 +17,17 @@ Sistemde kurulu Node'u kullanmak isterseniz script'lere
 
 ### 1. Klasörü yerine koyun
 
+> **Paket iki arşiv hâlinde geldiyse** (boyut sınırı nedeniyle) ikisini de
+> **aynı klasöre** açın:
+>
+> | Arşiv | İçindekiler |
+> |---|---|
+> | `SEC-K-Portali-sunucu.zip` | portalın tamamı |
+> | `SEC-K-Portali-node.zip` | yalnızca `node\node.exe` |
+>
+> İkinci arşiv `node\` klasörünü içerdiği için doğru yere açılır. Eksik
+> kalırsa kurulum script'i "Pakette node\node.exe yok" diye uyarır.
+
 Paketi kalıcı bir yere taşıyın — örneğin `C:\seckportal`. Şunlardan kaçının:
 
 - Kullanıcı masaüstü veya `OneDrive` klasörleri (otomatik başlatma görevi
