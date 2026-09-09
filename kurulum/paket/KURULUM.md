@@ -160,25 +160,42 @@ alınan yedek daha tutarlı olur.
 
 ## IIS ile 80/443 üzerinden yayınlamak (HTTP/HTTPS)
 
-Portal kendi web sunucusunu 3000 portunda çalıştırır; IIS ön kapı olur,
-sertifikayı sunar ve istekleri portala iletir. QDMS ile aynı sunucuda yan
-yana çalışır.
+Bu paket **doğrudan bir IIS uygulaması** olarak hazırlandı: kökünde `web.config`
+dosyası var, yolları görecelidir, düzenleme gerektirmez. IIS'te bu klasörü
+gösteren bir site oluşturmak yeterlidir.
 
-Bunun için ayrı bir script var:
+**İki gereksinim, ikisi de tek MSI:**
+
+1. Node.js 20 LTS — <https://nodejs.org/en/download>
+2. HttpPlatformHandler 1.2 — <https://www.iis.net/downloads/microsoft/httpplatformhandler>
+
+> IIS, PHP veya .NET uygulamalarını doğrudan çalıştırır ama **Node.js
+> uygulamalarını çalıştıramaz.** Portal bir Node.js uygulamasıdır; bu yüzden
+> hem Node.js hem de IIS ile Node arasındaki köprü modülü gerekir.
+> Sunucuda internet yoksa iki MSI'ı başka bir bilgisayara indirip kopyalayın.
+
+Sonra:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 `
-    -HostAdi seck.turkishfuel.com -Sertifika A1B2C3... -HttpsZorla
+cd C:\seckportal
+powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 -HostAdi seck.turkishfuel.com
 ```
 
-Script IIS sitesini, uygulama havuzunu, `web.config` dosyasını ve sertifika
-bağlantısını kurar; `.env` içindeki dış adresi de günceller.
+Script kurulu eklentilere bakıp modu kendisi seçer; uygulama havuzunu, siteyi,
+izinleri ve sertifikayı ayarlar. QDMS ile aynı sunucuda, aynı portu farklı ana
+bilgisayar adlarıyla paylaşarak yan yana çalışır.
 
-**Ayrıntılı anlatım, iki yöntem arasındaki fark, elle kurulum adımları ve
-sorun giderme: [`iis\IIS.md`](iis/IIS.md)**
+### Çalışmazsa
 
-> IIS kullansanız da **Node.js 20 kurulu olmalı** — IIS portalın kodunu
-> kendi başına çalıştıramaz, portal bir Node.js uygulamasıdır.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\iis\iis-kontrol.ps1
+```
+
+Hiçbir şeyi değiştirmez; neyin eksik olduğunu sırayla söyler ve çıktıyı
+`iis-tani.txt` dosyasına yazar.
+
+**Ayrıntılı anlatım, elle kurulum, hata kodlarına göre çözüm tablosu:
+[`iis\IIS.md`](iis/IIS.md)**
 
 ---
 

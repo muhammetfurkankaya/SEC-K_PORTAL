@@ -1,74 +1,70 @@
-﻿# SEC-K Portali — IIS uzerinden HTTP/HTTPS yayini
+﻿# SEC-K Portali - IIS uzerinden HTTP/HTTPS yayini
 #
-# Portal kendi web sunucusunu Node.js uzerinde calistirir. IIS'in gorevi on
-# kapi olmaktir: 80/443 portlarini dinler, sirket sertifikasi ile HTTPS
-# sunar ve istekleri portala iletir.
+# Portal bir Node.js uygulamasidir; IIS on kapi olur: 80/443 portlarini
+# dinler, sertifikayi sunar, istekleri portala iletir.
 #
-# Iki mod var:
+# Iki mod var, script kurulu eklentilere gore kendisi secer:
 #
-#   -Mod vekil   (varsayilan)  IIS ters vekil olur; Node surecini "SEC-K
-#                              Portali" zamanlanmis gorevi calistirir.
-#                              Gerekli: URL Rewrite 2.1 + ARR 3.0
-#                              Once .\kur.ps1 calistirilmis olmali.
+#   iis    (tercih edilen)  Sureci IIS baslatir ve yonetir. Site dogrudan bu
+#                           paket klasorunu gosterir ve paketle gelen
+#                           web.config kullanilir - duzenleme gerekmez.
+#                           Gerekli: HttpPlatformHandler 1.2
 #
-#   -Mod iis                   Node surecini IIS'in kendisi baslatir ve
-#                              yonetir; zamanlanmis gorev gerekmez.
-#                              Gerekli: HttpPlatformHandler 1.2
+#   vekil                   IIS ters vekil olur; Node surecini "SEC-K Portali"
+#                           zamanlanmis gorevi calistirir (once .\kur.ps1).
+#                           Gerekli: URL Rewrite 2.1 + ARR 3.0
 #
 # Kullanim (yonetici olarak acilmis PowerShell):
+#   powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1
 #   powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 -HostAdi seck.turkishfuel.com
+#   powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 -HostAdi seck.turkishfuel.com -Sertifika A1B2C3... -HttpsZorla
 #
-# Ornekler:
-#   .\iis\iis-kur.ps1 -HostAdi seck.turkishfuel.com -Sertifika A1B2C3... -HttpsZorla
-#   .\iis\iis-kur.ps1 -Mod iis -HostAdi seck.turkishfuel.com
-#   .\iis\iis-kur.ps1 -HttpPort 8080            (host adi yoksa ayri port)
-#
-# Ayrintili anlatim ve elle kurulum adimlari: iis\IIS.md
+# Once tani almak icin:  .\iis\iis-kontrol.ps1
+# Ayrinti:               iis\IIS.md
 
 [CmdletBinding()]
 param(
-    [ValidateSet("vekil", "iis")]
-    [string]$Mod = "vekil",
+    [ValidateSet("otomatik", "iis", "vekil")]
+    [string]$Mod = "otomatik",
 
     [string]$SiteAdi = "SEC-K Portali",
     [string]$HostAdi,
     [int]$HttpPort = 80,
     [int]$HttpsPort = 443,
 
-    # Sertifikanin parmak izi (thumbprint). IIS Yoneticisi > Sunucu
-    # Sertifikalari ekranindan veya:
+    # Sertifikanin parmak izi. Bulmak icin:
     #   Get-ChildItem Cert:\LocalMachine\My | Format-List Subject, Thumbprint
     [string]$Sertifika,
 
-    # HTTP ile geleni HTTPS'e yonlendir. Sertifika baglanmadan kullanmayin.
+    # HTTP ile geleni HTTPS'e yonlendir (yalnizca vekil modunda, URL Rewrite ile).
     [switch]$HttpsZorla,
 
-    # Portalin dinledigi port (yalnizca vekil modunda; .env icindeki PORT).
+    # Portalin dinledigi port (yalnizca vekil modunda).
     [int]$NodePort = 3000,
 
-    # Portal yalnizca 127.0.0.1 dinlesin ve 3000 guvenlik duvarindan
-    # kapatilsin — boylece IIS/HTTPS atlatilamaz (yalnizca vekil modunda).
+    # Portal yalnizca 127.0.0.1 dinlesin ve NodePort guvenlik duvarindan
+    # kapatilsin (yalnizca vekil modunda).
     [switch]$YalnizIIS
 )
 
 $ErrorActionPreference = "Stop"
 $TaskName = "SEC-K Portali"
 
-function Write-Step  ([string]$Text) { Write-Host "`n=== $Text ===" -ForegroundColor Cyan }
-function Write-Ok    ([string]$Text) { Write-Host "  [TAMAM] $Text" -ForegroundColor Green }
-function Write-Info  ([string]$Text) { Write-Host "  $Text" -ForegroundColor Gray }
-function Write-Warn2 ([string]$Text) { Write-Host "  [UYARI] $Text" -ForegroundColor Yellow }
-function Write-Fail  ([string]$Text) { Write-Host "  [HATA] $Text" -ForegroundColor Red }
+function Write-Step  ([string]$T) { Write-Host "`n=== $T ===" -ForegroundColor Cyan }
+function Write-Ok    ([string]$T) { Write-Host "  [TAMAM] $T" -ForegroundColor Green }
+function Write-Info  ([string]$T) { Write-Host "  $T" -ForegroundColor Gray }
+function Write-Warn2 ([string]$T) { Write-Host "  [UYARI] $T" -ForegroundColor Yellow }
+function Write-Fail  ([string]$T) { Write-Host "  [HATA] $T" -ForegroundColor Red }
 
 # ————————————————————————————— Yol ve yetki —————————————————————————————
 
 $paket   = Split-Path -Parent $PSScriptRoot
-$siteDir = Join-Path $paket "iis-site"
 $dataDir = Join-Path $paket "data"
 $envPath = Join-Path $paket ".env"
+$logDir  = Join-Path $dataDir "iis-log"
 
+Write-Host ""
 Write-Info "Paket klasoru : $paket"
-Write-Info "Mod           : $Mod"
 
 if (-not (Test-Path -LiteralPath (Join-Path $paket "baslat.cjs"))) {
     Write-Fail "baslat.cjs bulunamadi: $paket"
@@ -76,113 +72,116 @@ if (-not (Test-Path -LiteralPath (Join-Path $paket "baslat.cjs"))) {
     exit 1
 }
 
-$identity  = [Security.Principal.WindowsIdentity]::GetCurrent()
-$principal = New-Object Security.Principal.WindowsPrincipal($identity)
-if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+$kimlik = [Security.Principal.WindowsIdentity]::GetCurrent()
+if (-not (New-Object Security.Principal.WindowsPrincipal($kimlik)).IsInRole(
+        [Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Fail "Bu script yonetici yetkisi gerektirir."
     Write-Info "PowerShell'i 'Yonetici olarak calistir' ile acip tekrar deneyin."
     exit 1
 }
 
-# ————————————————————————————— Onkosullar —————————————————————————————
+# ————————————————————————————— appcmd yardimcilari —————————————————————————————
+
+# IIS yonetimini bastan sona appcmd ile yapiyoruz: WebAdministration modulu
+# her sunucuda kurulu olmuyor (yalnizca IIS Yonetim Script'leri ozelligiyle
+# gelir), appcmd.exe ise IIS ile birlikte her zaman var.
+$appcmd = Join-Path $env:windir "system32\inetsrv\appcmd.exe"
+
+if (-not (Test-Path -LiteralPath $appcmd)) {
+    Write-Fail "IIS kurulu degil (appcmd.exe bulunamadi)."
+    Write-Info "Sunucu Yoneticisi > Rol ve Ozellik Ekle > Web Sunucusu (IIS)"
+    exit 1
+}
+
+<#
+    appcmd cagirir; cikti ve cikis kodunu birlikte dondurur.
+    Hata mesajini yutmuyoruz: IIS'in kendi aciklamasi sorunu bulmanin en
+    kisa yolu oluyor.
+#>
+function Invoke-AppCmd {
+    $cikti = & $appcmd @args 2>&1
+    return [pscustomobject]@{
+        Ok     = ($LASTEXITCODE -eq 0)
+        Kod    = $LASTEXITCODE
+        Metin  = ($cikti | ForEach-Object { "$_" }) -join "`n"
+    }
+}
+
+function Test-IisNesne ([string]$Tur, [string]$Ad) {
+    $r = Invoke-AppCmd "list" $Tur $Ad
+    return ($r.Ok -and $r.Metin -match [regex]::Escape($Ad))
+}
+
+# ————————————————————————————— Node.js —————————————————————————————
 
 Write-Step "Node.js kontrolu"
 
-$nodeVersion = $null
-try { $nodeVersion = (& node -v 2>$null) } catch { $nodeVersion = $null }
+$nodeSurum = $null
+try { $nodeSurum = (& node -v 2>$null) } catch { }
 
-if (-not $nodeVersion) {
+if (-not $nodeSurum) {
     Write-Fail "Node.js bulunamadi."
-    Write-Info "IIS, portalin kodunu kendi basina calistiramaz; portal bir"
-    Write-Info "Node.js uygulamasidir. https://nodejs.org/en/download adresinden"
-    Write-Info "Node.js 20 LTS (.msi) kurup pencereyi kapatip yeniden acin."
+    Write-Info "IIS portalin kodunu kendi basina calistiramaz; portal bir Node.js"
+    Write-Info "uygulamasidir. https://nodejs.org/en/download adresinden"
+    Write-Info "Node.js 20 LTS (.msi) kurup bu pencereyi kapatip yeniden acin."
     exit 1
 }
 
-$nodeMajor = [int](($nodeVersion -replace '^v', '') -split '\.')[0]
-if ($nodeMajor -ne 20 -and $nodeMajor -ne 22) {
-    Write-Fail "Bu paket Node.js 20 veya 22 ile calisir (mevcut: $nodeVersion)."
+$nodeAna = [int](($nodeSurum -replace '^v','') -split '\.')[0]
+if ($nodeAna -ne 20 -and $nodeAna -ne 22) {
+    Write-Fail "Bu paket Node.js 20 veya 22 ile calisir (mevcut: $nodeSurum)."
     exit 1
 }
+
 $nodeExe = (Get-Command node).Source
-Write-Ok "Node.js $nodeVersion  ($nodeExe)"
+Write-Ok "Node.js $nodeSurum  ($nodeExe)"
 
-Write-Step "IIS kontrolu"
+# ————————————————————————————— Eklentiler ve mod secimi —————————————————————————————
 
-try {
-    Import-Module WebAdministration -ErrorAction Stop
-} catch {
-    Write-Fail "IIS yonetim modulu (WebAdministration) yuklenemedi."
-    Write-Info "IIS yonetim script'leri kurulu degil olabilir. Sunucu Yoneticisi >"
-    Write-Info "Rol ve Ozellik Ekle > Web Sunucusu (IIS) > Yonetim Araclari >"
-    Write-Info "'IIS Yonetim Script'leri ve Araclari' ozelligini ekleyin."
-    exit 1
-}
-Write-Ok "IIS yonetim modulu hazir."
+Write-Step "IIS eklentileri"
 
-$modules = @()
-try { $modules = Get-WebGlobalModule | Select-Object -ExpandProperty Name } catch { $modules = @() }
+$modMetin = (Invoke-AppCmd "list" "modules").Metin
+$hpVar  = $modMetin -match "httpPlatformHandler"
+$rwVar  = $modMetin -match "RewriteModule"
+$arrVar = $modMetin -match "ApplicationRequestRouting|RequestRouter"
 
-function Test-IisModule ([string]$Pattern) {
-    foreach ($m in $modules) { if ($m -match $Pattern) { return $true } }
-    return $false
-}
+if ($hpVar)  { Write-Ok "HttpPlatformHandler kurulu" } else { Write-Info "HttpPlatformHandler yok" }
+if ($rwVar)  { Write-Ok "URL Rewrite kurulu" }         else { Write-Info "URL Rewrite yok" }
+if ($arrVar) { Write-Ok "ARR kurulu" }                 else { Write-Info "ARR yok" }
 
-$appcmd = Join-Path $env:windir "system32\inetsrv\appcmd.exe"
-
-if ($Mod -eq "vekil") {
-    if (-not (Test-IisModule "Rewrite")) {
-        Write-Fail "URL Rewrite kurulu degil."
-        Write-Info "Indirme: https://www.iis.net/downloads/microsoft/url-rewrite"
+if ($Mod -eq "otomatik") {
+    if ($hpVar) { $Mod = "iis" }
+    elseif ($rwVar -and $arrVar) { $Mod = "vekil" }
+    else {
+        Write-Host ""
+        Write-Fail "IIS bir Node.js uygulamasini eklenti olmadan yayinlayamaz."
+        Write-Info ""
+        Write-Info "EN KISA YOL - tek kurulum dosyasi:"
+        Write-Info "  HttpPlatformHandler 1.2"
+        Write-Info "  https://www.iis.net/downloads/microsoft/httpplatformhandler"
+        Write-Info ""
+        Write-Info "ALTERNATIF - iki kurulum dosyasi (ters vekil):"
+        Write-Info "  URL Rewrite  https://www.iis.net/downloads/microsoft/url-rewrite"
+        Write-Info "  ARR          https://www.iis.net/downloads/microsoft/application-request-routing"
+        Write-Info ""
+        Write-Info "Sunucuda internet yoksa MSI dosyalarini baska bir bilgisayarda"
+        Write-Info "indirip kopyalayin; kurulumun kendisi internet gerektirmez."
+        Write-Info ""
         Write-Info "Kurduktan sonra bu script'i tekrar calistirin."
-        Write-Info "Alternatif: -Mod iis (yalnizca HttpPlatformHandler ister)."
         exit 1
     }
-    Write-Ok "URL Rewrite kurulu."
-
-    # ARR'nin varligini modul adindan tahmin etmek yerine, ihtiyacimiz olan
-    # ayari yazmayi deneyerek anliyoruz: proxy bolumu yalnizca ARR kuruluysa
-    # var oldugu icin bu en kesin kontrol.
-    & $appcmd set config -section:system.webServer/proxy /enabled:"True" /commit:apphost 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Fail "Application Request Routing (ARR) kurulu degil."
-        Write-Info "URL Rewrite tek basina baska bir sunucuya istek iletemez; ARR gerekir."
-        Write-Info "Indirme: https://www.iis.net/downloads/microsoft/application-request-routing"
-        Write-Info "Kurduktan sonra bu script'i tekrar calistirin."
-        Write-Info "Alternatif: -Mod iis (yalnizca HttpPlatformHandler ister)."
-        exit 1
-    }
-    Write-Ok "ARR kurulu ve vekil modu acildi."
-
-    # Gercek istemci adresini portala tasiyabilmek icin sunucu degiskenine
-    # izin gerekiyor; izin verilemezse web.config'ten ilgili blok cikarilir.
-    # Izin zaten varsa tekrar eklemek hata verecegi icin once listeye bakiyoruz.
-    $izinliler = (& $appcmd list config -section:system.webServer/rewrite/allowedServerVariables 2>&1) -join "`n"
-
-    if ($izinliler -match "HTTP_X_FORWARDED_FOR") {
-        $script:xffIzinli = $true
-    } else {
-        & $appcmd set config -section:system.webServer/rewrite/allowedServerVariables `
-            /+"[name='HTTP_X_FORWARDED_FOR']" /commit:apphost 2>&1 | Out-Null
-        $script:xffIzinli = ($LASTEXITCODE -eq 0)
-    }
-
-    if ($script:xffIzinli) {
-        Write-Ok "Istemci adresi (X-Forwarded-For) portala iletilecek."
-    } else {
-        Write-Warn2 "X-Forwarded-For izni eklenemedi; istemci adresi iletilmeyecek."
-        Write-Info "Anket hiz siniri bu durumda cerez tabanli calisir, sorun degil."
-    }
+    Write-Ok "Secilen mod: $Mod"
 } else {
-    $script:xffIzinli = $false
-    if (-not (Test-IisModule "httpPlatformHandler")) {
-        Write-Fail "HttpPlatformHandler kurulu degil."
-        Write-Info "Indirme: https://www.iis.net/downloads/microsoft/httpplatformhandler"
-        Write-Info "Kurduktan sonra bu script'i tekrar calistirin."
-        Write-Info "Alternatif: -Mod vekil (URL Rewrite + ARR ister)."
+    if ($Mod -eq "iis" -and -not $hpVar) {
+        Write-Fail "-Mod iis icin HttpPlatformHandler gerekir; kurulu degil."
+        Write-Info "https://www.iis.net/downloads/microsoft/httpplatformhandler"
         exit 1
     }
-    Write-Ok "HttpPlatformHandler kurulu."
+    if ($Mod -eq "vekil" -and -not ($rwVar -and $arrVar)) {
+        Write-Fail "-Mod vekil icin URL Rewrite ve ARR gerekir; eksik."
+        exit 1
+    }
+    Write-Ok "Mod: $Mod"
 }
 
 # ————————————————————————————— .env —————————————————————————————
@@ -228,7 +227,6 @@ if (-not (Test-Path -LiteralPath $envPath)) {
     Write-Ok ".env zaten var."
 }
 
-# Dis adres: QR kodlarin ve mutlak baglantilarin uretilmesinde kullanilir.
 $https = [bool]$Sertifika -or $HttpsZorla
 $scheme = if ($https) { "https" } else { "http" }
 $publicHost = if ($HostAdi) { $HostAdi } else { $env:COMPUTERNAME }
@@ -251,8 +249,11 @@ if ($Mod -eq "vekil") {
     Set-EnvValue $envPath "PORT" "$NodePort"
     if ($YalnizIIS) {
         Set-EnvValue $envPath "HOSTNAME" "127.0.0.1"
-        Write-Ok "Portal yalnizca 127.0.0.1 dinleyecek (IIS atlatilamaz)."
+        Write-Ok "Portal yalnizca 127.0.0.1 dinleyecek."
     }
+} else {
+    # Bu modda portu IIS secer (HTTP_PLATFORM_PORT); .env'deki PORT kullanilmaz.
+    Write-Info "Portu IIS secer; .env icindeki PORT bu modda kullanilmaz."
 }
 
 # ————————————————————————————— Veritabani —————————————————————————————
@@ -276,140 +277,174 @@ if (Test-Path -LiteralPath (Join-Path $dataDir "portal.db")) {
     Write-Info "Ayarlar > Sifre Degistir. Degistirilene kadar panelde uyari gorunur."
 }
 
+if (-not (Test-Path -LiteralPath $logDir)) {
+    New-Item -ItemType Directory -Path $logDir | Out-Null
+}
+
 # ————————————————————————————— Site klasoru ve web.config —————————————————————————————
 
 Write-Step "Site klasoru ve web.config"
 
-# IIS sitesi paketin kokunu DEGIL, yalnizca web.config iceren ayri bir
-# klasoru gosterir. Boylece .env veya data\ altindaki dosyalarin yanlis bir
-# yapilandirmada statik dosya olarak sunulmasi mumkun olmaz.
-if (-not (Test-Path -LiteralPath $siteDir)) {
-    New-Item -ItemType Directory -Path $siteDir | Out-Null
-}
+if ($Mod -eq "iis") {
+    # Site dogrudan paket klasorunu gosterir ve paketle gelen web.config
+    # kullanilir. Yollari goreceli oldugu icin duzenleme gerekmez; tum
+    # istekler handler'a gittigi ve request filtering data\ gibi yollari
+    # gizledigi icin statik dosya sizmasi olmuyor.
+    $siteDir = $paket
+    $kokConfig = Join-Path $paket "web.config"
 
-$sablon = Join-Path $PSScriptRoot $(if ($Mod -eq "vekil") { "web.config.vekil" } else { "web.config.iis" })
-if (-not (Test-Path -LiteralPath $sablon)) {
-    Write-Fail "Sablon bulunamadi: $sablon"
-    exit 1
-}
+    if (-not (Test-Path -LiteralPath $kokConfig)) {
+        Write-Fail "web.config bulunamadi: $kokConfig"
+        Write-Info "Arsivi yeniden acin."
+        exit 1
+    }
 
-$config = Get-Content -LiteralPath $sablon -Raw
+    Write-Ok "Paketle gelen web.config kullanilacak."
+    Write-Info "Site yolu: $siteDir"
 
-if ($Mod -eq "vekil") {
+    # node.exe beklenen yerde degilse processPath'i gercek yola cek.
+    $beklenenNode = Join-Path $env:ProgramFiles "nodejs\node.exe"
+    if ($nodeExe -ne $beklenenNode) {
+        $icerik = Get-Content -LiteralPath $kokConfig -Raw
+        $icerik = $icerik.Replace('processPath="%ProgramFiles%\nodejs\node.exe"', "processPath=`"$nodeExe`"")
+        [IO.File]::WriteAllText($kokConfig, $icerik, (New-Object Text.UTF8Encoding($false)))
+        Write-Ok "processPath gercek Node.js yoluna guncellendi: $nodeExe"
+    }
+} else {
+    # Ters vekilde site, yalnizca web.config iceren ayri bir klasoru gosterir.
+    $siteDir = Join-Path $paket "iis-site"
+    if (-not (Test-Path -LiteralPath $siteDir)) {
+        New-Item -ItemType Directory -Path $siteDir | Out-Null
+    }
+
+    $sablon = Join-Path $PSScriptRoot "web.config.vekil"
+    if (-not (Test-Path -LiteralPath $sablon)) {
+        Write-Fail "Sablon bulunamadi: $sablon"
+        exit 1
+    }
+
+    $config = Get-Content -LiteralPath $sablon -Raw
     $config = $config.Replace("http://127.0.0.1:3000/", "http://127.0.0.1:$NodePort/")
 
     if ($HttpsZorla) {
         $config = $config.Replace(
             'name="SEC-K HTTPS yonlendirme" enabled="false"',
             'name="SEC-K HTTPS yonlendirme" enabled="true"')
+    } else {
+        # HSTS: sertifika yokken gonderilirse site erisilemez hale gelebilir.
+        $config = $config -replace '(?s)\s*<!--\s*HSTS satiri.*?/>', ''
     }
 
-    # Izin verilmeyen bir sunucu degiskenine yazmak IIS'te 500.19 hatasi
-    # uretir; izin alinamadiysa blogu aciklamasiyla birlikte cikariyoruz.
-    if (-not $script:xffIzinli) {
+    # ARR vekil modu sunucu genelinde acik olmali; web.config'ten ayarlanamaz.
+    $r = Invoke-AppCmd "set" "config" "-section:system.webServer/proxy" "/enabled:True" "/commit:apphost"
+    if ($r.Ok) { Write-Ok "ARR vekil modu acik." }
+    else {
+        Write-Fail "ARR vekil modu acilamadi."
+        Write-Info $r.Metin
+        exit 1
+    }
+
+    # Gercek istemci adresini portala tasimak icin sunucu degiskeni izni.
+    $izinli = (Invoke-AppCmd "list" "config" "-section:system.webServer/rewrite/allowedServerVariables").Metin
+    $xffIzinli = $false
+    if ($izinli -match "HTTP_X_FORWARDED_FOR") {
+        $xffIzinli = $true
+    } else {
+        $r2 = Invoke-AppCmd "set" "config" "-section:system.webServer/rewrite/allowedServerVariables" "/+[name='HTTP_X_FORWARDED_FOR']" "/commit:apphost"
+        $xffIzinli = $r2.Ok
+    }
+
+    if ($xffIzinli) {
+        Write-Ok "Istemci adresi (X-Forwarded-For) portala iletilecek."
+    } else {
+        Write-Warn2 "X-Forwarded-For izni eklenemedi; anket hiz siniri cerezle calisir."
         $config = $config -replace '(?s)\s*<!--\s*Gercek istemci adresini.*?</serverVariables>', ''
     }
-} else {
-    $config = $config.Replace("C:\Program Files\nodejs\node.exe", $nodeExe)
-    $config = $config.Replace("C:\seckportal\baslat.cjs", (Join-Path $paket "baslat.cjs"))
-    $config = $config.Replace("C:\seckportal\data", $dataDir)
 
-    $logDir = Join-Path $dataDir "iis-log"
-    if (-not (Test-Path -LiteralPath $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
-}
-
-# HSTS: tarayiciya "bu siteye bir yil boyunca hep HTTPS ile gel" der. Sertifika
-# yokken gonderilirse site erisilemez hale gelebilecegi icin yalnizca HTTPS
-# zorlanirken biraktiyoruz.
-if (-not $HttpsZorla) {
-    $config = $config -replace '(?s)\s*<!--\s*HSTS satiri.*?/>', ''
-}
-
-# removeServerHeader yalnizca IIS 10 ve ustunde var (Windows Server 2016+).
-# Eski IIS bu ozelligi taniyamaz ve site 500.19 verir.
-$iisMajor = 0
-try {
-    $iisMajor = [int](Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\InetStp" -ErrorAction Stop).MajorVersion
-} catch {
+    # removeServerHeader yalnizca IIS 10+ da var; eski IIS'te site 500.19 verir.
     $iisMajor = 0
-}
+    try { $iisMajor = [int](Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\InetStp" -ErrorAction Stop).MajorVersion } catch { }
+    if ($iisMajor -lt 10) {
+        $config = $config.Replace(' removeServerHeader="true"', '')
+        Write-Info "IIS ${iisMajor}: 'Server' basligi kaldirma ozelligi atlandi."
+    }
 
-if ($iisMajor -lt 10) {
-    $config = $config.Replace(' removeServerHeader="true"', '')
-    Write-Info "IIS $iisMajor tespit edildi; 'Server' basligi kaldirma ozelligi atlandi."
-} else {
-    Write-Ok "IIS $iisMajor - 'Server' ve 'X-Powered-By' basliklari kaldirilacak."
+    $configPath = Join-Path $siteDir "web.config"
+    [IO.File]::WriteAllText($configPath, $config, (New-Object Text.UTF8Encoding($false)))
+    Write-Ok "web.config yazildi: $configPath"
 }
-
-$configPath = Join-Path $siteDir "web.config"
-# IIS yapilandirma dosyalari BOM'suz UTF-8 olmali.
-[IO.File]::WriteAllText($configPath, $config, (New-Object Text.UTF8Encoding($false)))
-Write-Ok "web.config yazildi: $configPath"
 
 # ————————————————————————————— Uygulama havuzu —————————————————————————————
 
 Write-Step "Uygulama havuzu"
 
-$poolPath = "IIS:\AppPools\$SiteAdi"
-if (-not (Test-Path -LiteralPath $poolPath)) {
-    New-WebAppPool -Name $SiteAdi | Out-Null
+if (-not (Test-IisNesne "apppool" $SiteAdi)) {
+    $r = Invoke-AppCmd "add" "apppool" "/name:$SiteAdi"
+    if (-not $r.Ok) {
+        Write-Fail "Uygulama havuzu olusturulamadi."
+        Write-Info $r.Metin
+        exit 1
+    }
     Write-Ok "Havuz olusturuldu: $SiteAdi"
 } else {
     Write-Ok "Havuz zaten var: $SiteAdi"
 }
 
-# .NET calistirmiyoruz; havuz yalnizca istekleri tasiyor.
-Set-ItemProperty -Path $poolPath -Name "managedRuntimeVersion" -Value ""
-# Portal surekli acik kalmali: bosta kapatma ve gunluk geri donusum kapali.
-Set-ItemProperty -Path $poolPath -Name "processModel.idleTimeout" -Value ([TimeSpan]::Zero)
-Set-ItemProperty -Path $poolPath -Name "recycling.periodicRestart.time" -Value ([TimeSpan]::Zero)
-try { Set-ItemProperty -Path $poolPath -Name "startMode" -Value "AlwaysRunning" } catch { }
-Write-Ok "Havuz ayarlandi (yonetilen kod yok, bosta kapatma kapali)."
+# .NET calistirmiyoruz; 32 bit mod %ProgramFiles% degiskenini yanlis klasore
+# cozer; portal surekli acik kalmali.
+$ayarlar = @(
+    "/managedRuntimeVersion:",
+    "/enable32BitAppOnWin64:false",
+    "/processModel.idleTimeout:00:00:00",
+    "/recycling.periodicRestart.time:00:00:00"
+)
+foreach ($a in $ayarlar) {
+    $r = Invoke-AppCmd "set" "apppool" $SiteAdi $a
+    if (-not $r.Ok) { Write-Warn2 "Havuz ayari uygulanamadi: $a" }
+}
+# startMode yalnizca IIS 8+ da var; basarisiz olursa onemli degil.
+Invoke-AppCmd "set" "apppool" $SiteAdi "/startMode:AlwaysRunning" | Out-Null
+Write-Ok "Havuz ayarlandi (yonetilen kod yok, 64 bit, bosta kapatma kapali)."
 
 # ————————————————————————————— Site ve baglantilar —————————————————————————————
 
 Write-Step "Site ve baglantilar"
 
-$hedefBinding = "*:${HttpPort}:$HostAdi"
+$httpBinding = "http/*:${HttpPort}:$HostAdi"
+$bindingInfo = "*:${HttpPort}:$HostAdi"
 
-# Ayni port + host adini kullanan baska bir site varsa ikisi birlikte
-# calismaz; kullaniciyi ucu acik bir hataya birakmak yerine uyariyoruz.
-foreach ($s in Get-Website) {
-    if ($s.Name -eq $SiteAdi) { continue }
-    foreach ($b in $s.bindings.Collection) {
-        if ($b.protocol -eq "http" -and $b.bindingInformation -eq $hedefBinding) {
-            Write-Fail "Port $HttpPort (host: '$HostAdi') zaten '$($s.Name)' sitesinde kullaniliyor."
-            Write-Info "Cozum: -HostAdi seck.turkishfuel.com verin (ayni portu host adiyla"
-            Write-Info "paylasabilirsiniz) veya -HttpPort 8080 gibi bos bir port secin."
-            exit 1
-        }
+# Ayni port + host adini kullanan baska bir site varsa ikisi birlikte calismaz.
+$tumSiteler = (Invoke-AppCmd "list" "sites").Metin
+foreach ($satir in ($tumSiteler -split "`n")) {
+    if ($satir -match [regex]::Escape($bindingInfo) -and $satir -notmatch [regex]::Escape($SiteAdi)) {
+        Write-Fail "Su baglanti baska bir sitede kullaniliyor: $bindingInfo"
+        Write-Info $satir.Trim()
+        Write-Info "Cozum: -HostAdi seck.turkishfuel.com verin (ayni portu host adiyla"
+        Write-Info "paylasabilirsiniz) veya -HttpPort 8080 gibi bos bir port secin."
+        exit 1
     }
 }
 
-$site = Get-Website | Where-Object { $_.Name -eq $SiteAdi }
-
-if (-not $site) {
-    if ($HostAdi) {
-        New-Website -Name $SiteAdi -PhysicalPath $siteDir -ApplicationPool $SiteAdi `
-            -Port $HttpPort -HostHeader $HostAdi | Out-Null
-    } else {
-        New-Website -Name $SiteAdi -PhysicalPath $siteDir -ApplicationPool $SiteAdi `
-            -Port $HttpPort | Out-Null
+if (-not (Test-IisNesne "site" $SiteAdi)) {
+    $r = Invoke-AppCmd "add" "site" "/name:$SiteAdi" "/physicalPath:$siteDir" "/bindings:$httpBinding"
+    if (-not $r.Ok) {
+        Write-Fail "Site olusturulamadi."
+        Write-Info $r.Metin
+        exit 1
     }
-    Write-Ok "Site olusturuldu: $SiteAdi  ($hedefBinding)"
+    Write-Ok "Site olusturuldu: $SiteAdi  ($bindingInfo)"
+
+    $r = Invoke-AppCmd "set" "app" "$SiteAdi/" "/applicationPool:$SiteAdi"
+    if (-not $r.Ok) { Write-Warn2 "Site havuza baglanamadi; IIS Yoneticisi'nden secin." }
 } else {
-    Set-ItemProperty -Path "IIS:\Sites\$SiteAdi" -Name "physicalPath"        -Value $siteDir
-    Set-ItemProperty -Path "IIS:\Sites\$SiteAdi" -Name "applicationPool"     -Value $SiteAdi
-    Write-Ok "Site zaten var, klasor ve havuz guncellendi."
+    Write-Ok "Site zaten var, ayarlari guncelleniyor."
+    Invoke-AppCmd "set" "vdir" "$SiteAdi/" "/physicalPath:$siteDir" | Out-Null
+    Invoke-AppCmd "set" "app" "$SiteAdi/" "/applicationPool:$SiteAdi" | Out-Null
 
-    $varMi = $false
-    foreach ($b in $site.bindings.Collection) {
-        if ($b.protocol -eq "http" -and $b.bindingInformation -eq $hedefBinding) { $varMi = $true }
-    }
-    if (-not $varMi) {
-        if ($HostAdi) { New-WebBinding -Name $SiteAdi -Protocol http -Port $HttpPort -HostHeader $HostAdi }
-        else          { New-WebBinding -Name $SiteAdi -Protocol http -Port $HttpPort }
-        Write-Ok "HTTP baglantisi eklendi: $hedefBinding"
+    if ($tumSiteler -notmatch [regex]::Escape($bindingInfo)) {
+        $r = Invoke-AppCmd "set" "site" $SiteAdi "/+bindings.[protocol='http',bindingInformation='$bindingInfo']"
+        if ($r.Ok) { Write-Ok "HTTP baglantisi eklendi: $bindingInfo" }
+        else { Write-Warn2 "HTTP baglantisi eklenemedi." }
     }
 }
 
@@ -418,124 +453,121 @@ if (-not $site) {
 if ($Sertifika) {
     Write-Step "HTTPS"
 
-    $Sertifika = ($Sertifika -replace '[^0-9A-Fa-f]', '').ToUpper()
-    $cert = Get-ChildItem -Path Cert:\LocalMachine\My |
-            Where-Object { $_.Thumbprint -eq $Sertifika }
+    $parmak = ($Sertifika -replace '[^0-9A-Fa-f]', '').ToUpper()
+    $cert = Get-ChildItem -Path Cert:\LocalMachine\My -ErrorAction SilentlyContinue |
+            Where-Object { $_.Thumbprint -eq $parmak }
 
     if (-not $cert) {
-        Write-Warn2 "Sertifika bulunamadi: $Sertifika"
-        Write-Info "Yuklu sertifikalari gormek icin:"
+        Write-Warn2 "Sertifika bulunamadi: $parmak"
+        Write-Info "Yuklu sertifikalar:"
         Write-Info "  Get-ChildItem Cert:\LocalMachine\My | Format-List Subject, Thumbprint"
-        Write-Info "HTTPS baglantisini IIS Yoneticisi > Baglantilar ekranindan da"
-        Write-Info "elle ekleyebilirsiniz (bkz. iis\IIS.md)."
+        Write-Info "HTTPS baglantisini IIS Yoneticisi > Baglamalar ekranindan elle"
+        Write-Info "ekleyebilirsiniz (bkz. iis\IIS.md)."
     } else {
-        Write-Info "Sertifika: $($cert.Subject)"
+        Write-Info "Sertifika : $($cert.Subject)"
         Write-Info "Gecerlilik: $($cert.NotAfter.ToString('yyyy-MM-dd'))"
 
-        $sslVar = $false
-        $site2 = Get-Website | Where-Object { $_.Name -eq $SiteAdi }
-        foreach ($b in $site2.bindings.Collection) {
-            if ($b.protocol -eq "https" -and $b.bindingInformation -eq "*:${HttpsPort}:$HostAdi") { $sslVar = $true }
-        }
+        $sslInfo = "*:${HttpsPort}:$HostAdi"
+        $sniBayrak = if ($HostAdi) { "1" } else { "0" }
 
-        if (-not $sslVar) {
-            try {
-                if ($HostAdi) {
-                    # SNI: ayni IP'de birden fazla HTTPS sitesi olabilsin.
-                    New-WebBinding -Name $SiteAdi -Protocol https -Port $HttpsPort `
-                        -HostHeader $HostAdi -SslFlags 1
-                } else {
-                    New-WebBinding -Name $SiteAdi -Protocol https -Port $HttpsPort
-                }
-                Write-Ok "HTTPS baglantisi eklendi (port $HttpsPort)."
-            } catch {
-                Write-Warn2 "HTTPS baglantisi eklenemedi: $($_.Exception.Message)"
+        $mevcut = (Invoke-AppCmd "list" "site" $SiteAdi).Metin
+        if ($mevcut -notmatch [regex]::Escape("https/$sslInfo")) {
+            $r = Invoke-AppCmd "set" "site" $SiteAdi "/+bindings.[protocol='https',bindingInformation='$sslInfo',sslFlags='$sniBayrak']"
+            if ($r.Ok) { Write-Ok "HTTPS baglantisi eklendi (port $HttpsPort)." }
+            else {
+                Write-Warn2 "HTTPS baglantisi eklenemedi."
+                Write-Info $r.Metin
             }
         } else {
             Write-Ok "HTTPS baglantisi zaten var."
         }
 
-        try {
-            $binding = Get-WebBinding -Name $SiteAdi -Protocol https |
-                       Where-Object { $_.bindingInformation -eq "*:${HttpsPort}:$HostAdi" }
-            if ($binding) {
-                $binding.AddSslCertificate($cert.Thumbprint, "My")
-                Write-Ok "Sertifika baglantiya atandi."
-            } else {
-                Write-Warn2 "HTTPS baglantisi bulunamadi, sertifika atanamadi."
-            }
-        } catch {
-            Write-Warn2 "Sertifika atanamadi: $($_.Exception.Message)"
-            Write-Info "IIS Yoneticisi > $SiteAdi > Baglantilar > https satiri > Duzenle"
+        # Sertifikayi baglantiya ata. netsh her IIS surumunde ayni sekilde
+        # calisiyor; WebAdministration modulu gerekmiyor.
+        $appId = "{4dc3e181-e14b-4a21-b022-59fc669b0914}"
+        if ($HostAdi) {
+            $ns = & netsh http add sslcert hostnameport="${HostAdi}:$HttpsPort" certhash=$parmak appid=$appId certstorename=MY 2>&1
+        } else {
+            $ns = & netsh http add sslcert ipport="0.0.0.0:$HttpsPort" certhash=$parmak appid=$appId certstorename=MY 2>&1
+        }
+
+        $nsMetin = ($ns | ForEach-Object { "$_" }) -join " "
+        if ($LASTEXITCODE -eq 0) {
+            Write-Ok "Sertifika baglantiya atandi."
+        } elseif ($nsMetin -match "1183|zaten|already|exists") {
+            Write-Ok "Sertifika baglantisi zaten tanimli."
+        } else {
+            Write-Warn2 "Sertifika netsh ile atanamadi."
+            Write-Info $nsMetin
+            Write-Info "IIS Yoneticisi > $SiteAdi > Baglamalar > https > Duzenle"
             Write-Info "ekranindan sertifikayi listeden secmeniz yeterli."
         }
     }
 } elseif ($HttpsZorla) {
     Write-Warn2 "-HttpsZorla verildi ama -Sertifika verilmedi."
     Write-Info "HTTPS baglantisini elle eklediyseniz sorun yok; eklemediyseniz"
-    Write-Info "site HTTP uzerinden acilmayacak. Bkz. iis\IIS.md"
+    Write-Info "site HTTP uzerinden acilmayacak."
 }
 
 # ————————————————————————————— Izinler —————————————————————————————
 
 Write-Step "Klasor izinleri"
 
-$poolUser = "IIS AppPool\$SiteAdi"
-
-# (OI)(CI) devralinabilir izin verir; alt dosyalara Windows kendisi yayar.
-# Paket klasorunde on binlerce dosya oldugu icin /T ile tek tek dolasmiyoruz.
-& icacls "$siteDir" /grant "${poolUser}:(OI)(CI)(RX)" /C /Q | Out-Null
-Write-Ok "Site klasorune okuma izni verildi."
-
-<#
-    .env oturum cookie'lerini imzalayan gizli anahtari, data\ ise veritabanini
-    ve yuklenen PDF'leri tutuyor. Klasorden izin devraldiklari surece sunucuda
-    oturum acabilen herkes anahtari okuyabilir; anahtari bilen kisi kendine
-    yonetici oturum cookie'si uretebilir. Devralmayi kesip yalnizca SYSTEM ve
-    yerel yoneticilere yetki veriyoruz (gruplar SID ile: Turkce Windows'ta
-    "Administrators" -> "Yoneticiler").
-#>
 $SID_SYSTEM = "*S-1-5-18"
 $SID_ADMINS = "*S-1-5-32-544"
-$izinTamam = $true
+$SID_IISUSR = "*S-1-5-32-568"
+$poolUser = "IIS AppPool\$SiteAdi"
 
+<#
+    .env oturum imza anahtarini, data\ ise veritabanini ve PDF'leri tutuyor.
+    Klasorden izin devraldiklari surece sunucuda oturum acabilen herkes
+    anahtari okuyabilir; anahtari bilen kendine yonetici cookie'si uretir.
+    Devralmayi kesip yalnizca SYSTEM ve yerel yoneticilere yetki veriyoruz.
+    Gruplar SID ile: Turkce Windows'ta "Administrators" -> "Yoneticiler".
+#>
 foreach ($hedef in @($envPath, $dataDir)) {
     if (-not (Test-Path -LiteralPath $hedef)) { continue }
-
     $klasorMu = (Get-Item -LiteralPath $hedef) -is [IO.DirectoryInfo]
     $bayrak = if ($klasorMu) { "(OI)(CI)(F)" } else { "(F)" }
-
     & icacls "$hedef" /inheritance:r /grant "${SID_SYSTEM}:$bayrak" /grant "${SID_ADMINS}:$bayrak" /T /C /Q 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { $izinTamam = $false }
 }
-
-if ($izinTamam) {
-    Write-Ok ".env ve data\ yalnizca SYSTEM ve yoneticilere acik."
-} else {
-    Write-Warn2 ".env / data\ izinleri tam ayarlanamadi."
-}
+Write-Ok ".env ve data\ yalnizca SYSTEM ve yoneticilere acik."
 
 if ($Mod -eq "iis") {
-    # Bu modda Node surecini havuz kimligi calistirir: programa okuma, veri
-    # klasorune yazma, .env dosyasina okuma izni gerekir. Yukaridaki kilidin
-    # ARDINDAN veriliyor ki devralma kesme bu izinleri silmesin.
-    & icacls "$paket"   /grant "${poolUser}:(OI)(CI)(RX)" /C /Q | Out-Null
-    & icacls "$dataDir" /grant "${poolUser}:(OI)(CI)(M)"  /T /C /Q | Out-Null
-    if (Test-Path -LiteralPath $envPath) {
-        & icacls "$envPath" /grant "${poolUser}:(R)" /C /Q | Out-Null
+    # Sureci havuz kimligi calistirir: pakete okuma, data\ ya yazma gerekir.
+    # Kilitten SONRA veriliyor ki devralma kesme bu izinleri silmesin.
+    # Havuz kimligi cozulemezse IIS_IUSRS grubuna veriyoruz.
+    $kimlikVar = $true
+    try {
+        $null = (New-Object Security.Principal.NTAccount($poolUser)).Translate([Security.Principal.SecurityIdentifier])
+    } catch { $kimlikVar = $false }
+
+    $kimler = @()
+    if ($kimlikVar) { $kimler += $poolUser } else { Write-Warn2 "'$poolUser' kimligi cozulemedi; IIS_IUSRS kullanilacak." }
+    $kimler += $SID_IISUSR
+
+    foreach ($kim in $kimler) {
+        & icacls "$paket"   /grant "${kim}:(OI)(CI)(RX)" /C /Q 2>&1 | Out-Null
+        & icacls "$dataDir" /grant "${kim}:(OI)(CI)(M)"  /T /C /Q 2>&1 | Out-Null
+        if (Test-Path -LiteralPath $envPath) {
+            & icacls "$envPath" /grant "${kim}:(R)" /C /Q 2>&1 | Out-Null
+        }
     }
-    Write-Ok "Havuz kimligine gereken okuma/yazma izinleri verildi."
+    Write-Ok "Havuz kimligine okuma ve data\ yazma izni verildi."
+} else {
+    & icacls "$siteDir" /grant "${SID_IISUSR}:(OI)(CI)(RX)" /C /Q 2>&1 | Out-Null
+    Write-Ok "Site klasorune okuma izni verildi."
 }
 
 # ————————————————————————————— Surec yonetimi —————————————————————————————
 
 Write-Step "Portal sureci"
 
-$task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+$gorev = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 
 if ($Mod -eq "iis") {
     # Iki surecin ayni veritabanina yazmasini onlemek icin gorevi kaldiriyoruz.
-    if ($task) {
+    if ($gorev) {
         Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
         Write-Ok "Zamanlanmis gorev kaldirildi; sureci artik IIS yonetiyor."
@@ -543,32 +575,28 @@ if ($Mod -eq "iis") {
         Write-Ok "Sureci IIS baslatacak; zamanlanmis gorev gerekmiyor."
     }
 
-    $ruleName = "SEC-K Portali (HTTP $NodePort)"
-    $rule = Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
-    if ($rule) {
-        Remove-NetFirewallRule -DisplayName $ruleName
+    $kural = "SEC-K Portali (HTTP $NodePort)"
+    if (Get-NetFirewallRule -DisplayName $kural -ErrorAction SilentlyContinue) {
+        Remove-NetFirewallRule -DisplayName $kural -ErrorAction SilentlyContinue
         Write-Ok "Port $NodePort guvenlik duvarindan kapatildi (artik gereksiz)."
     }
 } else {
     if ($YalnizIIS) {
-        $ruleName = "SEC-K Portali (HTTP $NodePort)"
-        $rule = Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
-        if ($rule) {
-            Remove-NetFirewallRule -DisplayName $ruleName
+        $kural = "SEC-K Portali (HTTP $NodePort)"
+        if (Get-NetFirewallRule -DisplayName $kural -ErrorAction SilentlyContinue) {
+            Remove-NetFirewallRule -DisplayName $kural -ErrorAction SilentlyContinue
             Write-Ok "Port $NodePort guvenlik duvarindan kapatildi."
         }
     }
 
-    if ($task) {
-        # .env degisiklikleri (SECK_BASE_URL, HOSTNAME) ancak surec yeniden
-        # baslayinca gecerli olur.
+    if ($gorev) {
         Stop-ScheduledTask  -TaskName $TaskName -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 2
         Start-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
         Write-Ok "Portal sureci yeniden baslatildi (.env degisiklikleri icin)."
         Start-Sleep -Seconds 6
     } else {
-        Write-Warn2 "'$TaskName' gorevi yok; portal sureci calismiyor olabilir."
+        Write-Warn2 "'$TaskName' gorevi yok - portal sureci calismiyor."
         Write-Info "Paket kokunde once sunu calistirin:  .\kur.ps1"
     }
 
@@ -586,10 +614,13 @@ if ($Mod -eq "iis") {
 
 Write-Step "Guvenlik duvari ve site baslatma"
 
-foreach ($p in @($HttpPort) + $(if ($Sertifika) { @($HttpsPort) } else { @() })) {
-    $rn = "SEC-K Portali (IIS $p)"
-    if (-not (Get-NetFirewallRule -DisplayName $rn -ErrorAction SilentlyContinue)) {
-        New-NetFirewallRule -DisplayName $rn -Direction Inbound -Action Allow `
+$portlar = @($HttpPort)
+if ($Sertifika) { $portlar += $HttpsPort }
+
+foreach ($p in $portlar) {
+    $kn = "SEC-K Portali (IIS $p)"
+    if (-not (Get-NetFirewallRule -DisplayName $kn -ErrorAction SilentlyContinue)) {
+        New-NetFirewallRule -DisplayName $kn -Direction Inbound -Action Allow `
             -Protocol TCP -LocalPort $p -Profile Domain, Private | Out-Null
         Write-Ok "Port $p ic aga acildi (genel aglara kapali)."
     } else {
@@ -597,13 +628,9 @@ foreach ($p in @($HttpPort) + $(if ($Sertifika) { @($HttpsPort) } else { @() }))
     }
 }
 
-try {
-    Start-WebAppPool -Name $SiteAdi -ErrorAction SilentlyContinue
-    Start-Website -Name $SiteAdi
-    Write-Ok "Site baslatildi."
-} catch {
-    Write-Warn2 "Site baslatilamadi: $($_.Exception.Message)"
-}
+Invoke-AppCmd "start" "apppool" $SiteAdi | Out-Null
+$r = Invoke-AppCmd "start" "site" $SiteAdi
+if ($r.Ok) { Write-Ok "Site baslatildi." } else { Write-Warn2 "Site baslatilamadi: $($r.Metin)" }
 
 # ————————————————————————————— Dogrulama —————————————————————————————
 
@@ -611,52 +638,80 @@ Write-Step "Dogrulama"
 
 $testUrl = if ($HostAdi) { "http://${HostAdi}:$HttpPort/" } else { "http://localhost:$HttpPort/" }
 
-try {
-    $r = Invoke-WebRequest -Uri $testUrl -UseBasicParsing -TimeoutSec 60 -MaximumRedirection 0
-    Write-Ok "$testUrl  ->  HTTP $($r.StatusCode)"
-} catch {
-    $status = $null
-    if ($_.Exception.Response) { $status = [int]$_.Exception.Response.StatusCode }
+# Ilk istekte IIS sureci baslatir; birkac saniye surebilir.
+Start-Sleep -Seconds 3
 
-    if ($status -eq 302 -or $status -eq 301) {
-        Write-Ok "$testUrl  ->  HTTPS'e yonlendiriyor (HTTP $status). Beklenen davranis."
+$basarili = $false
+try {
+    $r = Invoke-WebRequest -Uri $testUrl -UseBasicParsing -TimeoutSec 90 -MaximumRedirection 0
+    Write-Ok "$testUrl  ->  HTTP $($r.StatusCode)"
+    $basarili = $true
+} catch {
+    $kod = $null
+    if ($_.Exception.Response) { $kod = [int]$_.Exception.Response.StatusCode }
+
+    if ($kod -eq 302 -or $kod -eq 301) {
+        Write-Ok "$testUrl  ->  HTTPS'e yonlendiriyor (HTTP $kod). Beklenen davranis."
+        $basarili = $true
+    } elseif ($kod) {
+        Write-Fail "$testUrl  ->  HTTP $kod"
+        switch ($kod) {
+            500 { Write-Info "Yapilandirma hatasi veya portal acilamadi." }
+            502 { Write-Info "Portal sureci baslamiyor." }
+            403 { Write-Info "Site yolu veya handler yapilandirmasi hatali." }
+            404 { Write-Info "Site baska bir klasore bakiyor olabilir." }
+        }
+        Write-Info ""
+        Write-Info "Gercek hatayi gormek icin:"
+        if ($Mod -eq "iis") { Write-Info "  $logDir  klasorundeki son .log dosyasi" }
+        Write-Info "  powershell -ExecutionPolicy Bypass -File .\iis\iis-kontrol.ps1"
     } else {
-        Write-Warn2 "$testUrl yanit vermedi: $($_.Exception.Message)"
+        Write-Warn2 "$testUrl denenemedi: $($_.Exception.Message)"
         if ($HostAdi) {
             Write-Info "Host adi DNS'te tanimli olmayabilir. Sunucudan denemek icin"
             Write-Info "hosts dosyasina gecici satir ekleyebilirsiniz:"
             Write-Info "  127.0.0.1  $HostAdi"
         }
-        Write-Info "IIS gunlukleri: %SystemDrive%\inetpub\logs\LogFiles"
-        if ($Mod -eq "iis") { Write-Info "Node cikisi: $dataDir\iis-log\" }
     }
 }
 
 # ————————————————————————————— Bitti —————————————————————————————
 
 Write-Host ""
-Write-Host "  +----------------------------------------------------------+" -ForegroundColor Green
-Write-Host "  |  IIS YAYINI HAZIR                                        |" -ForegroundColor Green
-Write-Host "  +----------------------------------------------------------+" -ForegroundColor Green
+if ($basarili) {
+    Write-Host "  +----------------------------------------------------------+" -ForegroundColor Green
+    Write-Host "  |  IIS YAYINI HAZIR                                        |" -ForegroundColor Green
+    Write-Host "  +----------------------------------------------------------+" -ForegroundColor Green
+} else {
+    Write-Host "  +----------------------------------------------------------+" -ForegroundColor Yellow
+    Write-Host "  |  KURULUM BITTI - SITE HENUZ YANIT VERMIYOR               |" -ForegroundColor Yellow
+    Write-Host "  |  Tani icin: .\iis\iis-kontrol.ps1                        |" -ForegroundColor Yellow
+    Write-Host "  +----------------------------------------------------------+" -ForegroundColor Yellow
+}
+
 Write-Host ""
 Write-Info "Adres        : $baseUrl"
 Write-Info "Site         : $SiteAdi"
 Write-Info "Site klasoru : $siteDir"
 Write-Info "Mod          : $Mod"
+Write-Info "Giris        : admin / Tfs2026...  (ilk giristen sonra degistirin)"
 Write-Info ""
 
 if ($Mod -eq "iis") {
     Write-Info "Yonetim:"
-    Write-Info "  Durdur : Stop-Website  -Name '$SiteAdi'"
-    Write-Info "  Baslat : Start-Website -Name '$SiteAdi'"
-    Write-Info "  Yeniden: Restart-WebAppPool -Name '$SiteAdi'"
+    Write-Info "  Durdur  : appcmd stop site `"$SiteAdi`""
+    Write-Info "  Baslat  : appcmd start site `"$SiteAdi`""
+    Write-Info "  Yeniden : appcmd recycle apppool `"$SiteAdi`""
+    Write-Info "  Gunluk  : $logDir"
 } else {
     Write-Info "Yonetim:"
-    Write-Info "  Portal   : Stop-ScheduledTask / Start-ScheduledTask -TaskName '$TaskName'"
-    Write-Info "  IIS on yuz: Stop-Website / Start-Website -Name '$SiteAdi'"
+    Write-Info "  Portal    : Stop-ScheduledTask / Start-ScheduledTask -TaskName '$TaskName'"
+    Write-Info "  IIS on yuz: appcmd stop site `"$SiteAdi`" / appcmd start site `"$SiteAdi`""
 }
 
 Write-Info ""
+Write-Info "Tani            : .\iis\iis-kontrol.ps1"
+Write-Info "Izin onarimi    : .\iis\iis-izin.ps1"
 Write-Info "Sifre sifirlama : node komutlar\sifre.cjs"
 Write-Info "Ayrintili bilgi : iis\IIS.md"
 Write-Host ""
