@@ -136,27 +136,36 @@ if ($sistemSurum) {
 $kokConfig = Join-Path $paket "web.config"
 if (Test-Path -LiteralPath $kokConfig) {
     $cfgYol = $null
+    $cfgModul = $null
     try {
         [xml]$cfg = Get-Content -LiteralPath $kokConfig -Raw
-        $hp = $cfg.configuration.'system.webServer'.httpPlatform
-        if ($hp) { $cfgYol = $hp.processPath }
+        $ws = $cfg.configuration.'system.webServer'
+        # Once AspNetCoreModuleV2 (varsayilan), sonra HttpPlatformHandler.
+        if ($ws.aspNetCore)   { $cfgYol = $ws.aspNetCore.processPath;   $cfgModul = "AspNetCoreModuleV2" }
+        elseif ($ws.httpPlatform) { $cfgYol = $ws.httpPlatform.processPath; $cfgModul = "HttpPlatformHandler" }
     } catch {
         Yok "web.config okunamadi (bozuk XML?): $($_.Exception.Message)"
-        Sorun "web.config bozuk. iis\web.config.iis dosyasini kopyalayin veya iis-kur.ps1 calistirin."
+        Sorun "web.config bozuk. iis\web.config.ancm dosyasini kokteki web.config uzerine kopyalayin."
     }
 
     if (-not $cfgYol) {
-        Bilgi "web.config henuz KURULUM ONCESI surum (portali baslatmiyor)."
-        Bilgi "Kurulum tamamlaninca iis-kur.ps1 bunu calisan surumle degistirir."
+        Bilgi "web.config portali baslatmayan BILGI surumu (yalnizca kurulum.html)."
+        Bilgi "Portali acmak icin: iis\web.config.ancm dosyasini kokteki web.config yapin."
     } else {
+        Bilgi "web.config modulu     : $cfgModul"
         Bilgi "web.config processPath: $cfgYol"
+
+        # Goreceli yol (.\node\node.exe) paket klasorune gore cozulur.
         $cozulen = [Environment]::ExpandEnvironmentVariables($cfgYol)
+        if (-not [IO.Path]::IsPathRooted($cozulen)) {
+            $cozulen = Join-Path $paket ($cozulen -replace '^\.\\','')
+        }
         if (Test-Path -LiteralPath $cozulen) {
-            Ok "processPath gecerli bir dosyayi gosteriyor."
+            Ok "processPath gecerli bir dosyayi gosteriyor: $cozulen"
         } else {
             Yok "processPath dosyasi yok: $cozulen"
-            Bilgi "Duzeltmek icin: powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1"
-            Sorun "web.config processPath yolu gecersiz. iis-kur.ps1 bunu duzeltir."
+            Bilgi "Ikinci arsiv (node) acilmamis olabilir."
+            Sorun "web.config processPath yolu gecersiz: $cozulen bulunamadi."
         }
     }
 }
@@ -209,34 +218,42 @@ if (-not $modOkundu) {
     Sorun "Tanıyı YONETICI olarak acilmis PowerShell'de tekrar calistirin: eklenti durumu okunamadi."
 }
 
-$hpVar  = $modOkundu -and ($modMetin -match "httpPlatformHandler")
-$rwVar  = $modOkundu -and ($modMetin -match "RewriteModule")
-$arrVar = $modOkundu -and ($modMetin -match "ApplicationRequestRouting|RequestRouter")
-$inVar  = $modOkundu -and ($modMetin -match "iisnode")
+$ancmVar = $modOkundu -and ($modMetin -match "AspNetCoreModuleV2")
+$hpVar   = $modOkundu -and ($modMetin -match "httpPlatformHandler")
+$rwVar   = $modOkundu -and ($modMetin -match "RewriteModule")
+$arrVar  = $modOkundu -and ($modMetin -match "ApplicationRequestRouting|RequestRouter")
+$inVar   = $modOkundu -and ($modMetin -match "iisnode")
 
 if ($modOkundu) {
-    if ($hpVar) { Ok "HttpPlatformHandler kurulu  (dogrudan IIS uygulamasi mumkun)" }
-    else        { Yok "HttpPlatformHandler YOK" }
+    if ($ancmVar) { Ok "AspNetCoreModuleV2 kurulu  (kullandigimiz yol - ek kurulum gerekmez)" }
+    else          { Yok "AspNetCoreModuleV2 YOK" }
+
+    if ($hpVar) { Ok "HttpPlatformHandler kurulu  (alternatif: iis\web.config.iis)" }
+    else        { Bilgi "HttpPlatformHandler yok (AspNetCoreModuleV2 varsa gerekmiyor)" }
 
     if ($rwVar) { Ok "URL Rewrite kurulu" } else { Yok "URL Rewrite YOK" }
     if ($arrVar) { Ok "Application Request Routing (ARR) kurulu" } else { Yok "ARR YOK" }
     if ($inVar) { Bilgi "(iisnode kurulu - bu paket iisnode kullanmiyor)" }
+
+    if ($ancmVar -and $cfgModul -and $cfgModul -ne "AspNetCoreModuleV2") {
+        Uyari "Modul kurulu ama web.config baska modul istiyor ($cfgModul)."
+        Bilgi "iis\web.config.ancm dosyasini kokteki web.config uzerine kopyalayin."
+    }
 }
 
-if ($modOkundu -and -not $hpVar -and -not ($rwVar -and $arrVar)) {
+if ($modOkundu -and -not $ancmVar -and -not $hpVar -and -not ($rwVar -and $arrVar)) {
     Yaz ""
-    Uyari "IIS bir Node.js uygulamasini ancak bu eklentilerden biriyle yayinlar."
-    Bilgi "EN KISA YOL - tek kurulum dosyasi:"
+    Uyari "IIS bir Node.js uygulamasini ancak bir kopru modulle yayinlar."
+    Bilgi "Bu sunucuda uc modulden hicbiri yok. Kurulabilecekler:"
+    Bilgi "  ASP.NET Core Hosting Bundle (AspNetCoreModuleV2 gelir)"
     Bilgi "  HttpPlatformHandler 1.2"
-    Bilgi "  https://www.iis.net/downloads/microsoft/httpplatformhandler"
-    Bilgi ""
-    Bilgi "ALTERNATIF - iki kurulum dosyasi (ters vekil):"
-    Bilgi "  URL Rewrite  https://www.iis.net/downloads/microsoft/url-rewrite"
-    Bilgi "  ARR          https://www.iis.net/downloads/microsoft/application-request-routing"
+    Bilgi "  URL Rewrite + ARR (ters vekil)"
     Bilgi ""
     Bilgi "Sunucuda internet yoksa MSI dosyalarini baska bir bilgisayara indirip"
     Bilgi "kopyalayin; kurulum internet gerektirmez."
-    Sorun "IIS eklentisi eksik. HttpPlatformHandler 1.2 kurmak en kisa yol."
+    Bilgi "O zamana kadar iis\web.config.bilgi dosyasini web.config yaparsaniz"
+    Bilgi "site 500.19 yerine kurulum bilgi sayfasini gosterir."
+    Sorun "IIS kopru modulu eksik: AspNetCoreModuleV2 de HttpPlatformHandler de yok."
 }
 
 if ($rwVar -and $arrVar) {
@@ -285,8 +302,9 @@ if (Test-Path -LiteralPath $envPath) {
         }
     }
 } else {
-    Uyari ".env yok - ilk kurulum yapilmamis olabilir."
-    Bilgi "Olusturmak icin: powershell -ExecutionPolicy Bypass -File .\kur.ps1 -GorevAtla"
+    Bilgi ".env yok - zorunlu degil."
+    Bilgi "Oturum imza anahtari data\session-secret icinde kendiliginden uretilir."
+    Bilgi "HTTPS'e gecerken SECK_SECURE_COOKIE ve SECK_BASE_URL icin gerekecek."
 }
 
 $dbYol = Join-Path $paket "data\portal.db"
@@ -294,8 +312,9 @@ if (Test-Path -LiteralPath $dbYol) {
     $db = Get-Item -LiteralPath $dbYol
     Ok "Veritabani var ($([math]::Round($db.Length/1KB)) KB, $($db.LastWriteTime.ToString('yyyy-MM-dd HH:mm')))"
 } else {
-    Yok "data\portal.db yok - veritabani hic kurulmamis."
-    Sorun "Veritabani yok. Paket kokunde: node komutlar\seed.cjs"
+    # Ilk istekte portal semayi, dort sekmeyi ve admin hesabini kendisi kurar;
+    # bu yuzden veritabaninin olmamasi bir sorun degil.
+    Bilgi "data\portal.db yok - portal ilk acilista kendisi olusturacak."
 }
 
 # ————————————————————————————— Izinler —————————————————————————————
@@ -383,7 +402,7 @@ if ($iisVar) {
         } catch { }
     } else {
         Yok "'$SiteAdi' adinda site yok"
-        Sorun "IIS sitesi olusturulmamis. Bkz. iis\IIS.md - 'En kisa yol'."
+        Sorun "IIS sitesi olusturulmamis. Bkz. KURULUM.md - adim adim IIS Yoneticisi."
     }
 
     $havuzlar = @()

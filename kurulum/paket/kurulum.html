@@ -97,66 +97,95 @@
 <main>
 
   <div class="banner">
-    <h1>Dosyalar yerinde, kurulum henüz tamamlanmadı</h1>
-    <p>Bu sayfayı görüyorsanız IIS sitesi doğru klasörü gösteriyor. Portalın
-       çalışması için aşağıdaki adımlar kaldı.</p>
+    <h1>Dosyalar yerinde, portal henüz devrede değil</h1>
+    <p>Bu sayfayı görüyorsanız IIS sitesi doğru klasörü gösteriyor ve paket
+       eksiksiz açılmış. Şu an <b>bilgi yapılandırması</b> etkin: IIS bu
+       klasörden yalnızca bu sayfayı sunuyor, veritabanı ve PDF'ler dışarıya
+       kapalı. Portalı açmak için aşağıdaki adımlar kaldı.</p>
   </div>
 
   <h2>Neden bu sayfa çıkıyor</h2>
-  <p>Portal bir <b>Node.js</b> uygulamasıdır. IIS, PHP ve .NET uygulamalarını
-     doğrudan çalıştırır ama Node.js uygulamalarını çalıştıramaz — arada bir
-     köprü modülü gerekir. Bu modül kurulana kadar IIS bu klasörden yalnızca
-     bu bilgi sayfasını sunar; veritabanı, ayar dosyası ve PDF'ler dışarıya
-     kapalıdır.</p>
-  <p><b>Node.js kurmanız gerekmez:</b> portalın çalıştırıcısı
-     <code class="inline">node\node.exe</code> olarak paketin içinde geliyor.
-     Sunucudaki Node sürümüne dokunulmaz — aynı sunucudaki diğer uygulamalar
-     etkilenmez.</p>
+  <p>Portal bir <b>Node.js</b> uygulamasıdır. IIS, Node.js'i kendi başına
+     çalıştıramaz; arada bir köprü modülü gerekir. Bu sunucuda kurulu olan
+     <code class="inline">AspNetCoreModuleV2</code> bu işi görüyor:
+     <code class="inline">OutOfProcess</code> modunda kendisine verilen
+     programı başlatır, bir port seçip programa bildirir ve istekleri o porta
+     aktarır. Program çökerse yeniden başlatır.</p>
+  <p><b>Hiçbir şey kurmanız gerekmez.</b> Node.js çalıştırıcısı
+     <code class="inline">node\node.exe</code> olarak paketin içinde geliyor;
+     sunucudaki Node sürümüne dokunulmaz, aynı sunucudaki diğer uygulamalar
+     etkilenmez. Veritabanı, bülten sekmeleri ve yönetici hesabı ilk açılışta
+     portal tarafından kendiliğinden oluşturulur — komut çalıştırmanız
+     gerekmez.</p>
 
-  <h2>Yapılacaklar</h2>
+  <h2>Yapılacaklar — hepsi IIS Yöneticisi ve dosya kopyalama ile</h2>
   <ol>
     <li>
-      <b>HttpPlatformHandler 1.2 kurun</b>
-      <span class="neden">IIS ile Node.js arasındaki köprü — <b>kurulması
-      gereken tek şey budur.</b> Bu modül kurulduğunda IIS portalı kendisi
-      başlatır, çökerse yeniden başlatır. Tek MSI dosyasıdır; sunucuda internet
-      yoksa başka bir bilgisayara indirip kopyalayın.
-      <a href="https://www.iis.net/downloads/microsoft/httpplatformhandler">iis.net → HttpPlatformHandler</a></span>
+      <b>Portal yapılandırmasını devreye alın</b>
+      <span class="neden">Windows Gezgini'nde
+      <code class="inline">iis\web.config.ancm</code> dosyasını kopyalayıp
+      paketin köküne yapıştırın ve adını <code class="inline">web.config</code>
+      yapın (mevcut dosyanın üzerine yazın). Bu dosya IIS'e portalı hangi
+      programla başlatacağını söyler; yolları görecelidir, düzenleme
+      gerektirmez.</span>
     </li>
     <li>
-      <b>Kurulumu tamamlayın</b>
-      <span class="neden">Aşağıdaki komut veritabanını oluşturur, yönetici
-      hesabını açar, izinleri verir ve IIS yapılandırmasını devreye alır.
-      Yönetici olarak açılmış PowerShell'de, paket klasöründe çalıştırın:</span>
-<pre>powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1</pre>
+      <b>Uygulama havuzunu ayarlayın</b>
+      <span class="neden">IIS Yöneticisi → <i>Uygulama Havuzları</i> → bu
+      sitenin havuzu → <i>Temel Ayarlar</i>: <b>.NET CLR sürümü = Yönetilen Kod
+      Yok</b> (portal .NET değil). Sonra <i>Gelişmiş Ayarlar</i>:
+      <b>32 Bit Uygulamaları Etkinleştir = False</b> (paketteki
+      <code class="inline">node.exe</code> 64 bittir),
+      <b>Boşta Kalma Zaman Aşımı = 0</b> ve <b>Düzenli Aralıklarla Geri
+      Dönüşüm = 0</b> (aksi halde IIS portalı boşta kalınca kapatır, ilk
+      istek gecikir).</span>
     </li>
     <li>
-      <b>Sayfayı yenileyin</b>
-      <span class="neden">Portal açılır. Giriş bilgileri:
+      <b><code class="inline">data\</code> klasörüne yazma izni verin</b>
+      <span class="neden">Klasöre sağ tık → <i>Özellikler</i> →
+      <i>Güvenlik</i> → <i>Düzenle</i> → <b>Ekle</b> →
+      <code class="inline">IIS AppPool\&lt;havuz adı&gt;</code> → <b>Değiştir</b>
+      iznini işaretleyin. Veritabanı, yüklenen PDF'ler ve oturum anahtarı bu
+      klasöre yazılır; izin verilmezse portal başlamaz ve tarayıcıda
+      <b>502.5</b> görürsünüz.</span>
+    </li>
+    <li>
+      <b>Siteyi yeniden başlatıp Browse'a basın</b>
+      <span class="neden">IIS Yöneticisi → site → <i>Yeniden Başlat</i>, sonra
+      <i>Gözat / Browse</i>. İlk açılış veritabanını oluşturduğu için birkaç
+      saniye sürebilir. Giriş bilgileri:
       <span class="plaka">admin</span> / <span class="plaka">Tfs2026...</span>
       — ilk girişten sonra Ayarlar → Şifre Değiştir'den değiştirin.</span>
     </li>
   </ol>
 
   <div class="not">
-    <b>Modülü indiremiyorsanız</b> (iis.net indirme düğmesi
-    <code class="inline">go.microsoft.com</code> adresine gider ve bu adres
-    bazı kurumsal ağlarda kapalıdır): portal IIS olmadan da yayınlanabilir.
-    Bu durumda portal ayrılan portu kendisi dinler, ek modül ve indirme
-    gerekmez. Yönetici PowerShell'de:
-<pre>powershell -ExecutionPolicy Bypass -File .\kur.ps1 -Port 9092 -PortuBosalt</pre>
-    <span class="neden">Portu tutan IIS sitesini durdurur, veritabanını kurar,
-    açılışta otomatik başlatma görevini oluşturur ve portalı başlatır.
-    Ayrıntı: <code class="inline">iis\IIS.md</code> → “B seçeneği”.</span>
+    <b>Adım 1'den sonra 500.19 hatası alırsanız:</b> bu, IIS'in
+    <code class="inline">AspNetCoreModuleV2</code> modülünü tanımadığı anlamına
+    gelir. IIS Yöneticisi → sunucu adı → <i>Modüller</i> listesinde modülün
+    olup olmadığına bakın. Yoksa <code class="inline">iis\web.config.bilgi</code>
+    dosyasını yeniden <code class="inline">web.config</code> yapın (bu sayfaya
+    dönersiniz) ve durumu bize bildirin — sunucuda kurulu modüllere göre
+    alternatif yapılandırma dosyası hazırlanır
+    (<code class="inline">iis\IIS.md</code> → “Modülü değiştirmek gerekirse”).
   </div>
 
   <div class="not">
-    <b>Bir şey ters giderse:</b> aşağıdaki komut hiçbir şeyi değiştirmez,
-    neyin eksik olduğunu sırayla söyler ve çıktıyı
-    <code class="inline">iis-tani.txt</code> dosyasına yazar.
-<pre>powershell -ExecutionPolicy Bypass -File .\iis\iis-kontrol.ps1</pre>
-    <span class="neden">Yönetici olarak açılmış bir pencerede çalıştırın;
-    aksi halde IIS ayarlarını okuyamaz.</span>
+    <b>Portal açılmıyorsa gerçek sebep şurada yazılıdır:</b>
+    <code class="inline">data\iis-log\portal_*.log</code>. Bu dosyayı
+    klasörden çift tıklayıp açabilirsiniz; portal başlayamadığında sebebini ve
+    yapılması gerekeni oraya yazar. Hata kodlarına göre çözüm tablosu:
+    <code class="inline">iis\IIS.md</code>.
+  </div>
+
+  <div class="not">
+    <b>HTTPS:</b> sertifikayı IIS yönetir. Site → <i>Bağlamalar</i> →
+    <b>Ekle</b> → tür <code class="inline">https</code> ile sertifikayı seçin,
+    ardından paket kökündeki <code class="inline">.env</code> dosyasına
+    <code class="inline">SECK_SECURE_COOKIE=true</code> ve
+    <code class="inline">SECK_BASE_URL=https://…</code> satırlarını ekleyip
+    siteyi yeniden başlatın. Portal kendi başına TLS sunmaz, sertifika
+    üretmez.
   </div>
 
   <footer>

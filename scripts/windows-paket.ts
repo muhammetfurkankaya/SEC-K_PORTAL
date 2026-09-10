@@ -242,6 +242,22 @@ async function bundleAdminScripts(): Promise<void> {
     });
     log(`  + ${script.out}`);
   }
+
+  // İlk kurulum mantığı paketin köküne ayrıca derleniyor: baslat.cjs bunu
+  // sunucu açılmadan önce çağırıyor, böylece sunucuda hiçbir komut
+  // çalıştırılmasa da veritabanı, sekmeler ve yönetici hesabı oluşuyor.
+  // sqlite-hazir banner'ı yok: baslat.cjs onu zaten daha önce çağırıyor.
+  await esbuild({
+    entryPoints: [path.join(ROOT, "lib", "bootstrap.ts")],
+    outfile: path.join(OUT, "bootstrap.cjs"),
+    bundle: true,
+    platform: "node",
+    target: "node20",
+    format: "cjs",
+    external: ["better-sqlite3"],
+    logLevel: "warning",
+  });
+  log("  + bootstrap.cjs (ilk kurulum)");
 }
 
 async function main(): Promise<void> {
@@ -332,7 +348,7 @@ async function main(): Promise<void> {
   log(`  Klasör : yayin-paketi/`);
   log(`  Boyut  : ${size}`);
   log(`  Node.js paketle geliyor: sunucuya kurulum gerekmez`);
-  log(`  IIS ile yayın için tek eklenti: HttpPlatformHandler 1.2`);
+  log(`  IIS: AspNetCoreModuleV2 ile calisir (sunucuda kurulu)`);
   log("");
 }
 
@@ -376,8 +392,13 @@ function writeBundleFiles(): void {
     { from: path.join("iis", "iis-kur.ps1"), to: path.join("iis", "iis-kur.ps1") },
     { from: path.join("iis", "iis-kontrol.ps1"), to: path.join("iis", "iis-kontrol.ps1") },
     { from: path.join("iis", "iis-izin.ps1"), to: path.join("iis", "iis-izin.ps1") },
+    // Kökteki web.config AspNetCoreModuleV2 içindir. Sunucuda başka bir
+    // köprü modülü varsa ilgili dosya kökteki web.config üzerine kopyalanır.
+    { from: path.join("iis", "web.config.ancm"), to: path.join("iis", "web.config.ancm") },
     { from: path.join("iis", "web.config.iis"), to: path.join("iis", "web.config.iis") },
     { from: path.join("iis", "web.config.vekil"), to: path.join("iis", "web.config.vekil") },
+    // Hiçbir modül yoksa: site 500.19 yerine kurulum.html bilgi sayfasını gösterir.
+    { from: path.join("iis", "web.config.bilgi"), to: path.join("iis", "web.config.bilgi") },
     { from: path.join("iis", "IIS.md"), to: path.join("iis", "IIS.md") },
   ];
 
@@ -391,6 +412,29 @@ function writeBundleFiles(): void {
     fs.copyFileSync(from, to);
     log(`  + ${file.to.replace(/\\/g, "/")}`);
   }
+
+  // AspNetCoreModuleV2 portalin ciktisini data\iis-log\ altina yazar. Klasor
+  // yoksa gunlugu yazmaktan sessizce vazgeciyor — oysa asil ihtiyac duyulan
+  // an ILK acilis: portal hic baslamazsa tarayicida yalnizca 502.5 gorunur,
+  // sebebi bu dosyada yazilidir. Zip bos klasorleri tasimadigi icin icine
+  // bir aciklama dosyasi koyuyoruz.
+  const logDir = path.join(OUT, "data", "iis-log");
+  fs.mkdirSync(logDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(logDir, "OKU.txt"),
+    [
+      "IIS gunlukleri bu klasore yazilir.",
+      "",
+      "Portal acilmazsa buradaki en yeni portal_*.log dosyasini acin:",
+      "gercek hata orada yazilidir (tarayicidaki 502.5 yalnizca",
+      "\"surec baslamadi\" demektir).",
+      "",
+      "Bu klasoru silmeyin: yoksa IIS gunluk yazmaktan vazgecer.",
+      "",
+    ].join("\r\n"),
+    "utf8",
+  );
+  log("  + data/iis-log/OKU.txt (IIS gunluk klasoru)");
 }
 
 main().catch((error) => {

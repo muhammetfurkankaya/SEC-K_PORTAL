@@ -1,342 +1,185 @@
-# SEÇ-K Portalı — IIS üzerinden HTTP/HTTPS yayını
+# SEÇ-K Portalı — IIS üzerinden yayın
 
-## İki seçenek var — önce bunu okuyun
+## Bu sunucuda durum
 
-Portal bir **Node.js** uygulamasıdır. IIS, PHP ve .NET uygulamalarını doğrudan
-çalıştırır ama Node.js uygulamalarını çalıştıramaz. Bu yüzden iki yol var:
+Portal bir **Node.js** uygulamasıdır. IIS, Node.js'i kendi başına
+çalıştıramaz; arada bir köprü modülü gerekir. Bu modül isteği alır, bir port
+seçip programı başlatır ve istekleri o porta aktarır.
 
-| | **A seçeneği — IIS barındırır** | **B seçeneği — portal kendi portunu dinler** |
+`A8SOTIMDMV01P` sunucusunda kurulu modüller (IIS Yöneticisi → Modüller):
+
+| Modül | Durum | Kullanımı |
 |---|---|---|
-| Ek IIS modülü | HttpPlatformHandler 1.2 (tek MSI) | **gerekmez** |
-| IIS sitesi | Kalır, klasörü gösterir | Gerekmez (varsa durdurulur) |
-| Süreci kim yönetir | IIS (çökerse yeniden başlatır) | Windows zamanlanmış görevi |
-| IIS Yöneticisi'nde *Browse* | Portalı açar | Kullanılmaz; adrese doğrudan gidilir |
-| HTTPS | IIS'in sertifika yönetimi | Ters vekil veya ayrı yapılandırma gerekir |
+| **AspNetCoreModuleV2** | ✔ kurulu | **Kullandığımız yol** — kökteki `web.config` |
+| ApplicationRequestRouting | ✔ kurulu | Ters vekil (ayrı süreç gerekir) |
+| RewriteModule | ✔ kurulu | HTTP→HTTPS yönlendirme |
+| HttpPlatformHandler | ✘ yok | — |
+| iisnode | ✘ yok | — |
 
-**Node.js kurmanız gerekmiyor.** Portalın çalıştırıcısı `node\node.exe` olarak
-paketin içinde geliyor (Node.js 20, nodejs.org'dan indirilip SHA-256 ile
-doğrulanmış; ayrıntı `node\OKU.txt`). Sunucudaki Node sürümüne dokunulmaz —
-aynı sunucudaki diğer uygulamalar etkilenmez. Sistemdeki Node'u kullanmak
-isterseniz script'lere `-NodeExe "C:\Program Files\nodejs\node.exe"`
-verebilirsiniz.
+**AspNetCoreModuleV2 işi çözüyor ve kurulum gerektirmiyor.** Modül ASP.NET
+Core için yazıldı ama `hostingModel="OutOfProcess"` modunda yaptığı iş
+geneldir: `processPath` ile verilen programı başlatır, boş bir port seçip
+`ASPNETCORE_PORT` ortam değişkeniyle bildirir, istekleri o porta aktarır,
+program çökerse yeniden başlatır. Başlattığı programın .NET olma zorunluluğu
+yoktur — biz paketle gelen `node.exe`'yi başlatıyoruz.
 
-> Node.js MSI kurulumu **"The feature you are trying to use is on a network
-> resource that is unavailable"** hatası veriyorsa: Windows Installer eski
-> sürümü kaldırmak için orijinal `node-v16.13.1-x64.msi` dosyasını arıyor,
-> önbelleği silinmiş. Artık bu kuruluma hiç gerek yok — paketteki node.exe
-> yeterli. Yine de sistem geneline kurmak isterseniz eksik dosyayı
-> <https://nodejs.org/dist/v16.13.1/node-v16.13.1-x64.msi> adresinden indirip
-> "Use source" kutusuna dosyanın bulunduğu **klasörü** yazın.
-
-### B seçeneği (modül indiremiyorsanız): tek komut
-
-Yönetici PowerShell'de:
-
-```powershell
-cd E:\TSF_DATA\TFS_SECKA
-powershell -ExecutionPolicy Bypass -File .\kur.ps1 `
-    -Port 9092 -BaseUrl "http://10.34.32.55:9092" -PortuBosalt
+```
+Tarayici  =[HTTP/HTTPS]=>  IIS  =>  AspNetCoreModuleV2  =>  node.exe
+                                                            (127.0.0.1)
 ```
 
-`-PortuBosalt`, portu tutan IIS sitesini bulup durdurur. Bu gerekli çünkü
-Windows'ta portu HTTP.sys tutar; IIS sitesi açıkken başka bir program aynı
-IP:port ikilisini dinleyemez. Script durdurduktan sonra portun gerçekten
-serbest kaldığını da doğrular.
-
-Komut ayrıca veritabanını kurar, oturum anahtarını üretir, `.env` ve `data\`
-izinlerini kısıtlar, **sunucu açılışında portalı kendiliğinden başlatan** bir
-görev oluşturur, güvenlik duvarında portu iç ağa açar ve portalı başlatır.
-
-Sonuç: `http://10.34.32.55:9092` çalışır. Hiçbir IIS eklentisi, hiçbir
-indirme gerekmez — paketteki her şey yeterli.
-
-**Bu modda IIS Yöneticisi'ndeki *Browse* düğmesi kullanılmaz** (site
-durdurulmuş olur); adresi doğrudan açarsınız. Portalı kullanan personel
-açısından bir fark yoktur. Modülü sonradan temin ederseniz tek komutla
-A seçeneğine geçebilirsiniz:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1
-```
-
-Bu komut zamanlanmış görevi kaldırır, IIS sitesini geri devreye alır ve
-`web.config`'i çalışan sürümle değiştirir.
-
-### Modülü nasıl temin ederim
-
-`iis.net` üzerindeki indirme düğmesi `go.microsoft.com` adresine yönlendirir
-ve bu adres bazı kurumsal ağlarda kapalıdır (`ERR_CONNECTION_RESET`).
-Seçenekler:
-
-1. **Önce zaten kurulu mu diye bakın.** Sunucudaki diğer siteler için
-   URL Rewrite + ARR kurulmuş olabilir; bu ikisi varsa hiçbir şey indirmeniz
-   gerekmez, `iis-kur.ps1` ters vekil modunu kendisi seçer.
-   **Yönetici** komut isteminde:
-   ```
-   %windir%\system32\inetsrv\appcmd.exe list modules
-   ```
-   Çıktıda `RewriteModule` ve `ApplicationRequestRouting` (ya da
-   `httpPlatformHandler`) arayın.
-2. **İnternet erişimi olan başka bir bilgisayardan indirip kopyalayın.**
-   Dosyanın adı `httpPlatformHandler_amd64.msi` (~1 MB). Sunucuya kopyaladıktan
-   sonra çift tıklayıp kurun; kurulum internet gerektirmez.
-   Kopyaladığınız dosyanın sahiciliğini şöyle doğrulayın: sağ tık →
-   *Özellikler* → *Dijital İmzalar* sekmesinde **Microsoft Corporation**
-   yazmalı.
-3. **Ağ ekibinden `go.microsoft.com` / `download.microsoft.com` adreslerinin
-   geçici olarak açılmasını isteyin.**
-
-Hiçbiri olmuyorsa B seçeneği zaten çalışır durumdadır; modüle ihtiyaç yok.
+Portal yalnızca `127.0.0.1` dinler; dışarıya açık tek kapı IIS'tir. HTTPS'i
+IIS bitirir.
 
 ---
 
-## Çalışmadıysa önce bunu yapın
+## Kurulum: dosyaları kopyala → IIS'te göster → Browse
 
-```powershell
-cd C:\seckportal
-powershell -ExecutionPolicy Bypass -File .\iis\iis-kontrol.ps1
-```
+Ayrıntılı adımlar `KURULUM.md` dosyasında. Özet:
 
-Bu script **hiçbir şeyi değiştirmez.** Neyin eksik olduğunu sırayla söyler ve
-çıktıyı `iis-tani.txt` dosyasına yazar. Sorun çözülmezse o dosyayı paylaşmak
-yeterlidir — tahmin etmeye gerek kalmaz.
+1. İki arşivi aynı klasöre açın
+2. Site → *Temel Ayarlar* → fiziksel yol **paketin kökü**
+3. Havuz → *.NET CLR sürümü* = **Yönetilen Kod Yok**;
+   *Gelişmiş*: 32 bit **False**, boşta kalma **0**, geri dönüşüm **0**
+4. `data\` klasörüne havuz kimliği (`IIS AppPool\<havuz>`) için **Değiştir** izni
+5. **Browse**
 
----
-
-## Neden bir IIS eklentisi gerekiyor
-
-IIS, PHP veya .NET uygulamalarını doğrudan çalıştırır ama **Node.js
-uygulamalarını çalıştıramaz.** Portal bir Node.js uygulamasıdır. IIS'in bu
-kurulumdaki görevi ön kapı olmaktır: 80/443'ü dinler, sertifikayı sunar,
-isteği portala iletir. Bunun için IIS ile Node arasında bir köprü modülü
-gerekir.
-
-**Kurulması gereken tek şey:** HttpPlatformHandler 1.2 —
-<https://www.iis.net/downloads/microsoft/httpplatformhandler>
-
-Node.js paketle geliyor (`node\node.exe`), ayrıca kurmanız gerekmez.
-
-> Sunucuda internet yoksa MSI'ı internet erişimi olan bir bilgisayara indirip
-> kopyalayın. Kurulumun kendisi internet gerektirmez.
-
-Kurulu olup olmadığını görmek için:
-
-```powershell
-Get-WebGlobalModule | Where-Object Name -match 'httpPlatform|Rewrite|RequestRouting'
-```
-
-Bu komut hata veriyorsa (`Get-WebGlobalModule` tanınmıyorsa) şunu kullanın:
-
-```
-%windir%\system32\inetsrv\appcmd.exe list modules
-```
+Portal ilk açılışta veritabanını, dört bülten sekmesini ve `admin` hesabını
+kendisi oluşturur — hiçbir komut çalıştırmanız gerekmez.
 
 ---
 
-## En kısa yol (önerilen)
+## Modülü değiştirmek gerekirse
 
-Paket **doğrudan bir IIS uygulaması** olarak hazırlandı: kökünde `web.config`
-dosyası var, yolları görecelidir, düzenleme gerektirmez.
+Kökteki `web.config` AspNetCoreModuleV2 içindir. Başka bir modüle geçmek için
+ilgili dosyayı kökteki `web.config` üzerine kopyalayın:
 
-### 1. Hazırlık
+| Dosya | Hangi modül | Notu |
+|---|---|---|
+| `iis\web.config.ancm` | AspNetCoreModuleV2 | varsayılan; kökteki dosyanın yedeği |
+| `iis\web.config.iis` | HttpPlatformHandler 1.2 | modül kurulursa; `processPath` yolunu düzeltin |
+| `iis\web.config.vekil` | URL Rewrite + ARR | portalı ayrıca çalıştıran bir süreç gerekir |
+| `iis\web.config.bilgi` | (hiçbiri) | 500.19 yerine `kurulum.html` bilgi sayfasını gösterir |
 
-- Paketi kalıcı bir yere açın (kullanıcı klasörleri ve OneDrive'dan kaçının)
-- HttpPlatformHandler kurun — **tek gereksinim bu**
-- Komut penceresini kapatıp yeniden açın
-
-### 2. Tek komut
-
-```powershell
-cd C:\seckportal
-powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 -HostAdi seck.turkishfuel.com
-```
-
-Sertifikanız hazırsa aynı adımda:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 `
-    -HostAdi seck.turkishfuel.com -Sertifika A1B2C3D4E5F6...
-```
-
-Script kurulu eklentilere bakıp modu kendisi seçer, uygulama havuzunu ve
-siteyi oluşturur, izinleri verir, sertifikayı bağlar, güvenlik duvarını açar
-ve bir istekle doğrular. IIS yönetimini `appcmd` ile yapar; `WebAdministration`
-PowerShell modülü kurulu olmasa da çalışır.
-
-Sertifika parmak izini bulmak için:
-
-```powershell
-Get-ChildItem Cert:\LocalMachine\My | Format-List Subject, Thumbprint, NotAfter
-```
-
-### 3. Açın
-
-```
-https://seck.turkishfuel.com
-```
-
-Giriş: **`admin` / `Tfs2026...`** — ilk girişten sonra Ayarlar → Şifre
-Değiştir'den değiştirin.
+Dosyayı Windows Gezgini'nde kopyalayıp adını `web.config` yapmanız yeterli;
+komut satırına gerek yok. Değişiklikten sonra IIS Yöneticisi'nde siteyi
+*Yeniden Başlat* deyin.
 
 ---
 
-## Script çalışmıyorsa: IIS Yöneticisi ile elle kurulum
+## Portal açılmazsa: hatayı nerede göreceksiniz
 
-Script'in yaptığı işin tamamı dört adımdır. Hepsini arayüzden yapabilirsiniz.
-
-**1. Uygulama havuzu**
-IIS Yöneticisi → Uygulama Havuzları → **Uygulama Havuzu Ekle**
-- Ad: `SEC-K Portali`
-- .NET CLR sürümü: **Yönetilen Kod Yok**
-- Yönetilen ardışık düzen modu: Tümleşik
-
-Havuzu seçip **Gelişmiş Ayarlar**:
-- *32 Bit Uygulamaları Etkinleştir*: **False** ← önemli, `%ProgramFiles%`
-  aksi halde yanlış klasöre çözülür
-- *Boşta Kalma Zaman Aşımı (dakika)*: `0`
-- Geri Dönüşüm → *Düzenli Aralıklarla (dakika)*: `0`
-
-**2. Site**
-Siteler → **Web Sitesi Ekle**
-- Site adı: `SEC-K Portali`
-- Uygulama havuzu: `SEC-K Portali`
-- Fiziksel yol: `C:\seckportal` ← **paketin kökü**, alt klasör değil
-- Bağlama: http, port 80, ana bilgisayar adı `seck.turkishfuel.com`
-
-Paketle gelen `C:\seckportal\web.config` gerisini halleder.
-
-**3. İzinler** — atlanırsa site 502.5 verir
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\iis\iis-izin.ps1
-```
-
-Elle yapmak isterseniz, yönetici komut isteminde:
+Tarayıcıdaki hata kodu yalnızca *nerede* takıldığını söyler; **gerçek sebep
+Node'un kendi çıktısındadır** ve şu klasöre yazılır:
 
 ```
-icacls "C:\seckportal" /grant "IIS AppPool\SEC-K Portali:(OI)(CI)(RX)"
-icacls "C:\seckportal\data" /grant "IIS AppPool\SEC-K Portali:(OI)(CI)(M)" /T
+<paket klasörü>\data\iis-log\portal_*.log
 ```
 
-**4. Veritabanı** (daha önce kurulmadıysa)
+Bu dosya klasörden çift tıklayarak açılabilir. Portal başlayamadığında
+sebebini ve yapılması gerekeni buraya yazar (örneğin `data\` klasörüne yazma
+izni verilmesi gerektiğini). Dosya **hiç oluşmadıysa** modül süreci hiç
+başlatmamış demektir — o zaman aşağıdaki tablodaki 500.19 / 500.31 / 503
+satırlarına bakın.
 
-```powershell
-cd C:\seckportal
-nodejs.cmd komutlar\seed.cjs
-```
+`iis-log\` klasörü yoksa elle oluşturun ve havuz kimliğine yazma izni verin;
+modül günlük dosyasını kendisi yaratamazsa sessizce vazgeçer.
 
-`nodejs.cmd`, paketteki `node\node.exe` dosyasını kullanır; sistemde Node
-kurulu olmasa da çalışır.
+IIS'in kendi günlükleri (istek bazlı): `%SystemDrive%\inetpub\logs\LogFiles`
 
-**HTTPS bağlaması:** Site → *Bağlamalar* → **Ekle** → tür `https`, port 443,
-ana bilgisayar adı, *Sunucu Adı Belirtme Gerektir* işaretli, sertifikayı
-listeden seçin. Ardından `.env` dosyasında:
+> Sunucuda komut satırı erişiminiz varsa `iis\iis-kontrol.ps1` eksikleri
+> sırayla söyleyip çıktıyı `iis-tani.txt` dosyasına yazar; **hiçbir şeyi
+> değiştirmez.** Yetkiniz yoksa gerek de yok — yukarıdaki günlük dosyası
+> aynı bilgiyi veriyor.
+
+---
+
+## Hata kodlarına göre çözüm
+
+Hepsi IIS Yöneticisi'nden çözülebilir; komut satırı gerekmez.
+
+| Ne görüyorsunuz | Nedeni | Çözüm |
+|---|---|---|
+| **500.19** `0x8007000d` | `web.config` IIS'in tanımadığı bir bölüm içeriyor — kökteki dosya AspNetCoreModuleV2 ister, bu modül sunucuda yoksa bu hatayı verir | Modüller listesinde `AspNetCoreModuleV2` var mı diye bakın. Yoksa `iis\web.config.bilgi` dosyasını `web.config` yapın (site açılır, bilgi sayfası gösterir) ve durumu bize bildirin |
+| **500.19** başka kod | `web.config` okunamıyor veya bozuk | Havuz kimliğinin paket klasörüne **Okuma** izni olduğundan emin olun; `iis\web.config.ancm` dosyasını kökteki `web.config` üzerine kopyalayın |
+| **500.30** / **500.31** | Modül `node.exe`'yi başlattı ama süreç ayağa kalkmadı | `data\iis-log\` altındaki günlüğü okuyun. `node\node.exe` dosyası yerinde mi (ikinci arşiv açıldı mı) diye bakın |
+| **502.5** / "Process failure" | Node süreci başladı ve öldü, ya da hiç başlamadı | Günlüğü okuyun; en sık sebep `data\` klasörüne yazma izni olmaması → klasör > *Özellikler* > *Güvenlik* > *Ekle* > `IIS AppPool\<havuz adı>` > **Değiştir** |
+| **403.14** "Directory listing denied" | Handler devreye girmiyor, IIS klasörü statik sunmaya çalışıyor | Havuz *.NET CLR sürümü* = **Yönetilen Kod Yok** mu? Site fiziksel yolu `web.config`'in bulunduğu klasör mü? |
+| **404** ana sayfada | Site başka bir klasöre bakıyor | Site → *Temel Ayarlar* → fiziksel yol **paketin kökü** olmalı, alt klasör değil |
+| **HTTP 503** | Uygulama havuzu durmuş | IIS Yöneticisi → Uygulama Havuzları → havuz → **Başlat**. Tekrar duruyorsa Olay Görüntüleyici → Uygulama günlüğüne bakın |
+| Sayfa açılıyor, **giriş yapılamıyor** | `SECK_SECURE_COOKIE=true` ama site HTTP üzerinden açılıyor | `.env` içinde `false` yapın veya HTTPS bağlaması ekleyin, sonra siteyi yeniden başlatın |
+| İlk açılış **çok yavaş**, sonra düzeliyor | İlk istekte veritabanı ve hesaplar oluşturuluyor | Normal; bir kereliktir. `startupTimeLimit` 120 saniyeye ayarlı |
+| **Bültenler kayboldu** | Yükseltmede `data\` klasörü üzerine yazıldı | Eski `data\` klasörünü geri koyun; arşivi açarken bu klasörü hariç tutun |
+| QR kodu **yanlış adres** gösteriyor | `.env` içindeki `SECK_BASE_URL` | Dış adresle aynı yapın, siteyi yeniden başlatın |
+| **502.3** (yalnızca ters vekil modunda) | Portal süreci ayakta değil | O modda süreci IIS başlatmaz; ANCM moduna dönün |
+
+---
+
+## HTTPS
+
+Sertifika IIS'te durur; portal tarafında sertifika işi yoktur.
+
+1. Site → *Bağlamalar* → **Ekle** → tür `https`, port 443, ana bilgisayar adı,
+   *Sunucu Adı Belirtme Gerektir* işaretli, sertifikayı listeden seçin
+2. Paket kökündeki `.env` dosyasına (yoksa oluşturun) iki satır:
 
 ```
 SECK_BASE_URL=https://seck.turkishfuel.com
 SECK_SECURE_COOKIE=true
 ```
 
+3. IIS Yöneticisi → siteyi **Yeniden Başlat**
+
 `SECK_SECURE_COOKIE` **yalnızca HTTPS** varken `true` olmalı; HTTP'de `true`
-yaparsanız yönetim paneline giriş yapılamaz. Değiştirdikten sonra havuzu
-yeniden başlatın: `appcmd recycle apppool "SEC-K Portali"`
+yaparsanız tarayıcı oturum çerezini göndermez ve yönetim paneline giriş
+yapılamaz.
 
----
-
-## Alternatif: ters vekil (URL Rewrite + ARR)
-
-Sunucunuzda HttpPlatformHandler yerine URL Rewrite ve ARR kuruluysa bu mod
-kullanılır. Farkı: Node sürecini IIS değil, bir zamanlanmış görev çalıştırır —
-portal IIS durduğunda da ayakta kalır.
-
-```powershell
-cd C:\seckportal
-powershell -ExecutionPolicy Bypass -File .\kur.ps1          # portal + veritabani
-powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 -Mod vekil `
-    -HostAdi seck.turkishfuel.com -Sertifika A1B2C3... -HttpsZorla
-```
-
-Bu modda IIS sitesi paketin kökünü değil, yalnızca `web.config` içeren
-`iis-site\` klasörünü gösterir.
-
-HTTP'yi HTTPS'e zorlamak (`-HttpsZorla`) yalnızca bu modda vardır; URL Rewrite
-kuralı kullanır. Doğrudan IIS modunda HTTPS'e yönlendirme için IIS'in
-*HTTP Yeniden Yönlendirme* özelliğini ayrı bir HTTP sitesinde kullanın.
-
-Portal yalnızca IIS üzerinden erişilsin (3000 portu kapatılsın):
-
-```powershell
-.\iis\iis-kur.ps1 -Mod vekil -HostAdi seck.turkishfuel.com -Sertifika A1B2C3... -HttpsZorla -YalnizIIS
-```
-
----
-
-## Hata kodlarına göre çözüm
-
-Her durumda ilk adım: `.\iis\iis-kontrol.ps1`
-
-| Ne görüyorsunuz | Nedeni | Çözüm |
-|---|---|---|
-| **500.19** `0x8007000d` | `web.config` IIS'in tanımadığı bir bölüm içeriyor — neredeyse her zaman HttpPlatformHandler kurulu değildir | Modülü kurun; kurulumu bitirene kadar `copy web.config.kurulum-oncesi web.config` ile bilgi sayfasına dönebilirsiniz |
-| **502.5** / "Process failure" | Node süreci başlamıyor | `data\iis-log\` içindeki son `.log` dosyasını okuyun; genellikle izin sorunu → `.\iis\iis-izin.ps1` |
-| **502.3** (ters vekil) | Portal süreci ayakta değil | `Start-ScheduledTask -TaskName 'SEC-K Portali'` |
-| **500.52** veya boş sayfa (ters vekil) | ARR vekil modu kapalı | `appcmd set config -section:system.webServer/proxy /enabled:"True" /commit:apphost` |
-| **403.14** "Directory listing denied" | Handler devreye girmiyor; IIS klasörü statik sunmaya çalışıyor | HttpPlatformHandler kurulu mu? Havuz "Yönetilen Kod Yok" mu? |
-| **404** | Site başka bir klasöre bakıyor | Site fiziksel yolu paketin kökü olmalı |
-| **HTTP 503** | Uygulama havuzu durmuş | `appcmd start apppool "SEC-K Portali"` — sonra `data\iis-log\` bakın |
-| Sayfa açılıyor, **giriş yapılamıyor** | `SECK_SECURE_COOKIE=true` ama site HTTP | `.env` içinde `false` yapın veya HTTPS'e geçin |
-| **"is not digitally signed"** | PowerShell imza politikası | Komutu `powershell -ExecutionPolicy Bypass -File ...` biçiminde çağırın |
-| **Bültenler kayboldu** | `data\` klasörü yerinde değil | Yükseltmede eski `data\` klasörünü geri koyun |
-| QR kodu **yanlış adres** gösteriyor | `.env` içindeki `SECK_BASE_URL` | Dış adresle aynı yapın, havuzu yeniden başlatın |
-
-### Hatanın kendisini nerede göreceksiniz
-
-Doğrudan IIS modunda Node'un tüm çıktısı buraya yazılır:
-
-```
-C:\seckportal\data\iis-log\portal_*.log
-```
-
-**Tarayıcıda 502.5 görüyorsanız gerçek hata bu dosyadadır.** Portal
-başlayamadığında oraya ne yapılması gerektiğini yazar (örneğin hangi `icacls`
-komutunun çalıştırılacağını).
-
-IIS'in kendi günlükleri: `%SystemDrive%\inetpub\logs\LogFiles`
+**HTTP'yi HTTPS'e zorlamak:** `RewriteModule` kurulu olduğu için Site →
+*URL Yeniden Yazma* → *Kural Ekle* → *Boş kural* ile yapılabilir; hazır kural
+metni `KURULUM.md` içindedir.
 
 ---
 
 ## Kurulumdan sonra
 
-| İş | Doğrudan IIS modu | Ters vekil modu |
+| İş | IIS Yöneticisi'nden | Komut satırı varsa |
 |---|---|---|
-| Durdur | `appcmd stop site "SEC-K Portali"` | `Stop-ScheduledTask -TaskName 'SEC-K Portali'` |
-| Başlat | `appcmd start site "SEC-K Portali"` | `Start-ScheduledTask -TaskName 'SEC-K Portali'` |
-| Yeniden başlat | `appcmd recycle apppool "SEC-K Portali"` | görevi durdur + başlat |
-| Şifre sıfırla | `nodejs.cmd komutlar\sifre.cjs` | (aynı) |
-| Tanı | `.\iis\iis-kontrol.ps1` | (aynı) |
+| Durdur | Site → **Durdur** | `appcmd stop site "SEC-K Portali"` |
+| Başlat | Site → **Başlat** | `appcmd start site "SEC-K Portali"` |
+| Yeniden başlat (`.env` değişince) | Uygulama Havuzları → havuz → **Geri Dönüştür** | `appcmd recycle apppool "SEC-K Portali"` |
+| Sürüm yükseltme | Siteyi durdur → dosyaları üzerine kopyala (`data\` hariç) → Başlat | (aynı) |
+| Şifre sıfırlama | Yönetim panelinden (Ayarlar → Şifre Değiştir) | `nodejs.cmd komutlar\sifre.cjs` |
 
 `.env` dosyasını değiştirdikten sonra süreç **yeniden başlamalıdır**, aksi
 halde eski değerler kullanılmaya devam eder.
+
+Yönetici şifresini bilmiyorsanız ve komut satırı da yoksa: `data\portal.db`
+dosyasını yedekleyip klasörden kaldırın; portal bir sonraki açılışta
+veritabanını ve `admin` / `Tfs2026...` hesabını yeniden oluşturur. **Bu
+işlem bültenleri ve anket yanıtlarını da siler** — yalnızca son çare olarak
+kullanın.
 
 ---
 
 ## QDMS ile aynı sunucuda
 
-Aynı portu (80/443) farklı ana bilgisayar adlarıyla paylaşabilirsiniz —
-portal için `-HostAdi seck.turkishfuel.com` verin. Host adı vermeden 80'e
-bağlanmaya çalışırsanız script çakışmayı bildirip durur. Ayrı bir port da
-kullanabilirsiniz: `-HttpPort 8080`.
+Aynı portu (80/443) farklı ana bilgisayar adlarıyla paylaşabilirsiniz; site
+bağlamasına ana bilgisayar adı yazmanız yeterli. Ayrı bir port da
+kullanılabilir — bu sunucuda portal için **9092** ayrıldı.
+
+Portal süreci yalnızca `127.0.0.1` üzerinde, IIS'in seçtiği rastgele bir
+portta dinler; güvenlik duvarında ek bir kural açmanız gerekmez.
 
 ---
 
 ## Yedekleme
 
 Her şey `data\` klasöründedir: veritabanı, yüklenen PDF'ler, oturum anahtarı
-ve IIS günlükleri.
+ve IIS günlükleri. Klasörü olduğu gibi kopyalamak yeterlidir.
 
 ```powershell
-Copy-Item C:\seckportal\data "\\yedek-sunucu\seck\data-$(Get-Date -f yyyyMMdd)" -Recurse
+Copy-Item <paket>\data "\\yedek-sunucu\seck\data-$(Get-Date -f yyyyMMdd)" -Recurse
 ```
 
-Kurulum script'i bu klasörün izinlerini kısıtladığı için yedek komutunu
-yönetici olarak çalıştırın.
+Veritabanı açıkken kopyalanırsa tutarsız olabilir; sağlıklı bir yedek için
+önce siteyi durdurun (Site → **Durdur**), kopyalayın, sonra başlatın.

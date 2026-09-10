@@ -1,15 +1,22 @@
 # SEÇ-K Portalı — sunucu kurulumu
 
-Bu klasör **derlenmiş yayın paketidir.** `npm install` gerekmez, internet
-gerekmez, Python veya Visual Studio derleyicisi gerekmez.
+Bu klasör **derlenmiş yayın paketidir.** Sunucuda hiçbir kurulum
+gerektirmez: `npm install`, internet, Python, derleyici — hiçbiri gerekmez.
 
-**Node.js kurmanız da gerekmez:** portalın çalıştırıcısı `node\node.exe`
-olarak paketin içinde geliyor (Node.js 20, nodejs.org'dan indirilip SHA-256
-ile doğrulanmış — ayrıntı `node\OKU.txt`). Sunucudaki Node sürümüne
-dokunulmaz, böylece aynı sunucudaki diğer uygulamalar etkilenmez.
+**Node.js kurmanız gerekmez:** portalın çalıştırıcısı `node\node.exe` olarak
+paketin içinde geliyor (Node.js 20, nodejs.org'dan indirilip SHA-256 ile
+doğrulanmış — ayrıntı `node\OKU.txt`). Sunucudaki Node sürümüne dokunulmaz,
+böylece aynı sunucudaki diğer uygulamalar etkilenmez.
 
-Sistemde kurulu Node'u kullanmak isterseniz script'lere
-`-NodeExe "C:\Program Files\nodejs\node.exe"` verebilirsiniz.
+**IIS eklentisi kurmanız gerekmez:** paketle gelen `web.config`, IIS'te zaten
+kurulu olan **AspNetCoreModuleV2** modülünü kullanıyor. Bu modül
+`web.config`'te belirtilen programı başlatıp istekleri ona aktarıyor —
+başlattığı programın .NET olma zorunluluğu yok, burada `node.exe`.
+
+**Komut çalıştırmanız gerekmez:** portal ilk açılışta veritabanını, dört
+bülten sekmesini ve yönetici hesabını kendisi oluşturuyor.
+
+Yani yapılacak iş: **dosyaları kopyala → IIS'te siteyi göster → Browse.**
 
 ---
 
@@ -34,33 +41,33 @@ Paketi kalıcı bir yere taşıyın — örneğin `C:\seckportal`. Şunlardan ka
   SYSTEM hesabıyla çalışır ve buralara yazamayabilir)
 - Yolunda parantez bulunan klasörler (`seckportal (1)` gibi)
 
-### 2. `KUR.cmd` dosyasına sağ tıklayıp **"Yönetici olarak çalıştır"** seçin
+### 2. IIS Yöneticisi'nde üç ayar
 
-Başka bir şey indirmeniz veya kurmanız gerekmez. Kurulum size iki soru sorar:
+**a) Site paketin kökünü göstersin.**
+Site → *Temel Ayarlar* → Fiziksel yol: paketin kök klasörü (`web.config`'in
+yanındaki klasör), alt klasör değil.
 
-| Soru | Ne yazacaksınız |
+**b) Uygulama havuzu.**
+Uygulama Havuzları → sitenin havuzu → *Temel Ayarlar*:
+
+| Ayar | Değer |
 |---|---|
-| Port | Bu uygulama için ayrılan port, örneğin `9092` |
-| Adres | Ağdan erişilecek adres, örneğin `http://10.34.32.55:9092` |
+| .NET CLR sürümü | **Yönetilen Kod Yok** |
 
-Sonra sırayla: portun boş olmasını sağlar (gerekirse o portu tutan IIS
-sitesini durdurur) → `.env` oluşturup oturum anahtarı üretir → veritabanını
-kurar ve admin hesabını açar → `.env` ve `data\` izinlerini kısıtlar →
-sunucu açılışında portalı başlatan bir Windows görevi kurar → güvenlik
-duvarında portu iç ağa açar → portalı başlatır ve yanıt verdiğini doğrular.
+Aynı havuz → *Gelişmiş Ayarlar*:
 
-PowerShell'den yapmayı tercih ederseniz aynı iş:
+| Ayar | Değer | Neden |
+|---|---|---|
+| 32 Bit Uygulamaları Etkinleştir | **False** | 64 bit `node.exe` çalıştırılıyor |
+| Boşta Kalma Zaman Aşımı (dakika) | **0** | portal kapanmasın |
+| Düzenli Aralıklarla Geri Dönüşüm (dakika) | **0** | gereksiz yeniden başlatma olmasın |
 
-```powershell
-cd C:\seckportal
-powershell -ExecutionPolicy Bypass -File .\kur.ps1 `
-    -Port 9092 -BaseUrl "http://10.34.32.55:9092" -PortuBosalt
-```
+**c) `data\` klasörüne yazma izni.**
+`data` klasörü → sağ tık → *Özellikler* → *Güvenlik* → *Düzenle* → **Ekle** →
+kutuya `IIS AppPool\<havuz adı>` yazın → **Değiştir** iznini işaretleyin.
 
-> **Neden IIS'e ihtiyaç yok:** portal kendi web sunucusunu içinde taşır
-> (Node.js uygulamaları böyle çalışır). IIS'i yalnızca 80/443 üzerinden
-> yayın veya sertifika yönetimi isterseniz kullanırsınız — o zaman bir IIS
-> eklentisi gerekir, bkz. `iis\IIS.md`.
+> Bu adım atlanırsa site **502.5** verir: portal veritabanını oluşturamaz.
+> Gerçek hata her zaman `data\iis-log\` altındaki dosyada yazılıdır.
 
 ### Yönetim paneli giriş bilgileri
 
@@ -74,62 +81,61 @@ powershell -ExecutionPolicy Bypass -File .\kur.ps1 `
 > Değiştirilene kadar yönetim panelinin üstünde kırmızı bir uyarı şeridi
 > görünür; şifreyi değiştirdiğinizde kendiliğinden kaybolur.
 
-Kurulumu başka bir şifreyle yapmak isterseniz:
-
-```powershell
-.\kur.ps1 -AdminSifre "KendiSifreniz123"
-```
-
-Seçenekler:
-
-```powershell
-.\kur.ps1 -AdminSifre "Guclu1Sifre" -BaseUrl "http://seck.turkishfuel.com"
-.\kur.ps1 -Port 8080
-.\kur.ps1 -GorevAtla        # otomatik başlatma görevi kurulmasın
-```
-
-### 3. Açın
-
-Kurulumun sonunda yazdığı adresi açın — örneğin:
+Başka bir başlangıç şifresi istiyorsanız, **ilk açılıştan önce** paket
+köküne `.env` adlı bir metin dosyası koyun:
 
 ```
-http://10.34.32.55:9092
+SECK_ADMIN_PASSWORD=KendiSifreniz123
 ```
 
-Sunucunun kendi üzerinden: `http://localhost:<port>`
+Portal ilk açılışta hesabı bu şifreyle oluşturur. Hesap zaten oluştuysa bu
+satırın etkisi olmaz — şifreyi panelden değiştirin.
 
-Kurulum, portalın gerçekten yanıt verdiğini kendisi doğrular ve hem yerel
-hem ağ adresini ekrana yazar. Yanıt vermezse sebebi görmek için portalı ön
-planda çalıştırmayı önerir (`nodejs.cmd baslat.cjs`) — hata mesajı doğrudan
-ekrana gelir.
+### 3. Site → **Browse**
+
+Portal açılır. İlk istek biraz uzun sürebilir: IIS o anda `node.exe`'yi
+başlatıyor, portal da veritabanını ve yönetici hesabını oluşturuyor.
+
+Açılmazsa gerçek hata şurada yazılıdır:
+
+```
+<paket klasörü>\data\iis-log\portal_*.log
+```
 
 ---
 
-## Elle başlatma
+## Portalı durdurmak / yeniden başlatmak
 
-Otomatik başlatma görevi kurmadıysanız veya elle çalıştırmak isterseniz:
+Süreci IIS yönetiyor, ayrı bir servis yok:
 
-```
-nodejs.cmd baslat.cjs
-```
+| İş | IIS Yöneticisi'nde |
+|---|---|
+| Durdur | Site → *Durdur* |
+| Başlat | Site → *Başlat* |
+| Yeniden başlat | Uygulama Havuzları → havuz → *Geri Dönüştür* |
 
-Durdurmak için `Ctrl + C`.
+Ayar dosyasını (`.env`) değiştirdikten sonra havuzu geri dönüştürmeniz
+gerekir; aksi halde eski değerler kullanılmaya devam eder.
+
+Komut satırı erişiminiz varsa portalı IIS dışında da çalıştırabilirsiniz:
+`nodejs.cmd baslat.cjs` (durdurmak için `Ctrl + C`).
 
 ---
 
 ## Günlük yönetim
 
+Günlük işlerin tamamı **yönetim panelinden** yapılır: bülten yükleme,
+sekme ekleme, anket oluşturma, şifre değiştirme, analiz. Sunucuya girmeniz
+gerekmez.
+
+Komut satırı erişiminiz varsa ek araçlar (`komutlar\OKU.txt`):
+
 | İş | Komut |
 |---|---|
-| Durdur | `Stop-ScheduledTask -TaskName 'SEC-K Portali'` |
-| Başlat | `Start-ScheduledTask -TaskName 'SEC-K Portali'` |
-| Durum | `Get-ScheduledTask -TaskName 'SEC-K Portali'` |
-| Şifre sıfırla | `nodejs.cmd komutlar\sifre.cjs` |
+| Şifre sıfırla (panele giremiyorsanız) | `nodejs.cmd komutlar\sifre.cjs` |
 | Hesapları listele | `nodejs.cmd komutlar\sifre.cjs --liste` |
 | Örnek veri ekle | `nodejs.cmd komutlar\demo.cjs` |
 | Örnek veriyi sil | `nodejs.cmd komutlar\demo.cjs --temizle` |
-
-Ayrıntı: `komutlar\OKU.txt`
 
 ---
 
@@ -140,9 +146,9 @@ Kurulum sonrası **sizin yapmanız gereken iki şey** var:
 1. **Varsayılan şifreyi değiştirin** (Ayarlar → Şifre Değiştir). Değiştirilene
    kadar panelde kırmızı uyarı şeridi durur. Şifre değiştiğinde o hesapla
    açılmış diğer tüm oturumlar kapanır.
-2. **HTTPS kullanın.** Sertifikanız varsa `iis\iis-kur.ps1` ile bağlayın ve
-   `.env` içinde `SECK_SECURE_COOKIE=true` olduğundan emin olun — oturum
-   cookie'si yalnızca o zaman şifreli bağlantıyla sınırlanır.
+2. **HTTPS'e geçin.** Sertifikayı IIS site bağlamasına ekleyip `.env`
+   dosyasına `SECK_SECURE_COOKIE=true` yazın (aşağıdaki HTTPS bölümü) —
+   oturum cookie'si yalnızca o zaman şifreli bağlantıyla sınırlanır.
 
 Kutudan çıktığı gibi çalışan korumalar:
 
@@ -172,8 +178,8 @@ e-posta ile göndermeyin. Anahtar değişirse açık oturumlar düşer (zararsı
 Her şey `data\` klasöründedir: veritabanı, yüklenen PDF'ler ve oturum
 anahtarı. Yedek için bu klasörü kopyalamak yeterlidir.
 
-> Kurulum script'i bu klasörün izinlerini kısıtlar; yedek komutunu yönetici
-> olarak çalıştırın.
+> Portal çalışırken de kopyalanabilir; durdurulmuş hâlde alınan yedek daha
+> tutarlı olur.
 
 ```powershell
 Copy-Item C:\seckportal\data "\\yedek-sunucu\seck\data-$(Get-Date -f yyyyMMdd)" -Recurse
@@ -184,52 +190,80 @@ alınan yedek daha tutarlı olur.
 
 ---
 
-## IIS ile 80/443 üzerinden yayınlamak (HTTP/HTTPS)
+## HTTPS / sertifika
 
-Bu paket **doğrudan bir IIS uygulaması** olarak hazırlandı: kökünde `web.config`
-dosyası var, yolları görecelidir, düzenleme gerektirmez. IIS'te bu klasörü
-gösteren bir site oluşturmak yeterlidir.
+Sertifikayı **IIS yönetir**; portal tarafında yapılacak iş yalnızca iki
+satırdır.
 
-**Kurulması gereken tek şey:** HttpPlatformHandler 1.2 —
-<https://www.iis.net/downloads/microsoft/httpplatformhandler>
+### 1. Sertifikayı siteye bağlayın
 
-> IIS, PHP veya .NET uygulamalarını doğrudan çalıştırır ama **Node.js
-> uygulamalarını çalıştıramaz.** Portal bir Node.js uygulamasıdır; IIS ile
-> Node arasında bir köprü modülü gerekir. Node.js'in kendisi paketle geliyor.
-> Sunucuda internet yoksa MSI'ı başka bir bilgisayara indirip kopyalayın.
+IIS Yöneticisi → site → *Bağlamalar* → **Ekle**:
 
-Sonra:
+| Alan | Değer |
+|---|---|
+| Tür | `https` |
+| Port | 443 (veya size ayrılan port) |
+| Ana bilgisayar adı | ör. `seck.turkishfuel.com` |
+| Sunucu Adı Belirtme Gerektir (SNI) | işaretli (aynı IP'de başka HTTPS sitesi varsa) |
+| SSL sertifikası | listeden seçin |
 
-```powershell
-cd C:\seckportal
-powershell -ExecutionPolicy Bypass -File .\iis\iis-kur.ps1 -HostAdi seck.turkishfuel.com
+Sertifika listede çıkmıyorsa `LocalMachine\My` deposuna kurulu olmalıdır.
+
+### 2. Paket köküne `.env` koyun
+
+```
+SECK_SECURE_COOKIE=true
+SECK_BASE_URL=https://seck.turkishfuel.com
 ```
 
-Script kurulu eklentilere bakıp modu kendisi seçer; uygulama havuzunu, siteyi,
-izinleri ve sertifikayı ayarlar. QDMS ile aynı sunucuda, aynı portu farklı ana
-bilgisayar adlarıyla paylaşarak yan yana çalışır.
+- `SECK_SECURE_COOKIE=true` → oturum cookie'si yalnızca şifreli bağlantıda
+  gönderilir. **Yalnızca HTTPS varken açın:** HTTP üzerinden `true` yaparsanız
+  yönetim paneline giriş yapılamaz (tarayıcı cookie'yi göndermez).
+- `SECK_BASE_URL` → anket QR kodlarının içine gömülen adres. Dış adresle
+  birebir aynı olmalı.
 
-### Çalışmazsa
+Ardından uygulama havuzunu geri dönüştürün (Uygulama Havuzları → havuz →
+*Geri Dönüştür*).
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\iis\iis-kontrol.ps1
-```
+### HTTP'yi HTTPS'e yönlendirmek
 
-Hiçbir şeyi değiştirmez; neyin eksik olduğunu sırayla söyler ve çıktıyı
-`iis-tani.txt` dosyasına yazar.
+IIS'te URL Rewrite kurulu (sunucunuzda var). Site → *URL Rewrite* → yeni
+kural → *Blank rule*:
 
-**Ayrıntılı anlatım, elle kurulum, hata kodlarına göre çözüm tablosu:
-[`iis\IIS.md`](iis/IIS.md)**
+- Match URL: pattern `(.*)`
+- Condition: `{HTTPS}` matches `^OFF$`
+- Action: **Redirect** → `https://{HTTP_HOST}/{R:1}`, tür *Found (302)*
+
+301 yerine 302 seçin: tarayıcılar 301'i kalıcı önbelleğe alır ve HTTP'ye
+dönmek gerekirse sorun çıkar.
+
+---
+
+## Başka IIS modülleriyle yayın
+
+Bu paket üç farklı IIS modülüyle çalışabilir. Kökteki `web.config`
+**AspNetCoreModuleV2** içindir (sunucunuzda kurulu olan). Diğerleri
+`iis\` klasöründe hazır duruyor:
+
+| Modül | Dosya |
+|---|---|
+| AspNetCoreModuleV2 | kökteki `web.config` (varsayılan) — yedeği `iis\web.config.ancm` |
+| HttpPlatformHandler 1.2 | `iis\web.config.iis` |
+| URL Rewrite + ARR (ters vekil) | `iis\web.config.vekil` |
+| (hiçbiri) — 500.19 yerine bilgi sayfası | `iis\web.config.bilgi` |
+
+Değiştirmek için ilgili dosyayı kökteki `web.config` üzerine kopyalayın.
+Ayrıntı: `iis\IIS.md`
 
 ---
 
 ## Yükseltme (yeni sürüm geldiğinde)
 
-1. Portalı durdurun: `Stop-ScheduledTask -TaskName 'SEC-K Portali'`
-2. **`data\` klasörünü ve `.env` dosyasını bir yere kopyalayın.**
+1. IIS Yöneticisi → site → **Durdur**
+2. **`data\` klasörünü ve varsa `.env` dosyasını bir yere kopyalayın.**
 3. Yeni paketi açın, eski klasörün yerine koyun.
 4. Kopyaladığınız `data\` klasörünü ve `.env` dosyasını geri koyun.
-5. Başlatın: `Start-ScheduledTask -TaskName 'SEC-K Portali'`
+5. IIS Yöneticisi → site → **Başlat**
 
 Veritabanı şeması geriye dönük uyumludur; yeni tablolar açılışta
 kendiliğinden oluşturulur.
@@ -250,32 +284,60 @@ sürümüne uygun olanı yerine kopyalıyor. Sunucuda derleyiciye gerek kalmıyo
 Yönetim komutları da (`komutlar\`) düz JavaScript'e derlendi, böylece
 TypeScript veya `tsx` kurulumu gerekmiyor.
 
+IIS ile bağlantıyı **AspNetCoreModuleV2** kuruyor. Bu modül `web.config`'te
+yazan programı başlatır, ona boş bir port seçip `ASPNETCORE_PORT` ile
+bildirir ve istekleri o porta aktarır. `baslat.cjs` bu değişkeni okuyup
+Next'i o portta ve yalnızca `127.0.0.1` üzerinde çalıştırır — dışarıya açık
+tek kapı IIS olur. Modül ASP.NET Core için yazılmış olsa da başlattığı
+programın .NET olma zorunluluğu yoktur.
+
+İlk kurulum da koda gömülü: portal açılışta veritabanı şemasını, dört bülten
+sekmesini ve yönetici hesabını yoksa kendisi oluşturur (`bootstrap.cjs`).
+İşlem fikirsizdir; var olan kayıtlara dokunulmaz, şifreniz her açılışta
+sıfırlanmaz.
+
 ---
 
 ## Sorun giderme
 
-**`kur.ps1` çalışmıyor — "is not digitally signed"**
-Script'i şu biçimde çağırın:
-`powershell -ExecutionPolicy Bypass -File .\kur.ps1`
+Her durumda ilk bakılacak yer: **`data\iis-log\portal_*.log`** — portal
+açılamazsa gerçek hata orada yazılıdır.
+
+**HTTP 500.19** — `web.config` okunamıyor
+IIS bir yapılandırma bölümünü tanımıyor. Kökteki `web.config`
+AspNetCoreModuleV2 ister; sunucuda o modül yoksa `iis\` klasöründeki başka
+bir sürümü kökteki `web.config` üzerine kopyalayın (bkz. "Başka IIS
+modülleriyle yayın").
+
+**HTTP 502.5** — portal süreci başlamıyor
+Neredeyse her zaman `data\` klasörüne yazma izni eksiktir. `data` klasörü →
+Özellikler → Güvenlik → `IIS AppPool\<havuz adı>` → **Değiştir**. Günlük
+dosyası zaten hangi klasöre yazamadığını söyler.
+
+**HTTP 503** — uygulama havuzu durmuş
+Uygulama Havuzları → havuz → *Başlat*. Tekrar duruyorsa günlüğe bakın.
+
+**HTTP 403.14** — dizin listesi hatası
+Handler devreye girmiyor: havuzun *.NET CLR sürümü* **Yönetilen Kod Yok**
+olmalı ve site paketin **kökünü** göstermeli.
+
+**Sayfa açılıyor ama yönetim paneline giriş yapılamıyor**
+`.env` içinde `SECK_SECURE_COOKIE=true` yazıyor ama site HTTP üzerinden
+açılıyor. HTTPS'e geçin veya bu satırı `false` yapıp havuzu geri dönüştürün.
 
 **"Bu paket Node.js 20 veya 22 ile çalışır"**
-Bu mesajı görüyorsanız pakette `node\node.exe` bulunamamış ve sistemdeki
-sürüm uyumsuz demektir. Arşivi eksiksiz açtığınızdan emin olun (`node.exe`
-yaklaşık 70 MB'dır). Farklı bir Node kullanmak için:
-`.\kur.ps1 -NodeExe "C:\yol\node.exe"`
+Pakette `node\node.exe` bulunamamış. Arşivi eksiksiz açtığınızdan emin olun;
+bu dosya yaklaşık 70 MB'dır.
 
-**Port 3000 kullanılıyor**
-`.\kur.ps1 -Port 8080` ile farklı port seçin. Kurulum yapıldıysa `.env`
-içindeki `PORT` değerini değiştirip görevi yeniden başlatın:
-`Stop-ScheduledTask -TaskName 'SEC-K Portali'; Start-ScheduledTask -TaskName 'SEC-K Portali'`
-
-**Ağdaki başka bilgisayarlardan açılmıyor**
-Güvenlik duvarı kuralı, script yönetici olarak çalıştırıldığında ekleniyor.
-Elle eklemek için:
-`New-NetFirewallRule -DisplayName "SEC-K" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000 -Profile Domain,Private`
+**Anket QR kodu yanlış adresi gösteriyor**
+`.env` içindeki `SECK_BASE_URL` dış adresle aynı olmalı. Değiştirdikten sonra
+havuzu geri dönüştürün.
 
 **Şifreyi kaybettim**
-`nodejs.cmd komutlar\sifre.cjs` — bültenler ve anketler silinmez.
+Komut satırı erişiminiz varsa: `nodejs.cmd komutlar\sifre.cjs` — bültenler ve
+anketler silinmez. Erişiminiz yoksa `data\portal.db` dosyasını yedekleyip
+`admin_users` tablosundaki satırı silmek de olur; portal bir sonraki açılışta
+hesabı varsayılan şifreyle yeniden oluşturur.
 
 **Portal açılıyor ama logolar görünmüyor**
 `public\brand\` klasörünün paketle birlikte kopyalandığından emin olun.

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SEC-K Portali - IIS baslangic yapilandirmasi (KURULUM ONCESI)
+  =============================================================
+
+  Bu dosya bilincli olarak HICBIR IIS eklentisi gerektirmez. Yalnizca IIS'in
+  kendi bolumlerini kullanir, boylece site her zaman acilir ve tarayicida
+  "500.19" hatasi yerine kurulum.html bilgi sayfasi gorunur.
+
+  Ne yapar:
+    - Butun istekler kurulum.html sayfasina duser (varsayilan belge)
+    - .html DISINDA hicbir dosya sunulmaz (allowUnlisted="false")
+    - data\, komutlar\, node_modules\ gibi yollar ayrica gizlenir
+    Yani veritabani, .env ve PDF'ler kurulum tamamlanmadan once de disariya
+    kapalidir.
+
+  Ne zaman ise yarar: sunucuda hicbir kopru modulu (AspNetCoreModuleV2,
+  HttpPlatformHandler, iisnode) yoksa kokteki web.config "500.19" hatasi
+  verir. O durumda bu dosyayi kokteki web.config uzerine kopyalayin; site
+  hata yerine kurulum.html bilgi sayfasini gosterir.
+
+    copy iis\web.config.bilgi web.config
+
+  Portali calistiran surume geri donmek icin:
+
+    copy iis\web.config.ancm web.config
+-->
+<configuration>
+  <system.webServer>
+
+    <defaultDocument enabled="true">
+      <files>
+        <clear />
+        <add value="kurulum.html" />
+      </files>
+    </defaultDocument>
+
+    <directoryBrowse enabled="false" />
+
+    <security>
+      <requestFiltering>
+        <!-- allowUnlisted="false": listede olmayan hicbir uzanti sunulmaz.
+             .env, .db, .json, .cjs, .js hepsi bu kuralla kapali kalir. -->
+        <fileExtensions allowUnlisted="false">
+          <add fileExtension=".html" allowed="true" />
+        </fileExtensions>
+
+        <hiddenSegments>
+          <add segment="data" />
+          <add segment="komutlar" />
+          <add segment="sqlite-ikili" />
+          <add segment="node_modules" />
+          <add segment="iis" />
+          <add segment=".next" />
+        </hiddenSegments>
+
+        <!-- Bulten PDF yuklemeleri icin; kurulum sonrasi da gecerli olsun. -->
+        <requestLimits maxAllowedContentLength="52428800" />
+      </requestFiltering>
+    </security>
+
+    <httpProtocol>
+      <customHeaders>
+        <remove name="X-Powered-By" />
+      </customHeaders>
+    </httpProtocol>
+
+  </system.webServer>
+</configuration>

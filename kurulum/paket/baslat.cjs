@@ -8,9 +8,10 @@
  *
  * Kullanım:  node baslat.cjs
  *
- * IIS altında (HttpPlatformHandler) süreci IIS başlatır ve dinlenecek portu
- * HTTP_PLATFORM_PORT ile bildirir; bu durumda o port kullanılır ve sunucu
- * yalnızca 127.0.0.1 üzerinden dinler — dışarıya açık olan tek kapı IIS olur.
+ * IIS altında süreci IIS başlatır ve dinlenecek portu bildirir
+ * (AspNetCoreModuleV2 → ASPNETCORE_PORT, HttpPlatformHandler →
+ * HTTP_PLATFORM_PORT). Bu durumda o port kullanılır ve sunucu yalnızca
+ * 127.0.0.1 üzerinden dinler — dışarıya açık olan tek kapı IIS olur.
  */
 "use strict";
 
@@ -82,16 +83,33 @@ function loadEnvFile(file) {
 
 loadEnvFile(path.join(__dirname, ".env"));
 
-// IIS (HttpPlatformHandler) süreci kendisi başlatır ve dinlenecek portu
-// HTTP_PLATFORM_PORT ile verir. Bu modda dışarıya IIS bakar; Node'un tüm
-// arayüzlerde dinlemesi gereksizdir ve IIS'i (dolayısıyla HTTPS'i) atlatma
-// riski taşır.
-var underIis = Boolean(process.env.HTTP_PLATFORM_PORT);
+// ————————————————————————————— IIS altında mıyız —————————————————————————————
+
+/**
+ * IIS, portalı iki farklı modülle barındırabiliyor ve ikisi de dinlenecek
+ * portu bir ortam değişkeniyle bildiriyor:
+ *
+ *   ASPNETCORE_PORT     → AspNetCoreModuleV2 (hostingModel="OutOfProcess")
+ *   HTTP_PLATFORM_PORT  → HttpPlatformHandler
+ *
+ * İkisi de aynı işi yapar: bu süreci başlatır, boş bir port seçer ve
+ * istekleri o porta aktarır. Modül adına göre davranış değişmiyor, tek fark
+ * değişkenin adı.
+ *
+ * Bu modlarda dışarıya IIS bakar; Node'un tüm arayüzlerde dinlemesi
+ * gereksizdir ve IIS'i (dolayısıyla HTTPS'i) atlatma riski taşır — bu yüzden
+ * yalnızca 127.0.0.1'e bağlanıyoruz.
+ */
+var iisPort = process.env.ASPNETCORE_PORT || process.env.HTTP_PLATFORM_PORT;
+var iisModul = process.env.ASPNETCORE_PORT ? "AspNetCoreModuleV2" : "HttpPlatformHandler";
+var underIis = Boolean(iisPort);
 
 if (underIis) {
-  process.env.PORT = process.env.HTTP_PLATFORM_PORT;
+  process.env.PORT = String(iisPort);
   process.env.HOSTNAME = "127.0.0.1";
-  console.log("  IIS tarafindan baslatildi (port " + process.env.PORT + ", yalnizca 127.0.0.1)");
+  console.log(
+    "  IIS tarafindan baslatildi (" + iisModul + ", port " + iisPort + ", yalnizca 127.0.0.1)",
+  );
 }
 
 // ————————————————————————————— Veri klasörü —————————————————————————————
@@ -103,7 +121,7 @@ if (underIis) {
  * (varsayılan olarak "IIS AppPool\<havuz adı>") data\ klasörüne yazma izni
  * olmaz, SQLite açılamaz ve tarayıcı yalnızca 502.5 gösterir. Ham SQLite
  * hatası yerine ne yapılacağını söyleyen bir mesaj bırakıyoruz — bu çıktı
- * HttpPlatformHandler tarafından data\iis-log\ altına yazılır.
+ * IIS modülü tarafından data\iis-log\ altına yazılır.
  */
 function checkDataDirWritable() {
   var dataDir = process.env.SECK_DATA_DIR
@@ -160,5 +178,44 @@ process.on("uncaughtException", function (error) {
   console.error("");
   process.exit(1);
 });
+
+// ————————————————————————————— İlk kurulum —————————————————————————————
+
+/**
+ * Veritabanı şeması, bülten sekmeleri ve yönetici hesabı yoksa oluşturulur.
+ *
+ * Sunucuda komut satırı erişimi olmayabiliyor (yayına alma yalnızca dosya
+ * kopyalayıp IIS'te site açmakla yapılıyor), bu yüzden ilk kurulumu bir
+ * script'e bırakamıyoruz. İşlem fikirsizdir: kayıtlar varsa hiçbir şeye
+ * dokunulmaz.
+ */
+try {
+  var sonuc = require("./bootstrap.cjs").bootstrap();
+
+  if (sonuc.createdCategories.length > 0) {
+    console.log("  Ilk kurulum: " + sonuc.createdCategories.length + " bulten sekmesi olusturuldu");
+  }
+  if (sonuc.createdAdmin) {
+    console.log("");
+    console.log("  ============================================================");
+    console.log("  YONETIM PANELI GIRIS BILGILERI");
+    console.log("  ============================================================");
+    console.log("  Kullanici adi : " + sonuc.adminUsername);
+    console.log("  Sifre         : " + sonuc.adminPassword);
+    console.log("");
+    console.log("  ILK GIRISTEN SONRA Ayarlar > Sifre Degistir ile degistirin.");
+    console.log("  Degistirilene kadar panelde kirmizi uyari seridi gorunur.");
+    console.log("  ============================================================");
+    console.log("");
+  }
+} catch (error) {
+  console.error("");
+  console.error("  ILK KURULUM TAMAMLANAMADI");
+  console.error("  " + (error && error.stack ? error.stack : error));
+  console.error("");
+  console.error("  Veritabani olusturulamadiysa data\\ klasoru yazilabilir olmali.");
+  console.error("");
+  process.exit(1);
+}
 
 require("./server.js");

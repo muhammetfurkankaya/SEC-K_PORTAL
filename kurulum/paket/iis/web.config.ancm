@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SEC-K Portali - IIS uygulama yapilandirmasi
+  ===========================================
+
+  Bu dosya paketin kokunde duruyor. IIS'te bu klasoru gosteren bir site
+  olusturmak yeterli; hicbir dosyayi duzenlemeniz gerekmez.
+
+  KURULUM GEREKTIRMEZ. Sunucuda zaten kurulu olan AspNetCoreModuleV2
+  modulunu kullaniyor.
+
+  ================================================================
+  Nasil calisiyor
+  ================================================================
+
+  AspNetCoreModuleV2, "OutOfProcess" modunda su isi yapar:
+
+    1. processPath ile verilen programi baslatir
+    2. bos bir port secip programa ASPNETCORE_PORT ile bildirir
+    3. gelen istekleri 127.0.0.1 uzerindeki o porta aktarir
+    4. program cokerse yeniden baslatir
+
+  Modul ASP.NET Core icin yazildi ama baslattigi programin .NET olma
+  zorunlulugu yok. Burada paketle gelen node.exe'yi baslatiyoruz. Yani
+  HttpPlatformHandler'in yapacagi isi, zaten kurulu olan bir modulle
+  yapiyoruz.
+
+    Tarayici  =[HTTP/HTTPS]=>  IIS  =>  AspNetCoreModuleV2  =>  node.exe
+
+  Portal yalnizca 127.0.0.1 dinler; disariya acik olan tek kapi IIS'tir.
+  HTTPS'i IIS bitirir: sertifikayi site baglamasina eklemek yeterlidir.
+
+  ================================================================
+  IIS Yoneticisi'nde yapilmasi gerekenler
+  ================================================================
+
+    - Uygulama havuzu: .NET CLR surumu = "Yonetilen Kod Yok"
+    - Gelismis Ayarlar: 32 Bit Uygulamalari Etkinlestir = False
+                        Bosta Kalma Zaman Asimi = 0
+                        Duzenli Araliklarla Geri Donusum = 0
+    - data\ klasorune uygulama havuzu kimligi icin YAZMA izni
+      (klasor > Ozellikler > Guvenlik > Ekle > IIS AppPool\<havuz adi>)
+
+  Portal acilmazsa gercek hata data\iis-log\ altindaki dosyada yazilidir.
+
+  ================================================================
+  Yollar goreceli: paket hangi klasorde olursa olsun calisir.
+  Sistemde kurulu Node.js'i kullanmak isterseniz processPath yerine
+  o dosyanin tam yolunu yazabilirsiniz.
+-->
+<configuration>
+  <system.webServer>
+
+    <!-- Tum istekler portal surecine gider; IIS statik dosya sunmaz.
+         Bu yuzden .env veya data\ altindaki dosyalar dis dunyaya acilmaz. -->
+    <handlers>
+      <remove name="aspNetCore" />
+      <add name="aspNetCore" path="*" verb="*"
+           modules="AspNetCoreModuleV2" resourceType="Unspecified" />
+    </handlers>
+
+    <aspNetCore processPath=".\node\node.exe"
+                arguments=".\baslat.cjs"
+                hostingModel="OutOfProcess"
+                stdoutLogEnabled="true"
+                stdoutLogFile=".\data\iis-log\portal"
+                startupTimeLimit="120"
+                requestTimeout="00:04:00"
+                forwardWindowsAuthToken="false">
+      <environmentVariables>
+        <environmentVariable name="NODE_ENV" value="production" />
+      </environmentVariables>
+    </aspNetCore>
+
+    <security>
+      <requestFiltering>
+        <!-- Bulten PDF'leri icin 25 MB sinir var; IIS varsayilani (~28 MB)
+             cok yakin oldugu icin yukseltiyoruz. -->
+        <requestLimits maxAllowedContentLength="52428800" />
+
+        <!-- Ikinci katman: handler devre disi kalsa bile bu yollar sunulmaz. -->
+        <hiddenSegments>
+          <add segment="data" />
+          <add segment="komutlar" />
+          <add segment="sqlite-ikili" />
+          <add segment="node_modules" />
+          <add segment="node" />
+          <add segment="iis" />
+        </hiddenSegments>
+      </requestFiltering>
+    </security>
+
+    <directoryBrowse enabled="false" />
+
+    <httpProtocol>
+      <customHeaders>
+        <!-- Hangi surumu calistirdigimizi duyurmanin faydasi yok. -->
+        <remove name="X-Powered-By" />
+      </customHeaders>
+    </httpProtocol>
+
+    <!-- Portalin kendi hata sayfalari gorunsun; IIS araya girmesin. -->
+    <httpErrors existingResponse="PassThrough" />
+
+  </system.webServer>
+</configuration>

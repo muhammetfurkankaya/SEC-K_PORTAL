@@ -3,12 +3,19 @@
 # Portal bir Node.js uygulamasidir; IIS on kapi olur: 80/443 portlarini
 # dinler, sertifikayi sunar, istekleri portala iletir.
 #
-# Iki mod var, script kurulu eklentilere gore kendisi secer:
+# NOT: Bu script bir kolaylik; zorunlu degil. Sunucuda komut satiri yetkiniz
+# yoksa kurulum yalnizca dosya kopyalamak ve IIS Yoneticisi'ni kullanmakla
+# tamamlanabilir - bkz. KURULUM.md ve iis\IIS.md.
 #
-#   iis    (tercih edilen)  Sureci IIS baslatir ve yonetir. Site dogrudan bu
-#                           paket klasorunu gosterir ve paketle gelen
-#                           web.config kullanilir - duzenleme gerekmez.
-#                           Gerekli: HttpPlatformHandler 1.2
+# Uc mod var, script kurulu eklentilere gore kendisi secer:
+#
+#   ancm   (tercih edilen)  Sureci IIS baslatir ve yonetir. Site dogrudan bu
+#                           paket klasorunu gosterir. Gerekli modul zaten
+#                           kurulu: AspNetCoreModuleV2 (ASP.NET Core Hosting
+#                           Bundle ile gelir). Ek kurulum gerektirmez.
+#
+#   iis                     Ayni is, ama HttpPlatformHandler 1.2 ile.
+#                           O modul kuruluysa kullanilir.
 #
 #   vekil                   IIS ters vekil olur; Node surecini "SEC-K Portali"
 #                           zamanlanmis gorevi calistirir (once .\kur.ps1).
@@ -24,7 +31,7 @@
 
 [CmdletBinding()]
 param(
-    [ValidateSet("otomatik", "iis", "vekil")]
+    [ValidateSet("otomatik", "ancm", "iis", "vekil")]
     [string]$Mod = "otomatik",
 
     # Bos birakilirsa: bu paket klasorunu gosteren mevcut IIS sitesi bulunur
@@ -243,28 +250,31 @@ if (-not $modSonuc.Ok) {
 }
 
 $modMetin = $modSonuc.Metin
-$hpVar  = $modMetin -match "httpPlatformHandler"
-$rwVar  = $modMetin -match "RewriteModule"
-$arrVar = $modMetin -match "ApplicationRequestRouting|RequestRouter"
+$ancmVar = $modMetin -match "AspNetCoreModuleV2"
+$hpVar   = $modMetin -match "httpPlatformHandler"
+$rwVar   = $modMetin -match "RewriteModule"
+$arrVar  = $modMetin -match "ApplicationRequestRouting|RequestRouter"
 
-if ($hpVar)  { Write-Ok "HttpPlatformHandler kurulu" } else { Write-Info "HttpPlatformHandler yok" }
-if ($rwVar)  { Write-Ok "URL Rewrite kurulu" }         else { Write-Info "URL Rewrite yok" }
-if ($arrVar) { Write-Ok "ARR kurulu" }                 else { Write-Info "ARR yok" }
+if ($ancmVar) { Write-Ok "AspNetCoreModuleV2 kurulu" }  else { Write-Info "AspNetCoreModuleV2 yok" }
+if ($hpVar)   { Write-Ok "HttpPlatformHandler kurulu" }  else { Write-Info "HttpPlatformHandler yok" }
+if ($rwVar)   { Write-Ok "URL Rewrite kurulu" }          else { Write-Info "URL Rewrite yok" }
+if ($arrVar)  { Write-Ok "ARR kurulu" }                  else { Write-Info "ARR yok" }
 
 if ($Mod -eq "otomatik") {
-    if ($hpVar) { $Mod = "iis" }
+    # ANCM once: cogu Windows sunucusunda zaten kurulu oldugu icin hicbir
+    # indirme gerektirmiyor. Ters vekil en sona kaliyor; o mod sureci IIS
+    # yerine zamanlanmis gorevle calistirdigi icin daha fazla yetki ister.
+    if ($ancmVar) { $Mod = "ancm" }
+    elseif ($hpVar) { $Mod = "iis" }
     elseif ($rwVar -and $arrVar) { $Mod = "vekil" }
     else {
         Write-Host ""
-        Write-Fail "IIS bir Node.js uygulamasini eklenti olmadan yayinlayamaz."
+        Write-Fail "IIS bir Node.js uygulamasini kopru modul olmadan yayinlayamaz."
         Write-Info ""
-        Write-Info "EN KISA YOL - tek kurulum dosyasi:"
+        Write-Info "Bu sunucuda uc modulden hicbiri yok. Kurulabilecekler:"
+        Write-Info "  ASP.NET Core Hosting Bundle (AspNetCoreModuleV2 gelir)"
         Write-Info "  HttpPlatformHandler 1.2"
-        Write-Info "  https://www.iis.net/downloads/microsoft/httpplatformhandler"
-        Write-Info ""
-        Write-Info "ALTERNATIF - iki kurulum dosyasi (ters vekil):"
-        Write-Info "  URL Rewrite  https://www.iis.net/downloads/microsoft/url-rewrite"
-        Write-Info "  ARR          https://www.iis.net/downloads/microsoft/application-request-routing"
+        Write-Info "  URL Rewrite + ARR (ters vekil)"
         Write-Info ""
         Write-Info "Sunucuda internet yoksa MSI dosyalarini baska bir bilgisayarda"
         Write-Info "indirip kopyalayin; kurulumun kendisi internet gerektirmez."
@@ -274,6 +284,11 @@ if ($Mod -eq "otomatik") {
     }
     Write-Ok "Secilen mod: $Mod"
 } else {
+    if ($Mod -eq "ancm" -and -not $ancmVar) {
+        Write-Fail "-Mod ancm icin AspNetCoreModuleV2 gerekir; kurulu degil."
+        Write-Info "ASP.NET Core Hosting Bundle ile gelir."
+        exit 1
+    }
     if ($Mod -eq "iis" -and -not $hpVar) {
         Write-Fail "-Mod iis icin HttpPlatformHandler gerekir; kurulu degil."
         Write-Info "https://www.iis.net/downloads/microsoft/httpplatformhandler"
@@ -285,6 +300,10 @@ if ($Mod -eq "otomatik") {
     }
     Write-Ok "Mod: $Mod"
 }
+
+# Bu iki modda IIS sureci kendisi baslatir ve site paket klasorunu gosterir;
+# aralarindaki tek fark hangi web.config sablonunun kullanildigi.
+$dogrudan = ($Mod -eq "ancm" -or $Mod -eq "iis")
 
 # ————————————————————————————— Site ve havuz tespiti —————————————————————————————
 
@@ -448,14 +467,13 @@ if (-not (Test-Path -LiteralPath $logDir)) {
 
 Write-Step "Site klasoru ve web.config"
 
-if ($Mod -eq "iis") {
-    # Site dogrudan paket klasorunu gosterir. Kokte duran web.config kurulum
-    # oncesi hicbir eklenti istemeyen "bilgi sayfasi" surumudur; simdi onu
-    # calisan surumle degistiriyoruz. Boylece HttpPlatformHandler kurulmadan
-    # once site 500.19 vermek yerine kurulum sayfasini gosteriyor.
+if ($dogrudan) {
+    # Site dogrudan paket klasorunu gosterir; kokteki web.config hangi modulu
+    # kullanacagini soyler. Secilen moda gore dogru sablonu yaziyoruz.
     $siteDir = $paket
     $kokConfig = Join-Path $paket "web.config"
-    $sablon = Join-Path $PSScriptRoot "web.config.iis"
+    $sablonAdi = if ($Mod -eq "ancm") { "web.config.ancm" } else { "web.config.iis" }
+    $sablon = Join-Path $PSScriptRoot $sablonAdi
 
     if (-not (Test-Path -LiteralPath $sablon)) {
         Write-Fail "Sablon bulunamadi: $sablon"
@@ -463,7 +481,7 @@ if ($Mod -eq "iis") {
         exit 1
     }
 
-    # Kurulum oncesi surumu bir kez yedekle; geri donmek gerekebilir.
+    # Mevcut surumu bir kez yedekle; geri donmek gerekebilir.
     if ((Test-Path -LiteralPath $kokConfig) -and
         -not (Test-Path -LiteralPath (Join-Path $paket "web.config.kurulum-oncesi"))) {
         Copy-Item -LiteralPath $kokConfig -Destination (Join-Path $paket "web.config.kurulum-oncesi") -Force
@@ -471,12 +489,24 @@ if ($Mod -eq "iis") {
 
     $icerik = Get-Content -LiteralPath $sablon -Raw
 
-    # processPath'i gercek node.exe yoluna cek (sablonda ornek yol duruyor).
-    $icerik = $icerik.Replace('processPath="C:\seckportal\node\node.exe"', "processPath=`"$nodeExe`"")
-    Write-Ok "processPath ayarlandi: $nodeExe"
+    # processPath'i gercek node.exe yoluna cek. ANCM sablonunda goreceli yol
+    # (.\node\node.exe) duruyor: paketle gelen node.exe kullaniliyorsa oldugu
+    # gibi kaliyor, baska bir Node secildiyse tam yolla degistiriliyor.
+    $paketNode = Join-Path $paket "node\node.exe"
+    if ($Mod -eq "ancm") {
+        if ($nodeExe -ne $paketNode) {
+            $icerik = $icerik.Replace('processPath=".\node\node.exe"', "processPath=`"$nodeExe`"")
+            Write-Ok "processPath ayarlandi: $nodeExe"
+        } else {
+            Write-Ok "processPath goreceli kaldi: .\node\node.exe"
+        }
+    } else {
+        $icerik = $icerik.Replace('processPath="C:\seckportal\node\node.exe"', "processPath=`"$nodeExe`"")
+        Write-Ok "processPath ayarlandi: $nodeExe"
+    }
 
     [IO.File]::WriteAllText($kokConfig, $icerik, (New-Object Text.UTF8Encoding($false)))
-    Write-Ok "web.config calisan surumle degistirildi: $kokConfig"
+    Write-Ok "web.config yazildi ($sablonAdi): $kokConfig"
     Write-Info "Site yolu: $siteDir"
 } else {
     # Ters vekilde site, yalnizca web.config iceren ayri bir klasoru gosterir.
@@ -704,7 +734,7 @@ foreach ($hedef in @($envPath, $dataDir)) {
 }
 Write-Ok ".env ve data\ yalnizca SYSTEM ve yoneticilere acik."
 
-if ($Mod -eq "iis") {
+if ($dogrudan) {
     # Sureci havuz kimligi calistirir: pakete okuma, data\ ya yazma gerekir.
     # Kilitten SONRA veriliyor ki devralma kesme bu izinleri silmesin.
     # Havuz kimligi cozulemezse IIS_IUSRS grubuna veriyoruz.
@@ -736,7 +766,7 @@ Write-Step "Portal sureci"
 
 $gorev = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 
-if ($Mod -eq "iis") {
+if ($dogrudan) {
     # Iki surecin ayni veritabanina yazmasini onlemek icin gorevi kaldiriyoruz.
     if ($gorev) {
         Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
@@ -834,7 +864,7 @@ try {
         }
         Write-Info ""
         Write-Info "Gercek hatayi gormek icin:"
-        if ($Mod -eq "iis") { Write-Info "  $logDir  klasorundeki son .log dosyasi" }
+        if ($dogrudan) { Write-Info "  $logDir  klasorundeki son .log dosyasi" }
         Write-Info "  powershell -ExecutionPolicy Bypass -File .\iis\iis-kontrol.ps1"
     } else {
         Write-Warn2 "$testUrl denenemedi: $($_.Exception.Message)"
@@ -868,7 +898,7 @@ Write-Info "Mod          : $Mod"
 Write-Info "Giris        : admin / Tfs2026...  (ilk giristen sonra degistirin)"
 Write-Info ""
 
-if ($Mod -eq "iis") {
+if ($dogrudan) {
     Write-Info "Yonetim:"
     Write-Info "  Durdur  : appcmd stop site `"$SiteAdi`""
     Write-Info "  Baslat  : appcmd start site `"$SiteAdi`""
