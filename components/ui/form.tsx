@@ -188,16 +188,27 @@ const CHOICE_BASE =
   "peer-checked:text-tfs-red peer-focus-visible:outline peer-focus-visible:outline-2 " +
   "peer-focus-visible:outline-offset-2 peer-focus-visible:outline-tfs-red";
 
-/** Birkaç kısa seçenek arasından biri — açılır liste yerine görünür düğmeler. */
-export function Segmented({
-  name,
-  value,
-  options,
-}: {
+/**
+ * Seçim öğelerinin ortak propları.
+ *
+ * `onChange` verilmezse girdi KONTROLSÜZ çalışır (`defaultChecked`): ayar
+ * formunun çoğu sekmesinde React durumu tutmaya gerek yok. Verildiğinde
+ * kontrollü olur — canlı önizlemenin seçimi anında görebilmesi için.
+ */
+type ChoiceProps = {
   name: string;
   value: string;
   options: readonly ChoiceOption[];
-}) {
+  onChange?: (value: string) => void;
+};
+
+/** Seçili olma durumunu kontrollü/kontrolsüz moda göre verir. */
+function checkedProps(controlled: boolean, selected: boolean) {
+  return controlled ? { checked: selected } : { defaultChecked: selected };
+}
+
+/** Birkaç kısa seçenek arasından biri — açılır liste yerine görünür düğmeler. */
+export function Segmented({ name, value, options, onChange }: ChoiceProps) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {options.map((option) => (
@@ -206,7 +217,8 @@ export function Segmented({
             type="radio"
             name={name}
             value={option.value}
-            defaultChecked={value === option.value}
+            {...checkedProps(Boolean(onChange), value === option.value)}
+            onChange={onChange ? () => onChange(option.value) : undefined}
             className="peer sr-only"
           />
           <span className={`inline-block ${CHOICE_BASE}`}>{option.label}</span>
@@ -217,15 +229,7 @@ export function Segmented({
 }
 
 /** Kurumsal paletten renk seçimi — kare + ad. */
-export function ColorChoice({
-  name,
-  value,
-  options,
-}: {
-  name: string;
-  value: string;
-  options: readonly ChoiceOption[];
-}) {
+export function ColorChoice({ name, value, options, onChange }: ChoiceProps) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {options.map((option) => (
@@ -234,7 +238,8 @@ export function ColorChoice({
             type="radio"
             name={name}
             value={option.value}
-            defaultChecked={value === option.value}
+            {...checkedProps(Boolean(onChange), value === option.value)}
+            onChange={onChange ? () => onChange(option.value) : undefined}
             className="peer sr-only"
           />
           <span className={`inline-flex items-center gap-1.5 ${CHOICE_BASE}`}>
@@ -264,15 +269,7 @@ const SAMPLE_SCALE: Record<string, string> = {
   "cok-buyuk": "text-[1.5rem]",
 };
 
-export function SizeChoice({
-  name,
-  value,
-  options,
-}: {
-  name: string;
-  value: string;
-  options: readonly ChoiceOption[];
-}) {
+export function SizeChoice({ name, value, options, onChange }: ChoiceProps) {
   return (
     <div className="flex flex-wrap items-stretch gap-1.5">
       {options.map((option) => (
@@ -281,7 +278,8 @@ export function SizeChoice({
             type="radio"
             name={name}
             value={option.value}
-            defaultChecked={value === option.value}
+            {...checkedProps(Boolean(onChange), value === option.value)}
+            onChange={onChange ? () => onChange(option.value) : undefined}
             className="peer sr-only"
           />
           <span className={`flex min-w-[4.5rem] flex-col items-center gap-0.5 ${CHOICE_BASE}`}>

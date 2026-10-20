@@ -4,7 +4,9 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   TEXT_SLOTS,
+  TEXT_SLOT_META,
   allAppearanceClasses,
+  textClassFor,
   alignClass,
   blockPositionClass,
   blockWidthClass,
@@ -37,6 +39,39 @@ describe("appearance", () => {
             assert.ok(result.length > 0, `${slot}/${size.value}/${color.value}: boş sınıf`);
             assert.ok(!result.includes("undefined"), `${slot}: undefined sızdı`);
             assert.ok(!/\s{2,}/.test(result), `${slot}: çift boşluk`);
+          }
+        }
+      }
+    }
+  });
+
+  test("her yuvanın ayar ekranı üstverisi var", () => {
+    // Yeni bir metin yuvası eklenip önizlemesi unutulursa burada patlar.
+    for (const slot of TEXT_SLOTS) {
+      const meta = TEXT_SLOT_META[slot];
+      assert.ok(meta, `${slot}: TEXT_SLOT_META girdisi yok`);
+      assert.ok(meta.label.trim().length > 0, `${slot}: etiket boş`);
+      assert.ok(meta.where.trim().length > 0, `${slot}: nerede göründüğü yazılmamış`);
+      assert.equal(typeof meta.onDark, "boolean", `${slot}: zemin belirtilmemiş`);
+    }
+  });
+
+  test("textClassFor ve textClass aynı sonucu verir", () => {
+    // Önizleme textClassFor'u, sayfalar textClass'ı çağırıyor; ikisi
+    // ayrışırsa panelde görülen ile portalda görünen farklı olurdu.
+    for (const slot of TEXT_SLOTS) {
+      for (const size of SIZE_OPTIONS) {
+        for (const color of COLOR_OPTIONS) {
+          const settings = withAppearance({
+            [`type_${slot}_size`]: size.value,
+            [`type_${slot}_color`]: color.value,
+          });
+          for (const onDark of [false, true]) {
+            assert.equal(
+              textClassFor(slot, size.value, color.value, onDark),
+              textClass(settings, slot, { onDark }),
+              `${slot}/${size.value}/${color.value}`,
+            );
           }
         }
       }

@@ -13,6 +13,7 @@ import {
   type SettingKey,
 } from "@/lib/settings-schema";
 import { SettingField } from "./SettingField";
+import { TypographyGroup, type TypographySamples } from "./TypographyGroup";
 import { saveSettingsAction } from "./actions";
 
 /**
@@ -27,7 +28,14 @@ import { saveSettingsAction } from "./actions";
  * "kapat" olarak yazılırdı. `__alanlar` alanı aynı tehlikeye karşı ikinci
  * katman: sunucu yalnızca gerçekten gönderilen anahtarları doğrular ve yazar.
  */
-export function PortalSettingsForm({ settings }: { settings: PortalSettings }) {
+export function PortalSettingsForm({
+  settings,
+  typographySamples,
+}: {
+  settings: PortalSettings;
+  /** Punto önizlemelerinde gösterilecek gerçek metinler. */
+  typographySamples: TypographySamples;
+}) {
   const [state, action] = useActionState(saveSettingsAction, IDLE);
   const [activeGroup, setActiveGroup] = useState<SettingGroupId>(SETTING_GROUPS[0].id);
   const errors = state.fieldErrors ?? {};
@@ -100,13 +108,21 @@ export function PortalSettingsForm({ settings }: { settings: PortalSettings }) {
 
         return (
           <div key={group.id} hidden={group.id !== activeGroup} className="space-y-6">
-            <p className="text-xs font-light text-tfs-dark-60">{group.hint}</p>
+            {/* Tipografi grubu kendi bileşenini kullanıyor: buradaki asıl
+                soru "hangi seçenek" değil, "nasıl görünecek". */}
+            {group.id === "tipografi" ? (
+              <TypographyGroup settings={settings} samples={typographySamples} />
+            ) : (
+              <>
+                <p className="text-xs font-light text-tfs-dark-60">{group.hint}</p>
 
-            {[...sections.entries()].map(([section, keys]) => (
-              <GroupSection key={section || "_"} title={section}>
-                <FieldRows keys={keys} settings={settings} errors={errors} />
-              </GroupSection>
-            ))}
+                {[...sections.entries()].map(([section, keys]) => (
+                  <GroupSection key={section || "_"} title={section}>
+                    <FieldRows keys={keys} settings={settings} errors={errors} />
+                  </GroupSection>
+                ))}
+              </>
+            )}
           </div>
         );
       })}

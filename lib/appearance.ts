@@ -28,6 +28,42 @@ export const TEXT_SLOTS = [
 export type TextSlot = (typeof TEXT_SLOTS)[number];
 
 /**
+ * Her yuvanın ayar ekranında nasıl tanıtılacağı.
+ *
+ * React'tan bağımsız tutuluyor: yeni bir yuva eklendiğinde önizlemesinin
+ * unutulmasını test yakalasın diye (tests/appearance.test.ts).
+ */
+export const TEXT_SLOT_META: Record<TextSlot, { label: string; where: string; onDark: boolean }> = {
+  home_title: { label: "Ana sayfa başlığı", where: "Hero — en büyük yazı", onDark: true },
+  home_kicker: {
+    label: "Ana sayfa üst etiketi",
+    where: "Hero — başlığın yanındaki etiket",
+    onDark: true,
+  },
+  home_intro: {
+    label: "Ana sayfa giriş metni",
+    where: "Hero — başlığın altındaki açıklama",
+    onDark: true,
+  },
+  page_title: {
+    label: "Sayfa başlıkları",
+    where: "Bülten sekmeleri, arama, anketler",
+    onDark: false,
+  },
+  page_eyebrow: {
+    label: "Sayfa üst etiketleri",
+    where: "Sayfa başlığının üstündeki küçük yazı",
+    onDark: false,
+  },
+  nav: { label: "Sekmeler", where: "Üstteki gezinme çubuğu", onDark: false },
+  section_title: {
+    label: "Bölüm başlıkları",
+    where: "Son Yayımlananlar, Açık Anket…",
+    onDark: false,
+  },
+};
+
+/**
  * Punto kademeleri.
  *
  * Her kademe mobil + masaüstü çifti: "Çok büyük" seçimi telefonda başlığı
@@ -155,21 +191,28 @@ function pick(table: Record<string, string>, value: string, fallback: string): s
 }
 
 /** Bir metin yuvası için punto + renk sınıflarını birleştirir. */
-export function textClass(
-  settings: TypedSettings,
-  slot: TextSlot,
-  options: { onDark?: boolean } = {},
-): string {
-  const size = settings[`type_${slot}_size` as keyof TypedSettings] as string;
-  const color = settings[`type_${slot}_color` as keyof TypedSettings] as string;
-
-  const colorTable = options.onDark ? COLOR_CLASS_ON_DARK : COLOR_CLASS;
-  const defaults = options.onDark ? SLOT_DEFAULT_COLOR_DARK : SLOT_DEFAULT_COLOR;
+export function textClassFor(slot: TextSlot, size: string, color: string, onDark = false): string {
+  const colorTable = onDark ? COLOR_CLASS_ON_DARK : COLOR_CLASS;
+  const defaults = onDark ? SLOT_DEFAULT_COLOR_DARK : SLOT_DEFAULT_COLOR;
   const picked = pick(colorTable, color, "otomatik");
 
   return [pick(SIZE_CLASS[slot], size, "normal"), picked || defaults[slot]]
     .filter(Boolean)
     .join(" ");
+}
+
+/** Ayarlardan okuyan sarmalayıcı — sayfalar bunu kullanır. */
+export function textClass(
+  settings: TypedSettings,
+  slot: TextSlot,
+  options: { onDark?: boolean } = {},
+): string {
+  return textClassFor(
+    slot,
+    settings[`type_${slot}_size` as keyof TypedSettings] as string,
+    settings[`type_${slot}_color` as keyof TypedSettings] as string,
+    options.onDark,
+  );
 }
 
 export function alignClass(value: string): string {
