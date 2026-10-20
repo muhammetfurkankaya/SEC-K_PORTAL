@@ -74,7 +74,10 @@ export function SwitchRow({
   label,
   description,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { label: string; description: string }) {
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  description: string;
+}) {
   return (
     <label className="flex cursor-pointer items-start justify-between gap-4 border-b border-tfs-grey-40 py-3 last:border-b-0">
       <span className="min-w-0">
@@ -152,8 +155,146 @@ export function Alert({
   }[kind];
 
   return (
-    <p role={kind === "error" ? "alert" : "status"} className={`rounded-brand border px-3 py-2 text-sm ${styles}`}>
+    <p
+      role={kind === "error" ? "alert" : "status"}
+      className={`rounded-brand border px-3 py-2 text-sm ${styles}`}
+    >
       {children}
     </p>
+  );
+}
+
+// ————————————————————————————————————————————————
+// Seçim öğeleri
+//
+// Üçü de radio + `peer` ile çalışır: istemci durumu tutmazlar, bu yüzden
+// 70 alanlık ayar formunda 70 ayrı state olmaz. Görsel dil bülten
+// okuyucudaki sıralama düğmeleriyle aynı — bu arayüzün segment kontrolü o.
+// ————————————————————————————————————————————————
+
+export type ChoiceOption = {
+  value: string;
+  label: string;
+  /** Renk seçiminde gösterilecek kare. */
+  swatch?: string;
+  /** Punto seçiminde örnek harf. */
+  sample?: string;
+};
+
+const CHOICE_BASE =
+  "cursor-pointer rounded-brand border px-2.5 py-1.5 text-xs transition-colors " +
+  "border-tfs-grey text-tfs-dark-60 hover:border-tfs-dark-20 hover:text-tfs-dark " +
+  "peer-checked:border-tfs-red peer-checked:bg-tfs-red-10 peer-checked:font-semibold " +
+  "peer-checked:text-tfs-red peer-focus-visible:outline peer-focus-visible:outline-2 " +
+  "peer-focus-visible:outline-offset-2 peer-focus-visible:outline-tfs-red";
+
+/** Birkaç kısa seçenek arasından biri — açılır liste yerine görünür düğmeler. */
+export function Segmented({
+  name,
+  value,
+  options,
+}: {
+  name: string;
+  value: string;
+  options: readonly ChoiceOption[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((option) => (
+        <label key={option.value}>
+          <input
+            type="radio"
+            name={name}
+            value={option.value}
+            defaultChecked={value === option.value}
+            className="peer sr-only"
+          />
+          <span className={`inline-block ${CHOICE_BASE}`}>{option.label}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+/** Kurumsal paletten renk seçimi — kare + ad. */
+export function ColorChoice({
+  name,
+  value,
+  options,
+}: {
+  name: string;
+  value: string;
+  options: readonly ChoiceOption[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((option) => (
+        <label key={option.value}>
+          <input
+            type="radio"
+            name={name}
+            value={option.value}
+            defaultChecked={value === option.value}
+            className="peer sr-only"
+          />
+          <span className={`inline-flex items-center gap-1.5 ${CHOICE_BASE}`}>
+            <span
+              aria-hidden="true"
+              className="size-3.5 shrink-0 rounded-brand border border-tfs-grey"
+              style={{ backgroundColor: option.swatch ?? "transparent" }}
+            />
+            {option.label}
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Punto seçimi.
+ *
+ * Örnek harf gerçek ölçeğinde gösteriliyor: "Büyük"ün ne kadar büyük
+ * olduğunu kaydedip portala bakmadan görmek gerekiyor.
+ */
+const SAMPLE_SCALE: Record<string, string> = {
+  kucuk: "text-[0.75rem]",
+  normal: "text-[0.9375rem]",
+  buyuk: "text-[1.1875rem]",
+  "cok-buyuk": "text-[1.5rem]",
+};
+
+export function SizeChoice({
+  name,
+  value,
+  options,
+}: {
+  name: string;
+  value: string;
+  options: readonly ChoiceOption[];
+}) {
+  return (
+    <div className="flex flex-wrap items-stretch gap-1.5">
+      {options.map((option) => (
+        <label key={option.value}>
+          <input
+            type="radio"
+            name={name}
+            value={option.value}
+            defaultChecked={value === option.value}
+            className="peer sr-only"
+          />
+          <span className={`flex min-w-[4.5rem] flex-col items-center gap-0.5 ${CHOICE_BASE}`}>
+            <span
+              aria-hidden="true"
+              className={`leading-none font-semibold ${SAMPLE_SCALE[option.value] ?? "text-sm"}`}
+            >
+              {option.sample ?? "Aa"}
+            </span>
+            {option.label}
+          </span>
+        </label>
+      ))}
+    </div>
   );
 }

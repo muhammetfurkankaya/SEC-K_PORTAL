@@ -1,28 +1,29 @@
+import { cache } from "react";
 import { getDb } from "@/lib/db";
 import {
-  ANNOUNCEMENT_LEVELS,
   SETTING_DEFAULTS,
-  SORT_KEYS,
-  type AnnouncementLevel,
+  SETTING_KEYS,
   type PortalSettings,
   type ResolvedSettings,
   type SettingKey,
-  type SortKey,
 } from "@/lib/settings-schema";
+import { resolveSettings } from "@/lib/settings-validate";
 
 /**
  * Portal ayarlarının okunması ve yazılması.
  *
- * Anahtar listesi ve seçenekler lib/settings-schema.ts içindedir; istemci
- * bileşenleri oradan import eder. Burada yalnızca veritabanı erişimi var.
+ * Anahtar listesi ve seçenekler lib/settings-schema.ts, tür çözümlemesi
+ * lib/settings-validate.ts içinde. Burada yalnızca veritabanı erişimi var.
  */
 
-function isTruthy(value: string): boolean {
-  return value === "1" || value === "true" || value === "on";
-}
-
-/** Ham ayar değerleri — kaydedilmemiş olanlar için varsayılanla birlikte. */
-export function getRawSettings(): PortalSettings {
+/**
+ * Ham ayar değerleri — kaydedilmemiş olanlar için varsayılanla birlikte.
+ *
+ * React `cache()`: üst bant, alt bilgi ve sayfanın kendisi aynı istekte
+ * ayarları ayrı ayrı okuyor. ~70 anahtarla her istekte 5-6 kez tüm tabloyu
+ * taramanın anlamı yok; istek boyunca tek okuma yeterli.
+ */
+export const getRawSettings = cache(function getRawSettings(): PortalSettings {
   const rows = getDb().prepare(`SELECT key, value FROM settings`).all() as {
     key: string;
     value: string;
@@ -31,46 +32,39 @@ export function getRawSettings(): PortalSettings {
   const stored = new Map(rows.map((r) => [r.key, r.value]));
   const result = { ...SETTING_DEFAULTS } as PortalSettings;
 
-  for (const key of Object.keys(SETTING_DEFAULTS) as SettingKey[]) {
+  for (const key of SETTING_KEYS) {
     const value = stored.get(key);
     if (value !== undefined) result[key] = value;
   }
   return result;
-}
+});
 
 /**
  * Arayüzün kullandığı ayarlar.
  *
- * Sayı ve boolean alanlar burada bir kez çözülür; sayfalar
- * `settings.homeRecentCount` gibi hazır değerleri okur, her yerde ayrı ayrı
- * dönüştürme yapılmaz.
+ * Her alan türüne çevrilmiş olarak gelir: boolean boolean, sayı sayı, enum
+ * dar birleşim. Bozuk ya da eski bir değer arayüze sızmaz, varsayılana
+ * düşer. `announcementVisible` tek anahtardan türetilemediği için burada.
  */
-export function getSettings(): ResolvedSettings {
+export const getSettings = cache(function getSettings(): ResolvedSettings {
   const raw = getRawSettings();
-
-  const level = (ANNOUNCEMENT_LEVELS as readonly string[]).includes(raw.announcement_level)
-    ? (raw.announcement_level as AnnouncementLevel)
-    : "uyari";
-
-  const sort = (SORT_KEYS as readonly string[]).includes(raw.default_sort)
-    ? (raw.default_sort as SortKey)
-    : "tarih-yeni";
-
-  const recent = Number(raw.home_recent_count);
+  const typed = resolveSettings(raw);
 
   return {
-    ...raw,
+    ...typed,
     // Duyuru yalnızca metni varsa VE açıksa görünür.
-    announcementVisible: isTruthy(raw.announcement_active) && raw.announcement.trim().length > 0,
-    announcementLevel: level,
-    homeRecentCount: Number.isFinite(recent) ? Math.min(Math.max(Math.trunc(recent), 3), 24) : 6,
-    pdfPreviewEnabled: isTruthy(raw.enable_pdf_preview),
-    downloadCountVisible: isTruthy(raw.show_download_count),
-    surveysSectionVisible: isTruthy(raw.show_surveys_section),
-    qdmsSectionVisible: isTruthy(raw.show_qdms_section),
-    defaultSort: sort,
+    announcementVisible: typed.announcement_active && typed.announcement.trim().length > 0,
+
+    // Eski adlar — çağrı yerleri kademeli olarak doğrudan anahtara geçecek.
+    announcementLevel: typed.announcement_level,
+    homeRecentCount: typed.home_recent_count,
+    pdfPreviewEnabled: typed.enable_pdf_preview,
+    downloadCountVisible: typed.show_download_count,
+    surveysSectionVisible: typed.show_surveys_section,
+    qdmsSectionVisible: typed.show_qdms_section,
+    defaultSort: typed.default_sort,
   };
-}
+});
 
 export function setSettings(values: Partial<Record<SettingKey, string>>): void {
   const db = getDb();

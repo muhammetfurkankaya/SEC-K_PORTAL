@@ -3,6 +3,8 @@ type SectionTitleProps = {
   /** Başlığın yanında gösterilen ikincil bilgi (ör. kayıt sayısı). */
   meta?: React.ReactNode;
   className?: string;
+  /** Ayarlardan gelen punto + renk sınıfı. */
+  titleClass?: string;
 };
 
 /**
@@ -11,10 +13,19 @@ type SectionTitleProps = {
  * Marka Kimlik Kılavuzu s.55'teki "Belge Alt Başlık" kuralı: Nunito Sans
  * SemiBold, büyük harf, #CE2028.
  */
-export function SectionTitle({ children, meta, className = "" }: SectionTitleProps) {
+export function SectionTitle({
+  children,
+  meta,
+  className = "",
+  titleClass = "",
+}: SectionTitleProps) {
   return (
     <div className={`mb-4 flex flex-wrap items-baseline justify-between gap-2 ${className}`}>
-      <h2 className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+      <h2
+        className={`font-semibold tracking-[0.12em] uppercase ${
+          titleClass || "text-xs text-tfs-red"
+        }`}
+      >
         {children}
       </h2>
       {meta ? <span className="text-xs text-tfs-dark-60">{meta}</span> : null}

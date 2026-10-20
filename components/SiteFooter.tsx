@@ -12,7 +12,7 @@ export function SiteFooter() {
           {settings.portal_subtitle ? ` · ${settings.portal_subtitle}` : ""}
         </p>
         <p>
-          Turkish Fuel Services · {year}
+          {settings.footer_company} · {year}
           {settings.footer_note ? ` · ${settings.footer_note}` : ""}
         </p>
       </div>

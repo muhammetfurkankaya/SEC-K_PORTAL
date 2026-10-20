@@ -11,6 +11,17 @@
 @import "@fontsource/nunito-sans/700.css";
 @import "@fontsource/nunito-sans/400-italic.css";
 
+/* ————————————————————————————————————————————————
+   Punto/renk ayarlarının ürettiği sınıflar.
+
+   Tailwind kaynak dosyalarını metin olarak tarıyor. lib/appearance.ts'teki
+   tablolarda sınıflar düz metin yazılı olduğu için normalde bulunuyorlar;
+   bu satır paketleme ve standalone senaryolarında da kaybolmamalarını
+   garanti ediyor. tests/appearance.test.ts bu listenin tablolarla birebir
+   aynı olduğunu doğruluyor — elle güncellemeyin, test söyler.
+   ———————————————————————————————————————————————— */
+@source inline("lg:text-[2.75rem] lg:text-[4.75rem] lg:text-[4rem] lg:text-[5.5rem] max-w-3xl max-w-5xl max-w-6xl max-w-none ml-auto mr-auto mx-auto sm:text-2xl sm:text-[1.75rem] sm:text-[2.25rem] sm:text-[2.75rem] sm:text-[3.25rem] sm:text-[3.75rem] sm:text-[4.25rem] sm:text-lg sm:text-xl text-[#ff8f94] text-[0.625rem] text-[0.6875rem] text-[1.375rem] text-[1.75rem] text-[2.25rem] text-[2.5rem] text-[2.75rem] text-[2rem] text-base text-center text-left text-lg text-right text-sm text-tfs-dark text-tfs-dark-60 text-tfs-dark-80 text-tfs-green text-tfs-grey text-tfs-red text-white text-white/85 text-xl text-xs");
+
 @theme {
   /* ————— Kurumsal renk paleti (TFS Marka Kimlik Kılavuzu s.28 & s.30) ————— */
   /* PANTONE 433 C — ana koyu renk */
@@ -35,8 +46,8 @@
      renk değil, PANTONE 433 C'nin koyulaştırılmış hâli. */
   --color-tfs-deep: #12181d;
 
-  --font-sans: "Nunito Sans", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", Roboto, Arial, sans-serif;
+  --font-sans:
+    "Nunito Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 
   /* Kılavuz düz (flat) ve keskin bir dil öngörüyor: minimum yuvarlatma. */
   --radius-brand: 3px;

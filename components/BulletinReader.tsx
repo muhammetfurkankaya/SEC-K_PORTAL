@@ -6,8 +6,24 @@ import { compareBulletinNo, matchesQuery } from "@/lib/search";
 import { SORT_LABELS, SORT_KEYS, type SortKey } from "@/lib/settings-schema";
 import type { BulletinWithCategory } from "@/lib/types";
 
+/**
+ * Ekrandaki sabit yazılar.
+ *
+ * Tek tek prop yerine bir nesne: ayarlardan yönetilen metin sayısı arttıkça
+ * imza şişmesin. Değerleri sayfa, ayarlardan okuyup veriyor.
+ */
+export type ReaderLabels = {
+  indexTitle: string;
+  download: string;
+  newTab: string;
+  newBadge: string;
+  /** Bu kadar gün içinde yayımlananlar "yeni" sayılır. */
+  newDays: number;
+};
+
 type BulletinReaderProps = {
   bulletins: BulletinWithCategory[];
+  labels: ReaderLabels;
   /** Kapalıysa satıra tıklamak doğrudan indirir (ayarlardan yönetilir). */
   previewEnabled: boolean;
   showDownloadCount: boolean;
@@ -30,8 +46,8 @@ type BulletinReaderProps = {
   todayIso: string;
 };
 
-/** Son 7 gün içinde yayımlananlar "Yeni" işaretlenir. */
-function isRecent(publishedDate: string, todayIso: string): boolean {
+/** Ayarda belirtilen gün sayısı içinde yayımlananlar "Yeni" işaretlenir. */
+function isRecent(publishedDate: string, todayIso: string, days: number): boolean {
   const toDays = (value: string) => {
     const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (!match) return null;
@@ -44,7 +60,7 @@ function isRecent(publishedDate: string, todayIso: string): boolean {
   if (published === null || today === null) return false;
 
   const age = today - published;
-  return age >= 0 && age <= 7;
+  return age >= 0 && age <= days;
 }
 
 function sortBulletins(list: BulletinWithCategory[], sort: SortKey): BulletinWithCategory[] {
@@ -75,6 +91,7 @@ function sortBulletins(list: BulletinWithCategory[], sort: SortKey): BulletinWit
  */
 export function BulletinReader({
   bulletins,
+  labels,
   previewEnabled,
   showDownloadCount,
   defaultSort,
@@ -143,7 +160,7 @@ export function BulletinReader({
       >
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
-            Bülten indeksi
+            {labels.indexTitle}
           </h2>
           <span className="tnum text-xs text-tfs-dark-60">
             {formatNumber(visible.length)} / {formatNumber(bulletins.length)}
@@ -206,6 +223,7 @@ export function BulletinReader({
                     previewEnabled={previewEnabled}
                     showCategory={showCategory}
                     todayIso={todayIso}
+                    labels={labels}
                     onOpen={() => open(bulletin)}
                   />
                 </li>
@@ -231,6 +249,7 @@ export function BulletinReader({
             <Preview
               bulletin={selected}
               showDownloadCount={showDownloadCount}
+              labels={labels}
               onBack={() => setMobileOpen(false)}
             />
           ) : (
@@ -251,6 +270,7 @@ function IndexRow({
   previewEnabled,
   showCategory,
   todayIso,
+  labels,
   onOpen,
 }: {
   bulletin: BulletinWithCategory;
@@ -258,6 +278,7 @@ function IndexRow({
   previewEnabled: boolean;
   showCategory: boolean;
   todayIso: string;
+  labels: ReaderLabels;
   onOpen: () => void;
 }) {
   const label = `${bulletin.bulletin_no} — ${bulletin.subject}`;
@@ -276,7 +297,12 @@ function IndexRow({
           title={`${label} — okumak için tıklayın`}
           className="min-w-0 flex-1 px-3 py-2.5 text-left"
         >
-          <RowBody bulletin={bulletin} showCategory={showCategory} todayIso={todayIso} />
+          <RowBody
+            bulletin={bulletin}
+            showCategory={showCategory}
+            todayIso={todayIso}
+            labels={labels}
+          />
         </button>
       ) : (
         <a
@@ -284,7 +310,12 @@ function IndexRow({
           title={`${label} — indirmek için tıklayın`}
           className="min-w-0 flex-1 px-3 py-2.5"
         >
-          <RowBody bulletin={bulletin} showCategory={showCategory} todayIso={todayIso} />
+          <RowBody
+            bulletin={bulletin}
+            showCategory={showCategory}
+            todayIso={todayIso}
+            labels={labels}
+          />
         </a>
       )}
 
@@ -306,10 +337,12 @@ function RowBody({
   bulletin,
   showCategory,
   todayIso,
+  labels,
 }: {
   bulletin: BulletinWithCategory;
   showCategory: boolean;
   todayIso: string;
+  labels: ReaderLabels;
 }) {
   return (
     <>
@@ -322,9 +355,9 @@ function RowBody({
       </span>
       <span className="mt-1 flex items-baseline gap-1.5">
         <span className="text-xs leading-snug text-tfs-dark">{bulletin.subject}</span>
-        {isRecent(bulletin.published_date, todayIso) ? (
+        {isRecent(bulletin.published_date, todayIso, labels.newDays) ? (
           <span className="shrink-0 bg-tfs-green px-1 py-px text-[0.5625rem] font-semibold tracking-wide text-tfs-dark uppercase">
-            Yeni
+            {labels.newBadge}
           </span>
         ) : null}
       </span>
@@ -341,10 +374,12 @@ function RowBody({
 function Preview({
   bulletin,
   showDownloadCount,
+  labels,
   onBack,
 }: {
   bulletin: BulletinWithCategory;
   showDownloadCount: boolean;
+  labels: ReaderLabels;
   onBack: () => void;
 }) {
   return (
@@ -378,9 +413,7 @@ function Preview({
             </div>
             <p className="tnum mt-1.5 text-[0.6875rem] text-tfs-grey/70">
               {formatDate(bulletin.published_date)} · {formatFileSize(bulletin.file_size)}
-              {showDownloadCount
-                ? ` · ${formatNumber(bulletin.download_count)} indirme`
-                : ""}
+              {showDownloadCount ? ` · ${formatNumber(bulletin.download_count)} indirme` : ""}
             </p>
           </div>
 
@@ -392,14 +425,14 @@ function Preview({
               rel="noopener"
               className="inline-flex items-center justify-center gap-1.5 rounded-brand border border-white/30 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-white hover:bg-white/10"
             >
-              Yeni sekmede aç ↗
+              {labels.newTab} ↗
             </a>
             <a
               href={`/api/dosya/${bulletin.id}?mod=indir`}
               className="inline-flex items-center justify-center gap-1.5 rounded-brand bg-tfs-red px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#a81a20]"
             >
               <DownloadIcon />
-              PDF indir
+              {labels.download}
             </a>
           </div>
         </div>
@@ -422,7 +455,7 @@ function Preview({
       </div>
 
       <p className="mt-2 text-xs font-light text-tfs-dark-60">
-        PDF görüntülenemiyorsa “PDF indir” düğmesini kullanabilirsiniz.
+        PDF görüntülenemiyorsa “{labels.download}” düğmesini kullanabilirsiniz.
       </p>
     </div>
   );

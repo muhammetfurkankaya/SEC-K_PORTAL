@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { PasswordForm, PortalSettingsForm, ResetSettingsForm } from "./SettingsForms";
+import { PortalSettingsForm } from "./SettingsForm";
+import { PasswordForm } from "./PasswordForm";
+import { ResetSettingsForm } from "./ResetForm";
 import { AdminHeading, Panel } from "@/components/admin/AdminHeading";
 import { getRawSettings } from "@/lib/db/queries/settings";
 

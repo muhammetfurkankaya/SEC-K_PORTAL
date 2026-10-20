@@ -17,6 +17,10 @@ type PageHeroProps = {
   tone?: HeroTone;
   size?: HeroSize;
   align?: "sol" | "orta";
+  /** Ayarlardan gelen punto + renk sınıfları. */
+  titleClass?: string;
+  eyebrowClass?: string;
+  descriptionClass?: string;
   imageSrc?: string | null;
   /** Yüklenirken anında boyanan, satır içi gömülü küçük bulanık kare. */
   blurDataUrl?: string | null;
@@ -57,6 +61,9 @@ export function PageHero({
   tone,
   size = "md",
   align = "sol",
+  titleClass = "",
+  eyebrowClass = "",
+  descriptionClass = "",
   imageSrc,
   blurDataUrl,
   scrim = "normal",
@@ -71,6 +78,8 @@ export function PageHero({
         eyebrow={eyebrow}
         eyebrowPlace={eyebrowPlace}
         description={description}
+        titleClass={titleClass}
+        eyebrowClass={eyebrowClass}
       >
         {children}
       </FlatHeader>
@@ -82,9 +91,9 @@ export function PageHero({
 
   const eyebrowNode = showEyebrow ? (
     <p
-      className={`hero-ink hero-rise flex items-center gap-2.5 text-[0.6875rem] font-semibold tracking-[0.18em] text-tfs-grey uppercase ${
-        centered ? "justify-center" : ""
-      } ${eyebrowPlace === "altta" ? "mt-4 hero-rise-3" : ""}`}
+      className={`hero-ink hero-rise flex items-center gap-2.5 font-semibold tracking-[0.18em] uppercase ${
+        eyebrowClass || "text-[0.6875rem] text-tfs-grey"
+      } ${centered ? "justify-center" : ""} ${eyebrowPlace === "altta" ? "mt-4 hero-rise-3" : ""}`}
     >
       <span aria-hidden="true" className="h-px w-6 bg-tfs-red" />
       {eyebrow}
@@ -134,7 +143,9 @@ export function PageHero({
         {eyebrowPlace === "ustte" ? eyebrowNode : null}
 
         <h1
-          className={`hero-ink hero-rise hero-rise-2 font-semibold tracking-[-0.02em] text-white ${TITLE_SIZE[size]} leading-[1.06] ${
+          className={`hero-ink hero-rise hero-rise-2 font-semibold tracking-[-0.02em] leading-[1.06] ${
+            titleClass || `${TITLE_SIZE[size]} text-white`
+          } ${
             eyebrowPlace === "ustte" && showEyebrow ? "mt-3" : ""
           } ${centered ? "max-w-[22ch]" : "max-w-[18ch]"}`}
         >
@@ -145,9 +156,9 @@ export function PageHero({
 
         {description ? (
           <p
-            className={`hero-ink hero-rise hero-rise-3 mt-4 max-w-[46ch] text-base leading-relaxed font-light text-white/85 sm:text-lg ${
-              centered ? "mx-auto" : ""
-            }`}
+            className={`hero-ink hero-rise hero-rise-3 mt-4 max-w-[46ch] leading-relaxed font-light ${
+              descriptionClass || "text-base text-white/85 sm:text-lg"
+            } ${centered ? "mx-auto" : ""}`}
           >
             {description}
           </p>
@@ -178,21 +189,25 @@ function FlatHeader({
   eyebrow,
   eyebrowPlace = "ustte",
   description,
+  titleClass = "",
+  eyebrowClass = "",
   children,
 }: {
   title: string;
   eyebrow?: string | null;
   eyebrowPlace?: EyebrowPlace;
   description?: string | null;
+  titleClass?: string;
+  eyebrowClass?: string;
   children?: ReactNode;
 }) {
   const showEyebrow = Boolean(eyebrow) && eyebrowPlace !== "gizli";
 
   const eyebrowNode = showEyebrow ? (
     <p
-      className={`text-[0.6875rem] font-semibold tracking-[0.16em] text-tfs-red uppercase ${
-        eyebrowPlace === "altta" ? "mt-2" : ""
-      }`}
+      className={`font-semibold tracking-[0.16em] uppercase ${
+        eyebrowClass || "text-[0.6875rem] text-tfs-red"
+      } ${eyebrowPlace === "altta" ? "mt-2" : ""}`}
     >
       {eyebrow}
     </p>
@@ -204,9 +219,9 @@ function FlatHeader({
         <div className="brand-bar pl-4">
           {eyebrowPlace === "ustte" ? eyebrowNode : null}
           <h1
-            className={`text-[1.75rem] font-semibold tracking-[-0.015em] text-tfs-dark sm:text-[2.25rem] ${
-              eyebrowPlace === "ustte" && showEyebrow ? "mt-1.5" : ""
-            }`}
+            className={`font-semibold tracking-[-0.015em] ${
+              titleClass || "text-[1.75rem] text-tfs-dark sm:text-[2.25rem]"
+            } ${eyebrowPlace === "ustte" && showEyebrow ? "mt-1.5" : ""}`}
           >
             {title}
           </h1>

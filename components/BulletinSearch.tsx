@@ -31,9 +31,12 @@ const MAX_SUGGESTIONS = 8;
  */
 export function BulletinSearch({
   bulletins,
+  submitLabel,
   tone = "light",
 }: {
   bulletins: BulletinSuggestion[];
+  /** Gönder düğmesinin yazısı — ayarlardan yönetilir. */
+  submitLabel: string;
   /** koyu: hero altındaki koyu bandın üzerinde kullanılır. */
   tone?: "light" | "koyu";
 }) {
@@ -57,9 +60,8 @@ export function BulletinSearch({
   const totalMatches = useMemo(() => {
     const trimmed = query.trim();
     if (trimmed.length < 2) return 0;
-    return bulletins.filter((b) =>
-      matchesQuery(trimmed, b.bulletin_no, b.subject, b.category_name),
-    ).length;
+    return bulletins.filter((b) => matchesQuery(trimmed, b.bulletin_no, b.subject, b.category_name))
+      .length;
   }, [bulletins, query]);
 
   const showList = open && query.trim().length >= 2;
@@ -166,7 +168,7 @@ export function BulletinSearch({
               dark ? "bg-tfs-red hover:bg-[#a81a20]" : "bg-tfs-dark hover:bg-tfs-red"
             }`}
           >
-            Ara
+            {submitLabel}
           </button>
         </div>
       </form>

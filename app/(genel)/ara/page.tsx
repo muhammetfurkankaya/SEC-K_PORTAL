@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BulletinReader } from "@/components/BulletinReader";
 import { PageHero } from "@/components/brand/PageHero";
+import { textClass } from "@/lib/appearance";
 import { listAllPublishedBulletins } from "@/lib/db/queries/bulletins";
 import { getSettings } from "@/lib/db/queries/settings";
 
@@ -35,12 +36,21 @@ export default async function SearchPage({ searchParams }: Props) {
     <>
       <PageHero
         tone="flat"
-        eyebrow="Arama"
-        title={query ? `“${query}” için sonuçlar` : "Tüm bültenlerde ara"}
-        description="Bülten numarası veya konuya göre arayın. Türkçe karakter yazmanız gerekmez."
+        eyebrow={settings.page_search_eyebrow}
+        title={query ? `“${query}” için sonuçlar` : settings.page_search_title}
+        description={settings.page_search_desc}
+        titleClass={textClass(settings, "page_title")}
+        eyebrowClass={textClass(settings, "page_eyebrow")}
       />
       <BulletinReader
         bulletins={bulletins}
+        labels={{
+          indexTitle: settings.reader_index_title,
+          download: settings.btn_download,
+          newTab: settings.btn_new_tab,
+          newBadge: settings.badge_new,
+          newDays: settings.badge_new_days,
+        }}
         previewEnabled={settings.pdfPreviewEnabled}
         showDownloadCount={settings.downloadCountVisible}
         defaultSort={settings.defaultSort}
@@ -48,7 +58,7 @@ export default async function SearchPage({ searchParams }: Props) {
         initialQuery={query}
         initialSelectedId={initialSelectedId}
         showCategory
-        emptyNote="Portalda henüz yayımlanmış bülten yok."
+        emptyNote={settings.empty_category}
       />
     </>
   );

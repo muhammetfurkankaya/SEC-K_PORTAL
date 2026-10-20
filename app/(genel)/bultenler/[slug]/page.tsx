@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BulletinReader } from "@/components/BulletinReader";
 import { PageHero } from "@/components/brand/PageHero";
+import { textClass } from "@/lib/appearance";
 import { getCategoryBySlug } from "@/lib/db/queries/categories";
 import { listBulletinsByCategory } from "@/lib/db/queries/bulletins";
 import { getSettings } from "@/lib/db/queries/settings";
@@ -47,15 +48,27 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       <PageHero
         tone="flat"
         title={category.name}
+        eyebrow={settings.page_category_eyebrow}
+        eyebrowPlace={settings.page_category_eyebrow_pos}
+        titleClass={textClass(settings, "page_title")}
+        eyebrowClass={textClass(settings, "page_eyebrow")}
         description={category.description}
       />
       <BulletinReader
         bulletins={bulletins}
+        labels={{
+          indexTitle: settings.reader_index_title,
+          download: settings.btn_download,
+          newTab: settings.btn_new_tab,
+          newBadge: settings.badge_new,
+          newDays: settings.badge_new_days,
+        }}
         previewEnabled={settings.pdfPreviewEnabled}
         showDownloadCount={settings.downloadCountVisible}
         defaultSort={settings.defaultSort}
         todayIso={todayIso}
         initialSelectedId={initialSelectedId}
+        emptyNote={settings.empty_category}
       />
     </>
   );

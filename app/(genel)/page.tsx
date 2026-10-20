@@ -8,6 +8,7 @@ import { listAllPublishedBulletins, listRecentBulletins } from "@/lib/db/queries
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
 import { HOME_HERO_IMAGE } from "@/lib/brand";
+import { alignClass, blockPositionClass, blockWidthClass, textClass } from "@/lib/appearance";
 import { formatDate, formatNumber } from "@/lib/format";
 
 // Bültenler ve anketler admin panelinden değiştiğinde ana sayfa güncel
@@ -22,6 +23,20 @@ export default function HomePage() {
   // Kart alanı listenin yanına sığdığı kadar bülten gösterir; listenin
   // tamamını tekrar etmesi gerekmiyor.
   const cards = recent.slice(0, 4);
+
+  // Hero yüksekliği ayardan; kayıttaki değerler bileşenin boyut adlarına
+  // çevriliyor.
+  const heroSize = ({ kisa: "sm", orta: "md", yuksek: "lg" } as const)[settings.hero_height];
+
+  // "Son yayımlananlar" bloğunun yerleşimi: hangi görünüm, nerede, ne
+  // genişlikte, yazılar nasıl hizalı.
+  const listVisible = settings.home_list_mode !== "kart";
+  const cardsVisible = settings.home_list_mode !== "liste";
+  const blockClass = [
+    blockWidthClass(settings.home_block_width),
+    blockPositionClass(settings.home_block_position),
+    alignClass(settings.home_block_align),
+  ].join(" ");
 
   // Arama önerileri istemcide filtrelenir; yalnızca gereken alanlar
   // gönderilir, tüm bülten kaydı değil.
@@ -39,11 +54,15 @@ export default function HomePage() {
           Üst etiket (portal_subtitle) başlığın ALTINDA duruyor: büyük
           başlık önce okunsun, tanım sonra gelsin. */}
       <PageHero
-        size="lg"
+        size={heroSize}
+        align={settings.hero_align === "orta" ? "orta" : "sol"}
         title={settings.portal_title}
         eyebrow={settings.portal_subtitle}
-        eyebrowPlace="altta"
+        eyebrowPlace={settings.home_kicker_pos}
         description={settings.home_intro}
+        titleClass={textClass(settings, "home_title", { onDark: true })}
+        eyebrowClass={textClass(settings, "home_kicker", { onDark: true })}
+        descriptionClass={textClass(settings, "home_intro", { onDark: true })}
         imageSrc={HOME_HERO_IMAGE}
       />
 
@@ -51,11 +70,13 @@ export default function HomePage() {
           Arama sekmelerin üstünde çalışır: çalışan bültenin hangi bölümde
           olduğunu bilmek zorunda kalmaz. Hero'nun koyusunu içeriğe doğru
           sürdürüyor, böylece fotoğraftan beyaz sayfaya sert düşüş olmuyor. */}
-      <div className="bg-tfs-deep print-hidden">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
-          <BulletinSearch bulletins={suggestions} tone="koyu" />
+      {settings.show_search_band ? (
+        <div className="bg-tfs-deep print-hidden">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
+            <BulletinSearch bulletins={suggestions} submitLabel={settings.btn_search} tone="koyu" />
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
         {/* ————————————— Bildirimler —————————————
@@ -63,8 +84,8 @@ export default function HomePage() {
             Ayarlar > QDMS Bildirim Kartları bölümünden geri açılabilir. */}
         {settings.qdmsSectionVisible ? (
           <section aria-labelledby="bildirim-baslik">
-            <SectionTitle>
-              <span id="bildirim-baslik">Bildirim</span>
+            <SectionTitle titleClass={textClass(settings, "section_title")}>
+              <span id="bildirim-baslik">{settings.section_qdms_title}</span>
             </SectionTitle>
             <div className="grid gap-3 sm:grid-cols-2">
               <ReportAction
@@ -86,8 +107,8 @@ export default function HomePage() {
         {/* ————————————— Açık anketler ————————————— */}
         {openSurveys.length > 0 ? (
           <section aria-labelledby="anket-baslik">
-            <SectionTitle>
-              <span id="anket-baslik">Açık Anket</span>
+            <SectionTitle titleClass={textClass(settings, "section_title")}>
+              <span id="anket-baslik">{settings.section_survey_title}</span>
             </SectionTitle>
             <ul className="space-y-2">
               {openSurveys.map((survey) => (
@@ -106,7 +127,7 @@ export default function HomePage() {
                       </span>
                     </span>
                     <span className="shrink-0 rounded-brand bg-tfs-red px-3 py-1.5 text-xs font-semibold text-white">
-                      Doldur
+                      {settings.btn_survey}
                     </span>
                   </Link>
                 </li>
@@ -118,46 +139,60 @@ export default function HomePage() {
         {/* ————————————— Son yayımlananlar ————————————— */}
         <section aria-labelledby="son-baslik">
           <SectionTitle
+            titleClass={textClass(settings, "section_title")}
             meta={recent.length > 0 ? `son ${formatNumber(recent.length)} bülten` : undefined}
           >
-            <span id="son-baslik">Son Yayımlananlar</span>
+            <span id="son-baslik">{settings.section_recent_title}</span>
           </SectionTitle>
 
           {recent.length === 0 ? (
             <p className="rounded-brand border border-dashed border-tfs-grey bg-tfs-grey-20 px-4 py-10 text-center text-sm font-light text-tfs-dark-60">
-              Henüz bülten yayımlanmamış. Yönetim panelinden PDF yükleyerek başlayabilirsiniz.
+              {settings.empty_home}
             </p>
           ) : (
             /* Solda tam liste, sağda en yenilerin kartları. Liste taramak,
                kartlar göz gezdirmek için — ikisi aynı bültenlere farklı iki
                yoldan bakıyor. */
-            <div className="grid items-start gap-6 lg:grid-cols-[1.1fr_1fr]">
+            <div
+              className={`grid items-start gap-6 ${blockClass} ${
+                listVisible && cardsVisible ? "lg:grid-cols-[1.1fr_1fr]" : ""
+              }`}
+            >
               {/* items-start: liste kartlar kadar uzayıp altında boş çerçeve
                   bırakmasın. */}
-              <ul className="divide-y divide-tfs-grey-40 rounded-brand border border-tfs-grey bg-white">
-                {recent.map((bulletin) => (
-                  <li key={bulletin.id}>
-                    <Link
-                      href={`/bultenler/${bulletin.category_slug}?bulten=${bulletin.id}`}
-                      className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-3 transition-colors hover:bg-tfs-grey-20"
-                    >
-                      <span className="placard-quiet">{bulletin.bulletin_no}</span>
-                      <span className="min-w-0 flex-1 text-sm text-tfs-dark">
-                        {bulletin.subject}
-                      </span>
-                      <span className="tnum shrink-0 text-xs text-tfs-dark-60">
-                        {formatDate(bulletin.published_date)}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              {listVisible ? (
+                <ul className="divide-y divide-tfs-grey-40 rounded-brand border border-tfs-grey bg-white">
+                  {recent.map((bulletin) => (
+                    <li key={bulletin.id}>
+                      <Link
+                        href={`/bultenler/${bulletin.category_slug}?bulten=${bulletin.id}`}
+                        className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-3 transition-colors hover:bg-tfs-grey-20"
+                      >
+                        <span className="placard-quiet">{bulletin.bulletin_no}</span>
+                        <span className="min-w-0 flex-1 text-sm text-tfs-dark">
+                          {bulletin.subject}
+                        </span>
+                        <span className="tnum shrink-0 text-xs text-tfs-dark-60">
+                          {formatDate(bulletin.published_date)}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                {cards.map((bulletin) => (
-                  <BulletinCard key={bulletin.id} bulletin={bulletin} showCategory />
-                ))}
-              </div>
+              {cardsVisible ? (
+                <div className={`grid gap-3 sm:grid-cols-2 ${listVisible ? "" : "lg:grid-cols-4"}`}>
+                  {(listVisible ? cards : recent).map((bulletin) => (
+                    <BulletinCard
+                      key={bulletin.id}
+                      bulletin={bulletin}
+                      openLabel={settings.btn_open}
+                      showCategory
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
           )}
         </section>

@@ -4,6 +4,8 @@ import type { BulletinWithCategory } from "@/lib/types";
 
 type BulletinCardProps = {
   bulletin: BulletinWithCategory;
+  /** "Aç" düğmesinin yazısı — ayarlardan yönetilir. */
+  openLabel: string;
   /** Kategori adını kartta göster (ana sayfadaki karma listede gerekir). */
   showCategory?: boolean;
 };
@@ -19,7 +21,7 @@ type BulletinCardProps = {
  * için sunucuya poppler kurmak gerekirdi; tipografik kapak aynı işi
  * bağımlılık eklemeden yapıyor.
  */
-export function BulletinCard({ bulletin, showCategory = false }: BulletinCardProps) {
+export function BulletinCard({ bulletin, openLabel, showCategory = false }: BulletinCardProps) {
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-brand border border-tfs-grey bg-white transition-[border-color,box-shadow,transform] duration-[180ms] ease-[var(--ease-out-brand)] hover:-translate-y-px hover:border-tfs-red hover:shadow-brand-raised">
       {/* Kartın tamamı okuma ekranını açar. */}
@@ -37,9 +39,7 @@ export function BulletinCard({ bulletin, showCategory = false }: BulletinCardPro
           bilgi taşıyor ve ızgaraya taranabilir ikinci bir eksen veriyor. */}
       <div className="relative flex items-center justify-between gap-2 overflow-hidden bg-tfs-dark px-3 py-3">
         <span className="placard">{bulletin.bulletin_no}</span>
-        <span className="tnum text-xs text-tfs-grey/80">
-          {bulletin.published_date.slice(0, 4)}
-        </span>
+        <span className="tnum text-xs text-tfs-grey/80">{bulletin.published_date.slice(0, 4)}</span>
         {/* Hover'da şeridin altında büyüyen kırmızı çizgi. */}
         <span
           aria-hidden="true"
@@ -63,7 +63,7 @@ export function BulletinCard({ bulletin, showCategory = false }: BulletinCardPro
         </p>
 
         <div className="flex items-center justify-between gap-2 border-t border-tfs-grey-40 pt-2">
-          <span className="text-xs font-semibold text-tfs-red">Aç →</span>
+          <span className="text-xs font-semibold text-tfs-red">{openLabel} →</span>
 
           {/* z-20: kartı kaplayan bağlantının üzerinde kalmalı. */}
           <a
