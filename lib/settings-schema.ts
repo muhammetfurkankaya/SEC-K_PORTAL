@@ -41,6 +41,13 @@ export const SETTING_DEFAULTS = {
 
   // ————— Bölümler —————
   show_surveys_section: "1",
+  /**
+   * QDMS bildirim kartları ana sayfada görünsün mü?
+   *
+   * Varsayılanı kapalı: kartlar ana sayfadan kaldırıldı. Adresler ve
+   * metinler ayarlarda duruyor, istenirse tek tıkla geri açılır.
+   */
+  show_qdms_section: "0",
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
@@ -83,5 +90,6 @@ export type ResolvedSettings = PortalSettings & {
   pdfPreviewEnabled: boolean;
   downloadCountVisible: boolean;
   surveysSectionVisible: boolean;
+  qdmsSectionVisible: boolean;
   defaultSort: SortKey;
 };

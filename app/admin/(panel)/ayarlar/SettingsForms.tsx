@@ -107,6 +107,13 @@ export function PortalSettingsForm({ settings }: { settings: PortalSettings }) {
         title="QDMS Bildirim Kartları"
         hint="Ana sayfadaki iki bildirim kartının başlığı, açıklaması ve açtığı adres."
       >
+        <SwitchRow
+          name="show_qdms_section"
+          label="Kartlar ana sayfada görünsün"
+          description="Kapalıyken ana sayfada gösterilmez; aşağıdaki adresler ve metinler saklı kalır."
+          defaultChecked={on(settings.show_qdms_section)}
+        />
+
         <div className="rounded-brand border border-tfs-grey bg-tfs-grey-20 p-4">
           <p className="mb-4 text-xs font-semibold text-tfs-dark">Öneri kartı</p>
           <div className="space-y-4">

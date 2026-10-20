@@ -31,10 +31,13 @@ export function SiteNav({ items }: { items: NavItem[] }) {
                 <Link
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex items-center gap-2 border-b-[3px] px-4 py-3.5 text-sm whitespace-nowrap transition-colors ${
+                  /* Alt çizgi sert bir renk takası yerine soldan büyüyor:
+                     sekme değişimi ani bir sıçrama gibi değil, bir hareket
+                     gibi okunuyor. */
+                  className={`relative flex items-center gap-2 px-4 py-3.5 text-sm whitespace-nowrap transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:origin-left after:transition-transform after:duration-200 after:ease-[var(--ease-out-brand)] after:content-[''] ${
                     isActive
-                      ? "border-tfs-red font-semibold text-tfs-dark"
-                      : "border-transparent font-normal text-tfs-dark-80 hover:border-tfs-grey hover:text-tfs-dark"
+                      ? "font-semibold text-tfs-dark after:scale-x-100 after:bg-tfs-red"
+                      : "font-normal text-tfs-dark-80 after:scale-x-0 after:bg-tfs-grey hover:text-tfs-dark hover:after:scale-x-100"
                   }`}
                 >
                   {item.label}

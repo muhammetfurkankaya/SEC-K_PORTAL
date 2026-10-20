@@ -34,8 +34,10 @@ export function SiteHeader() {
       {/* Kılavuz s.51: koyu zemin (#1D252D) + beyaz logo */}
       <div className="bg-tfs-dark print-hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
+          {/* Logonun yanında portal adı TEKRAR YAZILMIYOR: aynı ad hemen
+              altındaki hero başlığında zaten büyük puntoyla duruyor. */}
           <Link href="/" className="flex items-center" aria-label="Ana sayfa">
-            <Logo variant="light" subtitle={settings.portal_title} />
+            <Logo variant="light" />
           </Link>
 
           <Link

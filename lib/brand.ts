@@ -16,10 +16,13 @@ import path from "node:path";
  */
 const EXTENSIONS = [".svg", ".png", ".webp"];
 
-function findFile(baseNames: string[]): string | null {
+/** Fotoğraflarda JPEG de kabul edilir; logolarda bilinçli olarak edilmez. */
+const PHOTO_EXTENSIONS = [".webp", ".jpg", ".jpeg", ".png"];
+
+function findFile(baseNames: string[], extensions: string[] = EXTENSIONS): string | null {
   const dir = path.join(process.cwd(), "public", "brand");
   for (const base of baseNames) {
-    for (const ext of EXTENSIONS) {
+    for (const ext of extensions) {
       if (fs.existsSync(path.join(dir, base + ext))) {
         return `/brand/${base}${ext}`;
       }
@@ -40,3 +43,18 @@ export function findLogo(variant: "light" | "dark"): string | null {
     ? findFile(["logo-beyaz", "logo-white", "logo"])
     : findFile(["logo", "logo-koyu", "logo-dark", "logo-beyaz"]);
 }
+
+/**
+ * Ana sayfa hero fotoğrafı.
+ *
+ * `public/brand/hero-anasayfa.(jpg|png|webp)` varsa kullanılır; yoksa hero
+ * kurumsal gradyana düşer — eksik dosya boş bir alan bırakmaz. Görseli
+ * değiştirmek için dosyayı bu adla değiştirmek yeterlidir.
+ *
+ * Yalnızca ANA SAYFADA kullanılır: bülten sekmeleri bilinçli olarak
+ * fotoğrafsız, sade başlık bandıyla çalışır.
+ */
+export const HOME_HERO_IMAGE: string | null = findFile(
+  ["hero-anasayfa", "hero"],
+  PHOTO_EXTENSIONS,
+);

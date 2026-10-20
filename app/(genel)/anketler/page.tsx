@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/brand/SectionTitle";
+import { PageHero } from "@/components/brand/PageHero";
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
 import { formatDate } from "@/lib/format";
@@ -18,7 +18,8 @@ export default function SurveysPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHero
+        tone="flat"
         eyebrow="Değerlendirme"
         title="Açık Anketler"
         description="Aşağıdaki anketler doldurulmaya açıktır. QR kodla da erişebilirsiniz."

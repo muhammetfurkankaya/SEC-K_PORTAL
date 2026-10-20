@@ -29,7 +29,15 @@ const MAX_SUGGESTIONS = 8;
  * Form gerçek bir `action` taşıdığı için JavaScript çalışmasa da arama
  * yapılabilir; öneri listesi yalnızca bunun üstüne eklenen bir kolaylıktır.
  */
-export function BulletinSearch({ bulletins }: { bulletins: BulletinSuggestion[] }) {
+export function BulletinSearch({
+  bulletins,
+  tone = "light",
+}: {
+  bulletins: BulletinSuggestion[];
+  /** koyu: hero altındaki koyu bandın üzerinde kullanılır. */
+  tone?: "light" | "koyu";
+}) {
+  const dark = tone === "koyu";
   const router = useRouter();
   const listId = useId();
 
@@ -112,7 +120,9 @@ export function BulletinSearch({ bulletins }: { bulletins: BulletinSuggestion[] 
               viewBox="0 0 24 24"
               fill="none"
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-tfs-dark-60"
+              className={`pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 ${
+                dark ? "text-tfs-grey/70" : "text-tfs-dark-60"
+              }`}
               stroke="currentColor"
               strokeWidth={2}
               strokeLinecap="round"
@@ -143,12 +153,18 @@ export function BulletinSearch({ bulletins }: { bulletins: BulletinSuggestion[] 
                   ? `${listId}-${matches[activeIndex].id}`
                   : undefined
               }
-              className="w-full rounded-brand border border-tfs-grey bg-white py-3 pr-4 pl-11 text-sm text-tfs-dark placeholder:text-tfs-dark-60 focus:border-tfs-red focus:outline-none"
+              className={`w-full rounded-brand border py-3 pr-4 pl-11 text-sm transition-colors focus:border-tfs-red focus:outline-none ${
+                dark
+                  ? "border-white/20 bg-white/[0.06] text-white placeholder:text-tfs-grey/60 focus:bg-white/[0.09]"
+                  : "border-tfs-grey bg-white text-tfs-dark placeholder:text-tfs-dark-60"
+              }`}
             />
           </div>
           <button
             type="submit"
-            className="rounded-brand bg-tfs-dark px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-tfs-red"
+            className={`rounded-brand px-6 py-3 text-sm font-semibold text-white transition-colors ${
+              dark ? "bg-tfs-red hover:bg-[#a81a20]" : "bg-tfs-dark hover:bg-tfs-red"
+            }`}
           >
             Ara
           </button>
@@ -160,7 +176,7 @@ export function BulletinSearch({ bulletins }: { bulletins: BulletinSuggestion[] 
           id={listId}
           role="listbox"
           aria-label="Arama önerileri"
-          className="fade-in absolute z-30 mt-1 w-full overflow-hidden rounded-brand border border-tfs-grey bg-white shadow-lg sm:w-[calc(100%-5.5rem)]"
+          className="fade-in absolute z-30 mt-1 w-full overflow-hidden rounded-brand border border-tfs-grey bg-white shadow-brand-float sm:w-[calc(100%-5.5rem)]"
         >
           {matches.length === 0 ? (
             <p className="px-4 py-3 text-sm font-light text-tfs-dark-60">

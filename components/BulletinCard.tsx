@@ -21,7 +21,7 @@ type BulletinCardProps = {
  */
 export function BulletinCard({ bulletin, showCategory = false }: BulletinCardProps) {
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-brand border border-tfs-grey bg-white transition-colors hover:border-tfs-red">
+    <article className="group relative flex flex-col overflow-hidden rounded-brand border border-tfs-grey bg-white transition-[border-color,box-shadow,transform] duration-[180ms] ease-[var(--ease-out-brand)] hover:-translate-y-px hover:border-tfs-red hover:shadow-brand-raised">
       {/* Kartın tamamı okuma ekranını açar. */}
       <Link
         href={`/bultenler/${bulletin.category_slug}?bulten=${bulletin.id}`}
@@ -31,12 +31,20 @@ export function BulletinCard({ bulletin, showCategory = false }: BulletinCardPro
         <span className="sr-only">Aç</span>
       </Link>
 
-      {/* Koyu kapak: plaka + dosya türü */}
-      <div className="flex items-center justify-between gap-2 bg-tfs-dark px-3 py-3">
+      {/* Koyu kapak: plaka + yayın yılı.
+          Eskiden sağda kırmızı bir "PDF" rozeti vardı; alttaki indirme
+          düğmesiyle aynı şeyi söylüyordu. Yerini yıl aldı — şerit artık
+          bilgi taşıyor ve ızgaraya taranabilir ikinci bir eksen veriyor. */}
+      <div className="relative flex items-center justify-between gap-2 overflow-hidden bg-tfs-dark px-3 py-3">
         <span className="placard">{bulletin.bulletin_no}</span>
-        <span className="rounded-brand bg-tfs-red px-1.5 py-0.5 text-[0.625rem] font-semibold tracking-wider text-white">
-          PDF
+        <span className="tnum text-xs text-tfs-grey/80">
+          {bulletin.published_date.slice(0, 4)}
         </span>
+        {/* Hover'da şeridin altında büyüyen kırmızı çizgi. */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-[3px] origin-left scale-x-0 bg-tfs-red transition-transform duration-[180ms] ease-[var(--ease-out-brand)] group-hover:scale-x-100"
+        />
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-3">
@@ -46,7 +54,7 @@ export function BulletinCard({ bulletin, showCategory = false }: BulletinCardPro
           </span>
         ) : null}
 
-        <h3 className="line-clamp-3 text-sm leading-snug font-semibold text-tfs-dark">
+        <h3 className="line-clamp-2 text-sm leading-snug font-semibold text-tfs-dark">
           {bulletin.subject}
         </h3>
 

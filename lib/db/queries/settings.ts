@@ -67,6 +67,7 @@ export function getSettings(): ResolvedSettings {
     pdfPreviewEnabled: isTruthy(raw.enable_pdf_preview),
     downloadCountVisible: isTruthy(raw.show_download_count),
     surveysSectionVisible: isTruthy(raw.show_surveys_section),
+    qdmsSectionVisible: isTruthy(raw.show_qdms_section),
     defaultSort: sort,
   };
 }

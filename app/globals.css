@@ -40,6 +40,18 @@
 
   /* Kılavuz düz (flat) ve keskin bir dil öngörüyor: minimum yuvarlatma. */
   --radius-brand: 3px;
+
+  /* ————— Hareket ————— */
+  /* Tek bir yavaşlama eğrisi: her geçiş aynı fizikle durur. */
+  --ease-out-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ————— Yükseklik —————
+     Kılavuz düz bir dil öngördüğü için gölge bir SÜSLEME değil, bir DURUM:
+     duran yüzeyler yalnızca kenarlıkla, yalnızca hover ve üst katmanlar
+     gölgeyle anlatılır. */
+  --shadow-brand-raised: 0 1px 2px rgb(29 37 45 / 0.06), 0 2px 8px rgb(29 37 45 / 0.06);
+  --shadow-brand-float: 0 2px 4px rgb(29 37 45 / 0.07), 0 8px 24px rgb(29 37 45 / 0.1);
 }
 
 @layer base {
@@ -152,6 +164,143 @@
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+}
+
+/* ————————————————————————————————————————————————
+   Hero perdesi.
+
+   Beyaz yazının herhangi bir fotoğraf üzerinde okunabilmesi gerekiyor.
+   En kötü durum bembeyaz bir kare: #12181d'nin 0.63 alfası orada 4.5:1
+   (WCAG AA) veriyor. Aşağıdaki gradyanın birleşik alfası alt %55'te bu
+   eşiğin üzerinde kalıyor — bu yüzden PageHero metin bloğunu yapısal
+   olarak alta yaslıyor (justify-end + bol üst boşluk).
+   ———————————————————————————————————————————————— */
+@utility hero-scrim {
+  background:
+    linear-gradient(
+      to top,
+      rgb(18 24 29 / 0.92) 0%,
+      rgb(18 24 29 / 0.8) 26%,
+      rgb(18 24 29 / 0.46) 52%,
+      rgb(18 24 29 / 0.14) 76%,
+      rgb(18 24 29 / 0) 100%
+    ),
+    linear-gradient(
+      to right,
+      rgb(18 24 29 / 0.55) 0%,
+      rgb(18 24 29 / 0.18) 50%,
+      rgb(18 24 29 / 0) 100%
+    ),
+    rgb(29 37 45 / 0.32);
+}
+
+/* Gökyüzü ağırlıklı, parlak fotoğraflar için. */
+@utility hero-scrim-strong {
+  background:
+    linear-gradient(
+      to top,
+      rgb(18 24 29 / 0.96) 0%,
+      rgb(18 24 29 / 0.88) 28%,
+      rgb(18 24 29 / 0.62) 55%,
+      rgb(18 24 29 / 0.26) 78%,
+      rgb(18 24 29 / 0) 100%
+    ),
+    linear-gradient(
+      to right,
+      rgb(18 24 29 / 0.7) 0%,
+      rgb(18 24 29 / 0.28) 50%,
+      rgb(18 24 29 / 0) 100%
+    ),
+    rgb(29 37 45 / 0.45);
+}
+
+/* Fotoğraf yokken: kurumsal koyu + sol üstten kırmızı, sağ alttan çok
+   hafif yeşil bir soluk. Yeni renk girmiyor; ikisi de paletten. */
+@utility hero-brand {
+  background:
+    radial-gradient(1100px 460px at 12% -15%, rgb(206 32 40 / 0.26), transparent 62%),
+    radial-gradient(880px 420px at 88% 115%, rgb(158 214 96 / 0.08), transparent 66%),
+    linear-gradient(158deg, #1d252d 0%, #151c22 55%, #12181d 100%);
+}
+
+/* Noktasal parlamalar (güneş yansıması) için küçük bir emniyet.
+   WCAG hesabına girmez — okunabilirliği gradyan taşıyor. */
+@utility hero-ink {
+  text-shadow:
+    0 1px 2px rgb(18 24 29 / 0.55),
+    0 2px 12px rgb(18 24 29 / 0.35);
+}
+
+@layer base {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Sayfa geçişi: başlık ve sekmeler yerinde kalır, yalnızca gövde girer. */
+    .route-enter {
+      animation: route-enter 220ms var(--ease-out-brand) both;
+    }
+
+    /* Hero: tek giriş hareketi, sonra tamamen durur. Sürekli animasyon
+       (Ken-Burns/parallax) bilinçli olarak yok — eski ofis makinelerinde ve
+       RDP üzerinde bedeli var. */
+    .hero-zoom {
+      animation: hero-zoom 900ms var(--ease-out-soft) both;
+    }
+
+    .hero-rise {
+      animation: hero-rise 320ms var(--ease-out-brand) both;
+    }
+
+    .hero-rise-2 {
+      animation-delay: 60ms;
+    }
+
+    .hero-rise-3 {
+      animation-delay: 120ms;
+    }
+  }
+
+  @keyframes route-enter {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes hero-zoom {
+    from {
+      transform: scale(1.04);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes hero-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Emniyet ağı: hareket azaltma açıkken animasyonlar durur ama geçişler
+     SIFIRLANMAZ, anlık olur — hover geri bildirimi kaybolmamalı. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }

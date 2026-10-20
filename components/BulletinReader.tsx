@@ -357,15 +357,26 @@ function Preview({
         <span aria-hidden="true">←</span> Listeye dön
       </button>
 
-      <div className="rounded-brand border border-tfs-grey bg-white">
-        {/* Doküman künyesi */}
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-tfs-grey p-4">
-          <div className="min-w-0">
-            <span className="placard text-sm">{bulletin.bulletin_no}</span>
-            <h2 className="mt-2 text-base font-semibold text-tfs-dark sm:text-lg">
-              {bulletin.subject}
-            </h2>
-            <p className="tnum mt-1 text-xs text-tfs-dark-60">
+      <div className="overflow-hidden rounded-brand border border-tfs-grey bg-white">
+        {/* Doküman künyesi + eylemler.
+
+            Çubuk KOYU: altındaki tarayıcı PDF görüntüleyicisinin kendi gri
+            araç çubuğu biçimlendirilemiyor. Bizim çubuğumuz da açık gri
+            olduğunda iki gri bant üst üste biniyor ve hiçbiri "bu sayfanın
+            düğmeleri" gibi okunmuyordu. Koyu zemin ikisini ayırıyor; indirme
+            ve yeni sekme düğmeleri ekranın en ağır öğesi oluyor.
+
+            Künye de sadeleşti: birinci satır plaka + konu, ikinci satır
+            sessiz künye bilgisi. Önceden hepsi tek satırda yarışıyordu. */}
+        <div className="sticky top-0 z-10 flex flex-wrap items-end justify-between gap-x-4 gap-y-3 bg-tfs-dark px-4 py-3.5">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="placard text-sm">{bulletin.bulletin_no}</span>
+              <h2 className="min-w-0 text-base font-semibold text-white sm:text-lg">
+                {bulletin.subject}
+              </h2>
+            </div>
+            <p className="tnum mt-1.5 text-[0.6875rem] text-tfs-grey/70">
               {formatDate(bulletin.published_date)} · {formatFileSize(bulletin.file_size)}
               {showDownloadCount
                 ? ` · ${formatNumber(bulletin.download_count)} indirme`
@@ -373,18 +384,19 @@ function Preview({
             </p>
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {/* Dar ekranda iki eşit sütun: düğmeler asla kırpılmaz. */}
+          <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
             <a
               href={`/api/dosya/${bulletin.id}`}
               target="_blank"
               rel="noopener"
-              className="rounded-brand border border-tfs-grey px-3 py-2 text-xs font-semibold text-tfs-dark transition-colors hover:border-tfs-red"
+              className="inline-flex items-center justify-center gap-1.5 rounded-brand border border-white/30 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-white hover:bg-white/10"
             >
               Yeni sekmede aç ↗
             </a>
             <a
               href={`/api/dosya/${bulletin.id}?mod=indir`}
-              className="inline-flex items-center gap-1.5 rounded-brand bg-tfs-red px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-tfs-dark"
+              className="inline-flex items-center justify-center gap-1.5 rounded-brand bg-tfs-red px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#a81a20]"
             >
               <DownloadIcon />
               PDF indir

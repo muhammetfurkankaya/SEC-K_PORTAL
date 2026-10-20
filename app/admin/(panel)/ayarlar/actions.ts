@@ -47,6 +47,7 @@ const SettingsSchema = z.object({
   enable_pdf_preview: checkbox,
   show_download_count: checkbox,
   show_surveys_section: checkbox,
+  show_qdms_section: checkbox,
 });
 
 export async function saveSettingsAction(
@@ -77,6 +78,7 @@ export async function saveSettingsAction(
     enable_pdf_preview: formData.get("enable_pdf_preview"),
     show_download_count: formData.get("show_download_count"),
     show_surveys_section: formData.get("show_surveys_section"),
+    show_qdms_section: formData.get("show_qdms_section"),
   });
 
   if (!parsed.success) {
@@ -106,6 +108,7 @@ export async function saveSettingsAction(
     enable_pdf_preview: data.enable_pdf_preview,
     show_download_count: data.show_download_count,
     show_surveys_section: data.show_surveys_section,
+    show_qdms_section: data.show_qdms_section,
   });
 
   logAction(user, "ayarlar.guncelle");

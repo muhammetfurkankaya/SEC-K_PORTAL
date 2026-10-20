@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BulletinReader } from "@/components/BulletinReader";
-import { PageHeader } from "@/components/brand/SectionTitle";
+import { PageHero } from "@/components/brand/PageHero";
 import { getCategoryBySlug } from "@/lib/db/queries/categories";
 import { listBulletinsByCategory } from "@/lib/db/queries/bulletins";
 import { getSettings } from "@/lib/db/queries/settings";
@@ -41,8 +41,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   return (
     <>
-      <PageHeader
-        eyebrow="Bültenler"
+      {/* Fotoğraf yalnızca ana sayfada; sekmeler sade bantla çalışır.
+          Başlığın üstündeki "Bültenler" etiketi kaldırıldı: sekme adı zaten
+          "… Bültenleri" diyor, iki kez yazmanın bilgi değeri yoktu. */}
+      <PageHero
+        tone="flat"
         title={category.name}
         description={category.description}
       />

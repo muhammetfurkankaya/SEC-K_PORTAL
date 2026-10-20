@@ -21,38 +21,3 @@ export function SectionTitle({ children, meta, className = "" }: SectionTitlePro
     </div>
   );
 }
-
-type PageHeaderProps = {
-  title: string;
-  /** Başlığın üstünde gösterilen küçük etiket (ör. sekme adı). */
-  eyebrow?: string;
-  description?: string | null;
-  children?: React.ReactNode;
-};
-
-/**
- * Sayfa başlığı bandı.
- *
- * Kılavuzun koyu zemin (#1D252D) + beyaz metin + kırmızı dikey çubuk
- * kompozisyonunu sayfa üstüne taşır.
- */
-export function PageHeader({ title, eyebrow, description, children }: PageHeaderProps) {
-  return (
-    <div className="border-b border-tfs-grey bg-tfs-grey-20">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="brand-bar pl-4">
-          {eyebrow ? (
-            <p className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
-              {eyebrow}
-            </p>
-          ) : null}
-          <h1 className="mt-1 text-2xl font-semibold text-tfs-dark sm:text-3xl">{title}</h1>
-          {description ? (
-            <p className="mt-2 max-w-2xl text-sm font-light text-tfs-dark-80">{description}</p>
-          ) : null}
-        </div>
-        {children ? <div className="flex items-center gap-2">{children}</div> : null}
-      </div>
-    </div>
-  );
-}

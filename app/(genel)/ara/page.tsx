@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { BulletinReader } from "@/components/BulletinReader";
-import { PageHeader } from "@/components/brand/SectionTitle";
+import { PageHero } from "@/components/brand/PageHero";
 import { listAllPublishedBulletins } from "@/lib/db/queries/bulletins";
 import { getSettings } from "@/lib/db/queries/settings";
 
@@ -33,7 +33,8 @@ export default async function SearchPage({ searchParams }: Props) {
 
   return (
     <>
-      <PageHeader
+      <PageHero
+        tone="flat"
         eyebrow="Arama"
         title={query ? `“${query}” için sonuçlar` : "Tüm bültenlerde ara"}
         description="Bülten numarası veya konuya göre arayın. Türkçe karakter yazmanız gerekmez."
