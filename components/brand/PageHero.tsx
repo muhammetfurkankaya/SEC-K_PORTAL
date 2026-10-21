@@ -25,6 +25,8 @@ type PageHeroProps = {
   /** Yüklenirken anında boyanan, satır içi gömülü küçük bulanık kare. */
   blurDataUrl?: string | null;
   scrim?: "normal" | "strong";
+  /** Fotoğrafın hangi kısmı görünsün. */
+  focal?: "ust" | "orta" | "alt";
   /** Başlığın altındaki eylem alanı (ör. sayaç, düğme). */
   children?: ReactNode;
 };
@@ -34,6 +36,13 @@ const MIN_HEIGHT: Record<HeroSize, string> = {
   md: "min-h-[17rem] sm:min-h-[20rem] lg:min-h-[23rem]",
   lg: "min-h-[20rem] sm:min-h-[24rem] lg:min-h-[28rem]",
 };
+
+/** Kadraj: fotoğrafın dikeyde hangi bölümü görünsün. */
+const FOCAL_POSITION = {
+  ust: "object-[center_18%]",
+  orta: "object-[center_38%]",
+  alt: "object-[center_72%]",
+} as const;
 
 const TITLE_SIZE: Record<HeroSize, string> = {
   sm: "text-[1.75rem] sm:text-[2.25rem]",
@@ -67,6 +76,7 @@ export function PageHero({
   imageSrc,
   blurDataUrl,
   scrim = "normal",
+  focal = "orta",
   children,
 }: PageHeroProps) {
   const resolvedTone: HeroTone = tone ?? (imageSrc ? "photo" : "brand");
@@ -122,7 +132,7 @@ export function PageHero({
           aria-hidden="true"
           decoding="async"
           fetchPriority="high"
-          className="hero-zoom absolute inset-0 size-full object-cover object-[center_38%]"
+          className={`hero-zoom absolute inset-0 size-full object-cover ${FOCAL_POSITION[focal]}`}
         />
       ) : (
         <div aria-hidden="true" className="hero-brand absolute inset-0" />

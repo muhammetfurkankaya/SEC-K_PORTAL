@@ -7,7 +7,7 @@ import { DEFAULT_ADMIN_PASSWORD } from "@/lib/password";
 import { fail, succeed, zodFieldErrors, type ActionState } from "@/lib/action-state";
 import { logAction } from "@/lib/db/queries/audit";
 import { resetSettings, setSettings } from "@/lib/db/queries/settings";
-import { SETTING_KEYS, isSettingKey, type SettingKey } from "@/lib/settings-schema";
+import { SETTING_KEYS, isFormKey, type SettingKey } from "@/lib/settings-schema";
 import { buildSettingsSchema } from "@/lib/settings-validate";
 import { getUserById, updatePassword } from "@/lib/db/queries/users";
 
@@ -29,8 +29,10 @@ export async function saveSettingsAction(
   // edilemezdi; bu işaret olmadan görünmeyen ayarlar sessizce kapanırdı.
   const declared = String(formData.get("__alanlar") ?? "")
     .split(",")
-    .filter(isSettingKey);
-  const keys: SettingKey[] = declared.length > 0 ? declared : SETTING_KEYS;
+    .filter(isFormKey);
+  // Gizli anahtarlar (ör. hero görselinin yolu) formdan ASLA yazılmaz: onları
+  // yalnızca kendi eylemleri yazar. Bildirilmiş olsalar bile burada elenir.
+  const keys: SettingKey[] = declared.length > 0 ? declared : SETTING_KEYS.filter(isFormKey);
 
   const input: Record<string, string> = {};
   for (const key of keys) input[key] = String(formData.get(key) ?? "");

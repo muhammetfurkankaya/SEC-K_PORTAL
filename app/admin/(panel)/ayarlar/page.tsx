@@ -3,7 +3,8 @@ import { PortalSettingsForm } from "./SettingsForm";
 import { PasswordForm } from "./PasswordForm";
 import { ResetSettingsForm } from "./ResetForm";
 import { AdminHeading, Panel } from "@/components/admin/AdminHeading";
-import { getRawSettings } from "@/lib/db/queries/settings";
+import { getRawSettings, getSettings } from "@/lib/db/queries/settings";
+import { resolveHomeHero } from "@/lib/hero";
 import { listActiveCategories } from "@/lib/db/queries/categories";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,15 @@ export default function SettingsPage() {
   // metin uydurmak, ayarın etkisini gerçek uzunlukta göstermezdi.
   const firstCategory = listActiveCategories()[0]?.name ?? "SEÇ-K Bültenleri";
 
+  const typed = getSettings();
+  const resolvedHero = resolveHomeHero(typed);
+  const hero = {
+    currentSrc: resolvedHero.imageSrc,
+    uploaded: resolvedHero.uploaded,
+    strongScrim: resolvedHero.scrim === "strong",
+    title: typed.portal_title,
+  };
+
   return (
     <>
       <AdminHeading
@@ -25,7 +35,7 @@ export default function SettingsPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_21rem]">
         <Panel title="Portal Ayarları">
-          <PortalSettingsForm settings={settings} firstCategory={firstCategory} />
+          <PortalSettingsForm settings={settings} firstCategory={firstCategory} hero={hero} />
         </Panel>
 
         <div className="space-y-6">

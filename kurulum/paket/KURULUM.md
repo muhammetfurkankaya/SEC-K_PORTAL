@@ -175,8 +175,14 @@ e-posta ile göndermeyin. Anahtar değişirse açık oturumlar düşer (zararsı
 
 ## Yedekleme
 
-Her şey `data\` klasöründedir: veritabanı, yüklenen PDF'ler ve oturum
-anahtarı. Yedek için bu klasörü kopyalamak yeterlidir.
+Her şey `data\` klasöründedir: veritabanı, yüklenen PDF'ler, panelden
+yüklenen ana sayfa görseli (`data\uploads\_gorsel\`) ve oturum anahtarı.
+Yedek için bu klasörü kopyalamak yeterlidir.
+
+> Ana sayfa görseli `public\` altına değil `data\` altına yazılır: IIS'te
+> uygulama havuzunun yalnızca `data\` klasörüne yazma izni var ve sürüm
+> yükseltmede paket klasörü değiştirilirken `data\` korunur. Görsel ayrıca
+> yüklenmediyse ana sayfa paketle gelen görseli kullanır.
 
 > Portal çalışırken de kopyalanabilir; durdurulmuş hâlde alınan yedek daha
 > tutarlı olur.

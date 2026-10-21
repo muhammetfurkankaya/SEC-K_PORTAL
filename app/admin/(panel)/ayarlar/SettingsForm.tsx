@@ -15,6 +15,7 @@ import {
 import { textCardKeys } from "@/lib/settings-layout";
 import { FieldRows, GroupSection } from "./FieldRows";
 import { TextAppearanceGroup } from "./TextAppearanceGroup";
+import { HeroImagePicker } from "@/components/admin/HeroImagePicker";
 import { saveSettingsAction } from "./actions";
 
 /**
@@ -29,13 +30,23 @@ import { saveSettingsAction } from "./actions";
  * "kapat" olarak yazılırdı. `__alanlar` alanı aynı tehlikeye karşı ikinci
  * katman: sunucu yalnızca gerçekten gönderilen anahtarları doğrular ve yazar.
  */
+export type HeroPickerInfo = {
+  currentSrc: string | null;
+  uploaded: boolean;
+  strongScrim: boolean;
+  title: string;
+};
+
 export function PortalSettingsForm({
   settings,
   firstCategory,
+  hero,
 }: {
   settings: PortalSettings;
   /** Önizlemelerde gösterilecek gerçek bülten sekmesi adı. */
   firstCategory: string;
+  /** Ana sayfa görselinin şu anki durumu — seçici için. */
+  hero: HeroPickerInfo;
 }) {
   const [state, action] = useActionState(saveSettingsAction, IDLE);
   const [activeGroup, setActiveGroup] = useState<SettingGroupId>(SETTING_GROUPS[0].id);
@@ -46,6 +57,7 @@ export function PortalSettingsForm({
     const map = new Map<SettingGroupId, Map<string, SettingKey[]>>();
     for (const key of SETTING_KEYS) {
       const def: SettingDef = SETTINGS[key];
+      if (def.hidden) continue; // kendi eylemi yazar, formda çizilmez
       const sections = map.get(def.group) ?? new Map<string, SettingKey[]>();
       const section = def.section ?? "";
       sections.set(section, [...(sections.get(section) ?? []), key]);
@@ -63,7 +75,8 @@ export function PortalSettingsForm({
   const renderedKeys = useMemo(() => {
     const keys = new Set<SettingKey>(textCardKeys());
     for (const key of SETTING_KEYS) {
-      if ((SETTINGS[key] as SettingDef).group !== "metin") keys.add(key);
+      const def: SettingDef = SETTINGS[key];
+      if (def.group !== "metin" && !def.hidden) keys.add(key);
     }
     return [...keys];
   }, []);
@@ -137,6 +150,11 @@ export function PortalSettingsForm({
 
                 {[...sections.entries()].map(([section, keys]) => (
                   <GroupSection key={section || "_"} title={section}>
+                    {/* Görsel, kullanıcının arayacağı yerde: Hero bölümünün
+                        başında. Kendi eylemiyle anında yüklenir. */}
+                    {group.id === "anasayfa" && section === "Hero" ? (
+                      <HeroImagePicker {...hero} />
+                    ) : null}
                     <FieldRows keys={keys} settings={settings} errors={errors} />
                   </GroupSection>
                 ))}

@@ -80,6 +80,23 @@ export const HERO_HEIGHT_OPTIONS = [
   { value: "yuksek", label: "Yüksek" },
 ] as const satisfies readonly EnumOption[];
 
+export const HERO_STYLE_OPTIONS = [
+  { value: "fotograf", label: "Fotoğraflı" },
+  { value: "gradyan", label: "Fotoğrafsız (marka gradyanı)" },
+] as const satisfies readonly EnumOption[];
+
+export const HERO_FOCAL_OPTIONS = [
+  { value: "ust", label: "Üst" },
+  { value: "orta", label: "Orta" },
+  { value: "alt", label: "Alt" },
+] as const satisfies readonly EnumOption[];
+
+export const HERO_SCRIM_OPTIONS = [
+  { value: "otomatik", label: "Otomatik" },
+  { value: "normal", label: "Normal" },
+  { value: "guclu", label: "Güçlü" },
+] as const satisfies readonly EnumOption[];
+
 export const SORT_OPTIONS = [
   { value: "tarih-yeni", label: "En yeni önce" },
   { value: "tarih-eski", label: "En eski önce" },
@@ -130,6 +147,12 @@ type Base = {
   section?: string;
   /** Formda alan tam satır mı yarım satır mı kaplasın. */
   span?: "full" | "half";
+  /**
+   * Formda ÇİZİLMEZ ve "Ayarları kaydet" ile yazılmaz; yalnızca kendi özel
+   * eylemi yazar (ör. hero görselinin yolu yükleme eylemiyle). Böylece
+   * formun kaydedilmesi bu değerleri asla ezmez.
+   */
+  hidden?: true;
 };
 
 export type SettingDef =
@@ -248,6 +271,65 @@ export const SETTINGS = {
     span: "half",
     label: "Üst etiketin konumu",
     help: "Portal adının üstünde mi, altında mı görünsün — ya da hiç görünmesin.",
+  },
+  home_hero_style: {
+    kind: "enum",
+    default: "fotograf",
+    control: "segment",
+    options: HERO_STYLE_OPTIONS,
+    group: "anasayfa",
+    section: "Hero",
+    span: "half",
+    label: "Arka plan",
+    help: "Fotoğraflı seçiliyken yüklenen görsel, yoksa paketle gelen görsel kullanılır.",
+  },
+  home_hero_focal: {
+    kind: "enum",
+    default: "orta",
+    control: "segment",
+    options: HERO_FOCAL_OPTIONS,
+    group: "anasayfa",
+    section: "Hero",
+    span: "half",
+    label: "Fotoğraf kadrajı",
+    help: "Fotoğrafın hangi kısmı görünsün.",
+  },
+  home_hero_scrim: {
+    kind: "enum",
+    default: "otomatik",
+    control: "segment",
+    options: HERO_SCRIM_OPTIONS,
+    group: "anasayfa",
+    section: "Hero",
+    span: "half",
+    label: "Yazı perdesi",
+    help: "Otomatik, görselin parlaklığına göre seçer. Parlak fotoğrafta Güçlü yazıyı okunur tutar.",
+  },
+  // Yükleme eyleminin yazdığı değerler — formda çizilmez (hidden).
+  home_hero_path: {
+    kind: "text",
+    default: "",
+    max: 200,
+    hidden: true,
+    group: "anasayfa",
+    label: "Hero görseli yolu",
+  },
+  home_hero_blur: {
+    kind: "text",
+    default: "",
+    max: 4096,
+    hidden: true,
+    group: "anasayfa",
+    label: "Hero bulanık ön izleme",
+  },
+  home_hero_brightness: {
+    kind: "int",
+    default: "0",
+    min: 0,
+    max: 255,
+    hidden: true,
+    group: "anasayfa",
+    label: "Hero görseli parlaklığı",
   },
   show_search_band: {
     kind: "bool",
@@ -745,6 +827,11 @@ export const SETTING_KEYS = Object.keys(SETTINGS) as SettingKey[];
 
 export function isSettingKey(value: string): value is SettingKey {
   return Object.prototype.hasOwnProperty.call(SETTINGS, value);
+}
+
+/** Ayar formunda çizilen ve "Ayarları kaydet" ile yazılabilen anahtar mı? */
+export function isFormKey(value: string): value is SettingKey {
+  return isSettingKey(value) && !(SETTINGS[value] as SettingDef).hidden;
 }
 
 /** Ham (metin) ayar değerleri — veritabanında saklanan biçim. */

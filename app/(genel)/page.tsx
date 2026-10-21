@@ -6,7 +6,7 @@ import { SectionTitle } from "@/components/brand/SectionTitle";
 import { listAllPublishedBulletins, listRecentBulletins } from "@/lib/db/queries/bulletins";
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
-import { HOME_HERO_IMAGE } from "@/lib/brand";
+import { resolveHomeHero } from "@/lib/hero";
 import { alignClass, blockPositionClass, blockWidthClass, textClass } from "@/lib/appearance";
 import { formatDate, formatNumber } from "@/lib/format";
 
@@ -25,6 +25,9 @@ export default function HomePage() {
 
   // Hero yüksekliği ayardan; kayıttaki değerler bileşenin boyut adlarına
   // çevriliyor.
+  // Görsel: yüklenen → paketle gelen → marka gradyanı (lib/hero.ts).
+  const hero = resolveHomeHero(settings);
+
   const heroSize = ({ kisa: "sm", orta: "md", yuksek: "lg" } as const)[settings.hero_height];
 
   // "Son yayımlananlar" bloğunun yerleşimi: hangi görünüm, nerede, ne
@@ -62,7 +65,10 @@ export default function HomePage() {
         titleClass={textClass(settings, "home_title", { onDark: true })}
         eyebrowClass={textClass(settings, "home_kicker", { onDark: true })}
         descriptionClass={textClass(settings, "home_intro", { onDark: true })}
-        imageSrc={HOME_HERO_IMAGE}
+        imageSrc={hero.imageSrc}
+        blurDataUrl={hero.blurDataUrl}
+        scrim={hero.scrim}
+        focal={hero.focal}
       />
 
       {/* ————————————— Koyu arama bandı —————————————
