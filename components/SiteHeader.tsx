@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { listActiveCategories } from "@/lib/db/queries/categories";
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
@@ -53,12 +54,15 @@ export function SiteHeader() {
             />
           </Link>
 
-          <Link
-            href="/admin"
-            className="rounded-brand border border-tfs-dark-80 px-3 py-1.5 text-xs font-semibold tracking-wide text-tfs-grey uppercase transition-colors hover:border-tfs-red hover:text-white"
-          >
-            {settings.nav_admin_label}
-          </Link>
+          <div className="flex items-center gap-2">
+            {settings.theme_toggle_visible ? <ThemeToggle /> : null}
+            <Link
+              href="/admin"
+              className="rounded-brand border border-tfs-dark-80 px-3 py-1.5 text-xs font-semibold tracking-wide text-tfs-grey uppercase transition-colors hover:border-accent hover:text-white"
+            >
+              {settings.nav_admin_label}
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -76,13 +80,13 @@ export function SiteHeader() {
 /** Duyuru şeridi — tonu ayarlardan gelir. */
 function AnnouncementStrip({ text, level }: { text: string; level: "bilgi" | "uyari" | "kritik" }) {
   const styles = {
-    bilgi: "border-b border-tfs-grey bg-tfs-grey-20 text-tfs-dark",
-    uyari: "border-b border-tfs-red/40 bg-tfs-red-10 text-tfs-dark",
+    bilgi: "border-b border-line bg-surface-2 text-ink",
+    uyari: "border-b border-accent/40 bg-accent-wash text-ink",
     kritik: "bg-tfs-red text-white",
   }[level];
 
   const labels = { bilgi: "Bilgi", uyari: "Duyuru", kritik: "Önemli" };
-  const labelColor = level === "kritik" ? "text-white" : "text-tfs-red";
+  const labelColor = level === "kritik" ? "text-white" : "text-accent-ink";
 
   return (
     <div className={`print-hidden ${styles}`} role={level === "kritik" ? "alert" : "status"}>

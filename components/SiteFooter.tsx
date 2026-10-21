@@ -5,10 +5,10 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-16 border-t border-tfs-grey bg-tfs-grey-20 print-hidden">
-      <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 py-6 text-xs text-tfs-dark-60 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+    <footer className="mt-16 border-t border-line bg-surface-2 print-hidden">
+      <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 py-6 text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <p>
-          <span className="font-semibold text-tfs-dark">{settings.portal_title}</span>
+          <span className="font-semibold text-ink">{settings.portal_title}</span>
           {settings.portal_subtitle ? ` · ${settings.portal_subtitle}` : ""}
         </p>
         <p>

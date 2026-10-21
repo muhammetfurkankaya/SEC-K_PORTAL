@@ -97,6 +97,12 @@ export const HERO_SCRIM_OPTIONS = [
   { value: "guclu", label: "Güçlü" },
 ] as const satisfies readonly EnumOption[];
 
+export const THEME_OPTIONS = [
+  { value: "acik", label: "Gündüz" },
+  { value: "koyu", label: "Gece" },
+  { value: "sistem", label: "Ziyaretçinin cihazına göre" },
+] as const satisfies readonly EnumOption[];
+
 export const SORT_OPTIONS = [
   { value: "tarih-yeni", label: "En yeni önce" },
   { value: "tarih-eski", label: "En eski önce" },
@@ -134,6 +140,11 @@ export const SETTING_GROUPS = [
     id: "duyuru",
     title: "Duyuru Bandı",
     hint: "Sekmelerin altında görünen şerit.",
+  },
+  {
+    id: "tema",
+    title: "Tema",
+    hint: "Gece / gündüz modu. Yönetim paneli her zaman gündüz görünümünde kalır.",
   },
 ] as const;
 
@@ -814,6 +825,25 @@ export const SETTINGS = {
     group: "duyuru",
     label: "Duyuru yayında",
     description: "Metni silmeden geçici olarak kapatmak için kullanın.",
+  },
+
+  // ————— Tema —————
+  theme_default: {
+    kind: "enum",
+    default: "acik",
+    control: "segment",
+    options: THEME_OPTIONS,
+    group: "tema",
+    label: "Varsayılan tema",
+    help: "Ziyaretçi düğmeyle seçim yapmadıysa portal bu temayla açılır. Cihaza göre: ziyaretçinin bilgisayarı ya da telefonu gece modundaysa portal da gece açılır.",
+  },
+  theme_toggle_visible: {
+    kind: "bool",
+    default: "1",
+    group: "tema",
+    label: "Gece / gündüz düğmesi görünsün",
+    description:
+      "Üst bantta, Yönetim düğmesinin yanında. Kapalıyken herkes varsayılan temayı görür; ziyaretçilerin eski seçimleri de yok sayılır.",
   },
 } as const satisfies Record<string, SettingDef>;
 

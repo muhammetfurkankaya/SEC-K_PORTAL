@@ -20,7 +20,7 @@ export default async function ThanksPage({ params }: Props) {
   const canFillAgain = Boolean(survey.allow_multiple) && checkAvailability(survey).open;
 
   return (
-    <div className="flex min-h-screen flex-col bg-tfs-grey-20">
+    <div className="flex min-h-screen flex-col bg-surface-2">
       <div className="bg-tfs-dark">
         <div className="mx-auto max-w-2xl px-4 py-4 sm:px-6">
           <Link href="/" aria-label="Portala git">
@@ -30,7 +30,7 @@ export default async function ThanksPage({ params }: Props) {
       </div>
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-4 py-12 sm:px-6">
-        <div className="rounded-brand border border-tfs-grey bg-white p-8 text-center">
+        <div className="rounded-brand border border-line bg-surface p-8 text-center">
           <span
             aria-hidden="true"
             className="mx-auto flex size-14 items-center justify-center rounded-full bg-tfs-green/20"
@@ -38,7 +38,7 @@ export default async function ThanksPage({ params }: Props) {
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              className="size-7 text-tfs-dark"
+              className="size-7 text-ink"
               stroke="currentColor"
               strokeWidth={2.2}
               strokeLinecap="round"
@@ -48,11 +48,11 @@ export default async function ThanksPage({ params }: Props) {
             </svg>
           </span>
 
-          <p className="mt-4 text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+          <p className="mt-4 text-xs font-semibold tracking-[0.12em] text-accent-ink uppercase">
             Cevabınız kaydedildi
           </p>
-          <h1 className="mt-2 text-2xl font-semibold text-tfs-dark">Teşekkür ederiz</h1>
-          <p className="mx-auto mt-3 max-w-md text-sm font-light text-tfs-dark-80">
+          <h1 className="mt-2 text-2xl font-semibold text-ink">Teşekkür ederiz</h1>
+          <p className="mx-auto mt-3 max-w-md text-sm font-light text-ink-soft">
             “{survey.title}” anketine katıldığınız için teşekkürler. Görüşleriniz SEÇ-K
             değerlendirmelerinde dikkate alınacaktır.
           </p>
@@ -68,7 +68,7 @@ export default async function ThanksPage({ params }: Props) {
             {canFillAgain ? (
               <Link
                 href={`/anket/${token}`}
-                className="rounded-brand border border-tfs-grey bg-white px-4 py-2.5 text-sm font-semibold text-tfs-dark transition-colors hover:border-tfs-dark-20"
+                className="rounded-brand border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-line-strong"
               >
                 Yeni cevap gönder
               </Link>

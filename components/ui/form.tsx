@@ -10,9 +10,9 @@ import { useFormStatus } from "react-dom";
  */
 
 const INPUT_CLASS =
-  "w-full rounded-brand border border-tfs-grey bg-white px-3 py-2 text-sm text-tfs-dark " +
-  "placeholder:text-tfs-dark-60 focus:border-tfs-red focus:outline-none " +
-  "disabled:bg-tfs-grey-20 disabled:text-tfs-dark-60";
+  "w-full rounded-brand border border-line bg-surface px-3 py-2 text-sm text-ink " +
+  "placeholder:text-ink-faint focus:border-accent focus:outline-none " +
+  "disabled:bg-surface-2 disabled:text-ink-faint";
 
 type FieldProps = {
   label: string;
@@ -26,12 +26,12 @@ type FieldProps = {
 export function Field({ label, htmlFor, hint, required, children, className = "" }: FieldProps) {
   return (
     <div className={className}>
-      <label htmlFor={htmlFor} className="block text-xs font-semibold text-tfs-dark">
+      <label htmlFor={htmlFor} className="block text-xs font-semibold text-ink">
         {label}
-        {required ? <span className="ml-0.5 text-tfs-red">*</span> : null}
+        {required ? <span className="ml-0.5 text-accent-ink">*</span> : null}
       </label>
       <div className="mt-1">{children}</div>
-      {hint ? <p className="mt-1 text-[0.6875rem] font-light text-tfs-dark-60">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-[0.6875rem] font-light text-ink-faint">{hint}</p> : null}
     </div>
   );
 }
@@ -53,11 +53,11 @@ export function Checkbox({
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
-    <label className="flex items-center gap-2 text-sm text-tfs-dark">
+    <label className="flex items-center gap-2 text-sm text-ink">
       <input
         type="checkbox"
         {...props}
-        className="size-4 rounded-brand border-tfs-grey text-tfs-red accent-tfs-red"
+        className="size-4 rounded-brand border-line text-accent-ink accent-tfs-red"
       />
       {label}
     </label>
@@ -79,15 +79,15 @@ export function SwitchRow({
   description: string;
 }) {
   return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 border-b border-tfs-grey-40 py-3 last:border-b-0">
+    <label className="flex cursor-pointer items-start justify-between gap-4 border-b border-line-soft py-3 last:border-b-0">
       <span className="min-w-0">
-        <span className="block text-sm font-semibold text-tfs-dark">{label}</span>
-        <span className="mt-0.5 block text-xs font-light text-tfs-dark-60">{description}</span>
+        <span className="block text-sm font-semibold text-ink">{label}</span>
+        <span className="mt-0.5 block text-xs font-light text-ink-faint">{description}</span>
       </span>
       <input
         type="checkbox"
         {...props}
-        className="mt-0.5 size-4 shrink-0 rounded-brand border-tfs-grey accent-tfs-red"
+        className="mt-0.5 size-4 shrink-0 rounded-brand border-line accent-tfs-red"
       />
     </label>
   );
@@ -97,8 +97,8 @@ type ButtonVariant = "primary" | "secondary" | "danger";
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: "bg-tfs-red text-white hover:bg-tfs-dark",
-  secondary: "border border-tfs-grey bg-white text-tfs-dark hover:border-tfs-dark-20",
-  danger: "border border-tfs-red bg-white text-tfs-red hover:bg-tfs-red hover:text-white",
+  secondary: "border border-line bg-surface text-ink hover:border-line-strong",
+  danger: "border border-accent bg-surface text-accent-ink hover:bg-tfs-red hover:text-white",
 };
 
 /**
@@ -149,9 +149,9 @@ export function Alert({
   children: React.ReactNode;
 }) {
   const styles = {
-    success: "border-tfs-green bg-tfs-green/10 text-tfs-dark",
-    error: "border-tfs-red bg-tfs-red-10 text-tfs-dark",
-    info: "border-tfs-grey bg-tfs-grey-20 text-tfs-dark",
+    success: "border-tfs-green bg-tfs-green/10 text-ink",
+    error: "border-accent bg-accent-wash text-ink",
+    info: "border-line bg-surface-2 text-ink",
   }[kind];
 
   return (
@@ -183,9 +183,9 @@ export type ChoiceOption = {
 
 const CHOICE_BASE =
   "cursor-pointer rounded-brand border px-2.5 py-1.5 text-xs transition-colors " +
-  "border-tfs-grey text-tfs-dark-60 hover:border-tfs-dark-20 hover:text-tfs-dark " +
-  "peer-checked:border-tfs-red peer-checked:bg-tfs-red-10 peer-checked:font-semibold " +
-  "peer-checked:text-tfs-red peer-focus-visible:outline peer-focus-visible:outline-2 " +
+  "border-line text-ink-faint hover:border-line-strong hover:text-ink " +
+  "peer-checked:border-accent peer-checked:bg-accent-wash peer-checked:font-semibold " +
+  "peer-checked:text-accent-ink peer-focus-visible:outline peer-focus-visible:outline-2 " +
   "peer-focus-visible:outline-offset-2 peer-focus-visible:outline-tfs-red";
 
 /**
@@ -245,7 +245,7 @@ export function ColorChoice({ name, value, options, onChange }: ChoiceProps) {
           <span className={`inline-flex items-center gap-1.5 ${CHOICE_BASE}`}>
             <span
               aria-hidden="true"
-              className="size-3.5 shrink-0 rounded-brand border border-tfs-grey"
+              className="size-3.5 shrink-0 rounded-brand border border-line"
               style={{ backgroundColor: option.swatch ?? "transparent" }}
             />
             {option.label}

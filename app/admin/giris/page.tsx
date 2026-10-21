@@ -16,7 +16,10 @@ export default async function LoginPage() {
   const settings = getSettings();
 
   return (
-    <div className="flex min-h-screen flex-col bg-tfs-grey-20">
+    // Yönetim paneli her zaman gündüz görünümünde: bileşenleri henüz
+    // gece moduna göre taşınmadı. data-theme bu alt ağaçtaki tüm anlamsal
+    // renkleri gündüz değerlerine sabitliyor.
+    <div data-theme="light" className="flex min-h-screen flex-col bg-tfs-grey-20">
       <div className="bg-tfs-dark">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" aria-label="Portala dön">

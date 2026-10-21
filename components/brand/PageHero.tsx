@@ -216,7 +216,7 @@ function FlatHeader({
   const eyebrowNode = showEyebrow ? (
     <p
       className={`font-semibold tracking-[0.16em] uppercase ${
-        eyebrowClass || "text-[0.6875rem] text-tfs-red"
+        eyebrowClass || "text-[0.6875rem] text-accent-ink"
       } ${eyebrowPlace === "altta" ? "mt-2" : ""}`}
     >
       {eyebrow}
@@ -224,20 +224,20 @@ function FlatHeader({
   ) : null;
 
   return (
-    <div className="border-b border-tfs-grey bg-tfs-grey-20 print-hidden">
+    <div className="border-b border-line bg-surface-2 print-hidden">
       <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4 px-4 py-9 sm:px-6 sm:py-11 lg:px-8">
         <div className="brand-bar pl-4">
           {eyebrowPlace === "ustte" ? eyebrowNode : null}
           <h1
             className={`font-semibold tracking-[-0.015em] ${
-              titleClass || "text-[1.75rem] text-tfs-dark sm:text-[2.25rem]"
+              titleClass || "text-[1.75rem] text-ink sm:text-[2.25rem]"
             } ${eyebrowPlace === "ustte" && showEyebrow ? "mt-1.5" : ""}`}
           >
             {title}
           </h1>
           {eyebrowPlace === "altta" ? eyebrowNode : null}
           {description ? (
-            <p className="mt-2.5 max-w-2xl text-sm leading-relaxed font-light text-tfs-dark-80">
+            <p className="mt-2.5 max-w-2xl text-sm leading-relaxed font-light text-ink-soft">
               {description}
             </p>
           ) : null}

@@ -19,7 +19,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const settings = getSettings();
 
   return (
-    <div className="flex min-h-screen flex-col bg-tfs-grey-20">
+    // Yönetim paneli her zaman gündüz görünümünde: bileşenleri henüz
+    // gece moduna göre taşınmadı. data-theme bu alt ağaçtaki tüm anlamsal
+    // renkleri gündüz değerlerine sabitliyor.
+    <div data-theme="light" className="flex min-h-screen flex-col bg-tfs-grey-20">
       <header>
         <div className="bg-tfs-dark print-hidden">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">

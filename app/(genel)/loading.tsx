@@ -12,10 +12,10 @@ export default function Loading() {
       <div className="h-[17rem] bg-tfs-dark sm:h-[20rem]" />
       <div className="brand-seam" />
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="h-4 w-40 bg-tfs-grey-40" />
+        <div className="h-4 w-40 bg-surface-3" />
         <div className="mt-6 grid gap-6 lg:grid-cols-[21rem_1fr]">
-          <div className="h-80 rounded-brand border border-tfs-grey bg-tfs-grey-20" />
-          <div className="h-80 rounded-brand border border-tfs-grey bg-tfs-grey-20" />
+          <div className="h-80 rounded-brand border border-line bg-surface-2" />
+          <div className="h-80 rounded-brand border border-line bg-surface-2" />
         </div>
       </div>
     </div>

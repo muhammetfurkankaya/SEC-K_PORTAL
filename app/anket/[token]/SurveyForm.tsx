@@ -31,8 +31,8 @@ export function SurveyForm({
       {state.message ? <Alert kind="error">{state.message}</Alert> : null}
 
       {survey.collect_identity ? (
-        <fieldset className="rounded-brand border border-tfs-grey bg-white p-4">
-          <legend className="px-1 text-xs font-semibold tracking-[0.1em] text-tfs-red uppercase">
+        <fieldset className="rounded-brand border border-line bg-surface p-4">
+          <legend className="px-1 text-xs font-semibold tracking-[0.1em] text-accent-ink uppercase">
             Kimlik Bilgileri (isteğe bağlı)
           </legend>
 
@@ -45,7 +45,7 @@ export function SurveyForm({
             </Field>
           </div>
 
-          <p className="mt-2 text-[0.6875rem] font-light text-tfs-dark-60">
+          <p className="mt-2 text-[0.6875rem] font-light text-ink-faint">
             Bu alanları doldurmak zorunlu değildir; boş bırakırsanız cevabınız anonim kalır.
           </p>
         </fieldset>
@@ -53,17 +53,17 @@ export function SurveyForm({
 
       <ol className="space-y-4">
         {questions.map((question, index) => (
-          <li key={question.id} className="rounded-brand border border-tfs-grey bg-white p-4">
+          <li key={question.id} className="rounded-brand border border-line bg-surface p-4">
             <QuestionField question={question} index={index} />
           </li>
         ))}
       </ol>
 
-      <div className="rounded-brand border border-tfs-grey bg-tfs-grey-20 p-4">
+      <div className="rounded-brand border border-line bg-surface-2 p-4">
         <SubmitButton className="w-full !py-3" pendingLabel="Gönderiliyor…">
           Anketi gönder
         </SubmitButton>
-        <p className="mt-2 text-center text-[0.6875rem] font-light text-tfs-dark-60">
+        <p className="mt-2 text-center text-[0.6875rem] font-light text-ink-faint">
           Cevaplarınız SEÇ-K değerlendirmelerinde toplu olarak kullanılır.
         </p>
       </div>
@@ -76,18 +76,18 @@ function QuestionField({ question, index }: { question: Question; index: number 
 
   return (
     <fieldset>
-      <legend className="text-sm font-semibold text-tfs-dark">
-        <span className="mr-1.5 text-tfs-red">{index + 1}.</span>
+      <legend className="text-sm font-semibold text-ink">
+        <span className="mr-1.5 text-accent-ink">{index + 1}.</span>
         {question.text}
         {question.is_required ? (
-          <span className="ml-1 text-tfs-red" title="Zorunlu">
+          <span className="ml-1 text-accent-ink" title="Zorunlu">
             *
           </span>
         ) : null}
       </legend>
 
       {question.help_text ? (
-        <p className="mt-1 text-xs font-light text-tfs-dark-60">{question.help_text}</p>
+        <p className="mt-1 text-xs font-light text-ink-faint">{question.help_text}</p>
       ) : null}
 
       <div className="mt-3">
@@ -96,12 +96,7 @@ function QuestionField({ question, index }: { question: Question; index: number 
         ) : null}
 
         {question.type === "multi_choice" ? (
-          <ChoiceList
-            name={name}
-            options={question.options}
-            multiple
-            questionId={question.id}
-          />
+          <ChoiceList name={name} options={question.options} multiple questionId={question.id} />
         ) : null}
 
         {question.type === "yes_no" ? (
@@ -168,7 +163,7 @@ function ChoiceList({
     <ul className="space-y-2">
       {options.map((option, index) => (
         <li key={index}>
-          <label className="flex cursor-pointer items-start gap-2.5 rounded-brand border border-tfs-grey px-3 py-2.5 transition-colors hover:border-tfs-dark-20 has-checked:border-tfs-red has-checked:bg-tfs-red-10">
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-brand border border-line px-3 py-2.5 transition-colors hover:border-line-strong has-checked:border-accent has-checked:bg-accent-wash">
             <input
               type={multiple ? "checkbox" : "radio"}
               // Çok seçimlide her seçenek kendi alan adını taşır; böylece
@@ -177,7 +172,7 @@ function ChoiceList({
               value={multiple ? "1" : index}
               className="mt-0.5 size-4 shrink-0 accent-tfs-red"
             />
-            <span className="text-sm text-tfs-dark">{option}</span>
+            <span className="text-sm text-ink">{option}</span>
           </label>
         </li>
       ))}
@@ -209,7 +204,7 @@ function ScaleInput({
         {values.map((value) => (
           <label
             key={value}
-            className="flex min-w-9 grow basis-9 cursor-pointer flex-col items-center rounded-brand border border-tfs-grey py-2 transition-colors hover:border-tfs-dark-20 has-checked:border-tfs-red has-checked:bg-tfs-red has-checked:text-white"
+            className="flex min-w-9 grow basis-9 cursor-pointer flex-col items-center rounded-brand border border-line py-2 transition-colors hover:border-line-strong has-checked:border-accent has-checked:bg-tfs-red has-checked:text-white"
           >
             <input type="radio" name={name} value={value} className="sr-only" />
             <span className="text-sm font-semibold">{value}</span>
@@ -217,7 +212,7 @@ function ScaleInput({
         ))}
       </div>
 
-      <div className="mt-1 flex justify-between text-[0.6875rem] font-light text-tfs-dark-60">
+      <div className="mt-1 flex justify-between text-[0.6875rem] font-light text-ink-faint">
         <span>{minLabel}</span>
         <span>{maxLabel}</span>
       </div>

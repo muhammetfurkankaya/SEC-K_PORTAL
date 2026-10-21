@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { safeThemeSettings } from "@/lib/db/queries/settings";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
+
+// Tema varsayılanı ayarlardan okunuyor; her istekte güncel olmalı.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: {
@@ -18,9 +23,24 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const theme = safeThemeSettings();
+
   return (
-    <html lang="tr">
-      <body className="min-h-screen bg-white antialiased">{children}</body>
+    // data-theme sunucuda belirleniyor, sonra <head>'deki betik ziyaretçinin
+    // kendi seçimini (ve "Sistem" için cihaz tercihini) sayfa BOYANMADAN
+    // uyguluyor. suppressHydrationWarning zorunlu: betik özniteliği React
+    // devreye girmeden değiştiriyor, bu bilinçli bir farklılık.
+    <html
+      lang="tr"
+      data-theme={theme.themeDefault === "koyu" ? "dark" : "light"}
+      data-theme-default={theme.themeDefault}
+      data-theme-lock={theme.toggleVisible ? undefined : "1"}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="min-h-screen bg-surface text-ink antialiased">{children}</body>
     </html>
   );
 }

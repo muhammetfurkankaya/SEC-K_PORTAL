@@ -23,7 +23,7 @@ type BulletinCardProps = {
  */
 export function BulletinCard({ bulletin, openLabel, showCategory = false }: BulletinCardProps) {
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-brand border border-tfs-grey bg-white transition-[border-color,box-shadow,transform] duration-[180ms] ease-[var(--ease-out-brand)] hover:-translate-y-px hover:border-tfs-red hover:shadow-brand-raised">
+    <article className="group relative flex flex-col overflow-hidden rounded-brand border border-line bg-surface transition-[border-color,box-shadow,transform] duration-[180ms] ease-[var(--ease-out-brand)] hover:-translate-y-px hover:border-accent hover:shadow-brand-raised">
       {/* Kartın tamamı okuma ekranını açar. */}
       <Link
         href={`/bultenler/${bulletin.category_slug}?bulten=${bulletin.id}`}
@@ -49,28 +49,28 @@ export function BulletinCard({ bulletin, openLabel, showCategory = false }: Bull
 
       <div className="flex flex-1 flex-col gap-2 p-3">
         {showCategory ? (
-          <span className="text-[0.625rem] font-semibold tracking-[0.1em] text-tfs-red uppercase">
+          <span className="text-[0.625rem] font-semibold tracking-[0.1em] text-accent-ink uppercase">
             {bulletin.category_name}
           </span>
         ) : null}
 
-        <h3 className="line-clamp-2 text-sm leading-snug font-semibold text-tfs-dark">
+        <h3 className="line-clamp-2 text-sm leading-snug font-semibold text-ink">
           {bulletin.subject}
         </h3>
 
-        <p className="tnum mt-auto text-xs text-tfs-dark-60">
+        <p className="tnum mt-auto text-xs text-ink-faint">
           {formatDate(bulletin.published_date)} · {formatFileSize(bulletin.file_size)}
         </p>
 
-        <div className="flex items-center justify-between gap-2 border-t border-tfs-grey-40 pt-2">
-          <span className="text-xs font-semibold text-tfs-red">{openLabel} →</span>
+        <div className="flex items-center justify-between gap-2 border-t border-line-soft pt-2">
+          <span className="text-xs font-semibold text-accent-ink">{openLabel} →</span>
 
           {/* z-20: kartı kaplayan bağlantının üzerinde kalmalı. */}
           <a
             href={`/api/dosya/${bulletin.id}?mod=indir`}
             title={`${bulletin.bulletin_no} — indir`}
             aria-label={`${bulletin.bulletin_no} bültenini indir`}
-            className="relative z-20 flex size-7 items-center justify-center rounded-brand border border-tfs-grey text-tfs-dark-60 transition-colors hover:border-tfs-red hover:bg-tfs-red hover:text-white"
+            className="relative z-20 flex size-7 items-center justify-center rounded-brand border border-line text-ink-faint transition-colors hover:border-accent hover:bg-tfs-red hover:text-white"
           >
             <svg
               viewBox="0 0 24 24"

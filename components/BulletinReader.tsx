@@ -139,7 +139,7 @@ export function BulletinReader({
   if (bulletins.length === 0) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <p className="rounded-brand border border-dashed border-tfs-grey bg-tfs-grey-20 px-4 py-14 text-center text-sm font-light text-tfs-dark-60">
+        <p className="rounded-brand border border-dashed border-line bg-surface-2 px-4 py-14 text-center text-sm font-light text-ink-faint">
           {emptyNote}
         </p>
       </div>
@@ -159,10 +159,10 @@ export function BulletinReader({
         } lg:sticky lg:top-4 lg:self-start`}
       >
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+          <h2 className="text-xs font-semibold tracking-[0.12em] text-accent-ink uppercase">
             {labels.indexTitle}
           </h2>
-          <span className="tnum text-xs text-tfs-dark-60">
+          <span className="tnum text-xs text-ink-faint">
             {formatNumber(visible.length)} / {formatNumber(bulletins.length)}
           </span>
         </div>
@@ -176,7 +176,7 @@ export function BulletinReader({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Bülten no veya konu ara…"
-              className="w-full rounded-brand border border-tfs-grey bg-white py-2.5 pr-3 pl-9 text-sm text-tfs-dark placeholder:text-tfs-dark-60 focus:border-tfs-red focus:outline-none"
+              className="w-full rounded-brand border border-line bg-surface py-2.5 pr-3 pl-9 text-sm text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none"
             />
           </div>
         </label>
@@ -190,8 +190,8 @@ export function BulletinReader({
               aria-pressed={sort === key}
               className={`rounded-brand border px-2 py-1 text-[0.6875rem] transition-colors ${
                 sort === key
-                  ? "border-tfs-red bg-tfs-red-10 font-semibold text-tfs-red"
-                  : "border-tfs-grey text-tfs-dark-60 hover:border-tfs-dark-20 hover:text-tfs-dark"
+                  ? "border-accent bg-accent-wash font-semibold text-accent-ink"
+                  : "border-line text-ink-faint hover:border-line-strong hover:text-ink"
               }`}
             >
               {SORT_LABELS[key]}
@@ -199,22 +199,22 @@ export function BulletinReader({
           ))}
         </div>
 
-        <div className="mt-3 max-h-[34rem] overflow-y-auto rounded-brand border border-tfs-grey">
+        <div className="mt-3 max-h-[34rem] overflow-y-auto rounded-brand border border-line">
           {visible.length === 0 ? (
             <div className="px-3 py-8 text-center">
-              <p className="text-xs font-light text-tfs-dark-60">
+              <p className="text-xs font-light text-ink-faint">
                 Aramanızla eşleşen bülten bulunamadı.
               </p>
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="mt-2 text-xs font-semibold text-tfs-red underline underline-offset-2"
+                className="mt-2 text-xs font-semibold text-accent-ink underline underline-offset-2"
               >
                 Aramayı temizle
               </button>
             </div>
           ) : (
-            <ul className="divide-y divide-tfs-grey-40">
+            <ul className="divide-y divide-line-soft">
               {visible.map((bulletin) => (
                 <li key={bulletin.id}>
                   <IndexRow
@@ -232,7 +232,7 @@ export function BulletinReader({
           )}
         </div>
 
-        <p className="mt-2 text-[0.6875rem] font-light text-tfs-dark-60">
+        <p className="mt-2 text-[0.6875rem] font-light text-ink-faint">
           {previewEnabled
             ? "Bülten satırına tıklamak onu yanda açar. İndirmek için ↓ simgesini kullanın."
             : "Bülten satırına tıklamak PDF'i indirir."}
@@ -253,7 +253,7 @@ export function BulletinReader({
               onBack={() => setMobileOpen(false)}
             />
           ) : (
-            <p className="rounded-brand border border-dashed border-tfs-grey bg-tfs-grey-20 px-4 py-16 text-center text-sm font-light text-tfs-dark-60">
+            <p className="rounded-brand border border-dashed border-line bg-surface-2 px-4 py-16 text-center text-sm font-light text-ink-faint">
               Okumak için soldaki listeden bir bülten seçin.
             </p>
           )}
@@ -286,7 +286,7 @@ function IndexRow({
   return (
     <div
       className={`flex items-stretch gap-1 transition-colors ${
-        isActive ? "bg-tfs-red-10" : "hover:bg-tfs-grey-20"
+        isActive ? "bg-accent-wash" : "hover:bg-surface-2"
       }`}
     >
       {previewEnabled ? (
@@ -324,7 +324,7 @@ function IndexRow({
           href={`/api/dosya/${bulletin.id}?mod=indir`}
           title={`${label} — indir`}
           aria-label={`${label} bültenini indir`}
-          className="flex w-9 shrink-0 items-center justify-center border-l border-tfs-grey-40 text-tfs-dark-60 transition-colors hover:bg-tfs-red hover:text-white"
+          className="flex w-9 shrink-0 items-center justify-center border-l border-line-soft text-ink-faint transition-colors hover:bg-tfs-red hover:text-white"
         >
           <DownloadIcon />
         </a>
@@ -349,20 +349,20 @@ function RowBody({
       <span className="flex items-center justify-between gap-2">
         {/* İmza öğesi: bülten numarası plaka olarak */}
         <span className="placard-quiet">{bulletin.bulletin_no}</span>
-        <span className="tnum shrink-0 text-[0.6875rem] text-tfs-dark-60">
+        <span className="tnum shrink-0 text-[0.6875rem] text-ink-faint">
           {formatDate(bulletin.published_date)}
         </span>
       </span>
       <span className="mt-1 flex items-baseline gap-1.5">
-        <span className="text-xs leading-snug text-tfs-dark">{bulletin.subject}</span>
+        <span className="text-xs leading-snug text-ink">{bulletin.subject}</span>
         {isRecent(bulletin.published_date, todayIso, labels.newDays) ? (
-          <span className="shrink-0 bg-tfs-green px-1 py-px text-[0.5625rem] font-semibold tracking-wide text-tfs-dark uppercase">
+          <span className="shrink-0 bg-tfs-green px-1 py-px text-[0.5625rem] font-semibold tracking-wide text-ink uppercase">
             {labels.newBadge}
           </span>
         ) : null}
       </span>
       {showCategory ? (
-        <span className="mt-1 block text-[0.625rem] font-semibold tracking-[0.08em] text-tfs-dark-60 uppercase">
+        <span className="mt-1 block text-[0.625rem] font-semibold tracking-[0.08em] text-ink-faint uppercase">
           {bulletin.category_name}
         </span>
       ) : null}
@@ -387,12 +387,12 @@ function Preview({
       <button
         type="button"
         onClick={onBack}
-        className="mb-3 inline-flex items-center gap-1.5 self-start text-xs font-semibold text-tfs-red lg:hidden"
+        className="mb-3 inline-flex items-center gap-1.5 self-start text-xs font-semibold text-accent-ink lg:hidden"
       >
         <span aria-hidden="true">←</span> Listeye dön
       </button>
 
-      <div className="overflow-hidden rounded-brand border border-tfs-grey bg-white">
+      <div className="overflow-hidden rounded-brand border border-line bg-surface">
         {/* Doküman künyesi + eylemler.
 
             Çubuk KOYU: altındaki tarayıcı PDF görüntüleyicisinin kendi gri
@@ -423,7 +423,7 @@ function Preview({
               href={`/api/dosya/${bulletin.id}`}
               target="_blank"
               rel="noopener"
-              className="inline-flex items-center justify-center gap-1.5 rounded-brand border border-white/30 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-white hover:bg-white/10"
+              className="inline-flex items-center justify-center gap-1.5 rounded-brand border border-white/30 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-white hover:bg-surface/10"
             >
               {labels.newTab} ↗
             </a>
@@ -438,23 +438,23 @@ function Preview({
         </div>
 
         {bulletin.description ? (
-          <p className="border-b border-tfs-grey-40 px-4 py-3 text-sm font-light text-tfs-dark-80">
+          <p className="border-b border-line-soft px-4 py-3 text-sm font-light text-ink-soft">
             {bulletin.description}
           </p>
         ) : null}
 
-        <div className="bg-tfs-grey-20 p-2">
+        <div className="bg-surface-2 p-2">
           <iframe
             // key: bülten değişince görüntüleyici baştan yüklenir.
             key={bulletin.id}
             src={`/api/dosya/${bulletin.id}`}
             title={`${bulletin.bulletin_no} — ${bulletin.subject}`}
-            className="h-[70vh] min-h-[26rem] w-full border border-tfs-grey bg-white"
+            className="h-[70vh] min-h-[26rem] w-full border border-line bg-surface"
           />
         </div>
       </div>
 
-      <p className="mt-2 text-xs font-light text-tfs-dark-60">
+      <p className="mt-2 text-xs font-light text-ink-faint">
         PDF görüntülenemiyorsa “{labels.download}” düğmesini kullanabilirsiniz.
       </p>
     </div>
@@ -467,7 +467,7 @@ function SearchIcon() {
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
-      className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-tfs-dark-60"
+      className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-faint"
       stroke="currentColor"
       strokeWidth={2}
       strokeLinecap="round"

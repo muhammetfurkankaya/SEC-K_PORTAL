@@ -23,12 +23,12 @@ export function SectionTitle({
     <div className={`mb-4 flex flex-wrap items-baseline justify-between gap-2 ${className}`}>
       <h2
         className={`font-semibold tracking-[0.12em] uppercase ${
-          titleClass || "text-xs text-tfs-red"
+          titleClass || "text-xs text-accent-ink"
         }`}
       >
         {children}
       </h2>
-      {meta ? <span className="text-xs text-tfs-dark-60">{meta}</span> : null}
+      {meta ? <span className="text-xs text-ink-faint">{meta}</span> : null}
     </div>
   );
 }

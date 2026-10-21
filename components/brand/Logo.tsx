@@ -23,14 +23,9 @@ const HEIGHTS = { sm: "h-7", md: "h-9", lg: "h-12" } as const;
  * Resmî logo varken dikey çubuk çizilmez: amblemin kendisi kırmızıyı
  * taşıdığı için çubuk aynı vurguyu ikinci kez yapardı.
  */
-export function Logo({
-  variant = "light",
-  subtitle,
-  size = "md",
-  className = "",
-}: LogoProps) {
+export function Logo({ variant = "light", subtitle, size = "md", className = "" }: LogoProps) {
   const file = findLogo(variant);
-  const subtitleColor = variant === "light" ? "text-tfs-grey" : "text-tfs-dark-60";
+  const subtitleColor = variant === "light" ? "text-tfs-grey" : "text-ink-faint";
 
   return (
     <span className={`flex items-center gap-3 ${className}`}>
@@ -47,7 +42,7 @@ export function Logo({
           <span aria-hidden="true" className="block h-10 w-1 shrink-0 bg-tfs-red" />
           <span
             className={`text-[1.375rem] leading-none font-semibold tracking-tight ${
-              variant === "light" ? "text-white" : "text-tfs-dark"
+              variant === "light" ? "text-white" : "text-ink"
             }`}
           >
             TFS
@@ -58,7 +53,7 @@ export function Logo({
       {subtitle ? (
         <span
           className={`hidden border-l pl-3 text-[0.8125rem] leading-tight font-light sm:block ${subtitleColor} ${
-            variant === "light" ? "border-tfs-dark-80" : "border-tfs-grey"
+            variant === "light" ? "border-tfs-dark-80" : "border-line"
           }`}
         >
           {subtitle}

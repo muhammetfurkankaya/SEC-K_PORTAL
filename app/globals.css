@@ -11,6 +11,12 @@
 @import "@fontsource/nunito-sans/700.css";
 @import "@fontsource/nunito-sans/400-italic.css";
 
+/* Gece modu varyantı — yalnızca bir değerin değil bir KURALIN değiştiği
+   birkaç yer için (ör. koyu bant ile sayfa zemini birleştiğinde ayırıcı
+   çizgi). Renklerin çoğu aşağıdaki anlamsal değişkenlerle kendiliğinden
+   döner; `dark:` her yere serpiştirilmez. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ————————————————————————————————————————————————
    Punto/renk ayarlarının ürettiği sınıflar.
 
@@ -20,7 +26,7 @@
    garanti ediyor. tests/appearance.test.ts bu listenin tablolarla birebir
    aynı olduğunu doğruluyor — elle güncellemeyin, test söyler.
    ———————————————————————————————————————————————— */
-@source inline("lg:text-[2.75rem] lg:text-[4.75rem] lg:text-[4rem] lg:text-[5.5rem] max-w-3xl max-w-5xl max-w-6xl max-w-none ml-auto mr-auto mx-auto sm:text-2xl sm:text-[1.75rem] sm:text-[2.25rem] sm:text-[2.75rem] sm:text-[3.25rem] sm:text-[3.75rem] sm:text-[4.25rem] sm:text-lg sm:text-xl text-[#ff8f94] text-[0.625rem] text-[0.6875rem] text-[1.375rem] text-[1.75rem] text-[2.25rem] text-[2.5rem] text-[2.75rem] text-[2rem] text-base text-center text-left text-lg text-right text-sm text-tfs-dark text-tfs-dark-60 text-tfs-dark-80 text-tfs-green text-tfs-grey text-tfs-red text-white text-white/85 text-xl text-xs");
+@source inline("lg:text-[2.75rem] lg:text-[4.75rem] lg:text-[4rem] lg:text-[5.5rem] max-w-3xl max-w-5xl max-w-6xl max-w-none ml-auto mr-auto mx-auto sm:text-2xl sm:text-[1.75rem] sm:text-[2.25rem] sm:text-[2.75rem] sm:text-[3.25rem] sm:text-[3.75rem] sm:text-[4.25rem] sm:text-lg sm:text-xl text-[#ff8f94] text-[0.625rem] text-[0.6875rem] text-[1.375rem] text-[1.75rem] text-[2.25rem] text-[2.5rem] text-[2.75rem] text-[2rem] text-accent-ink text-base text-center text-ink text-ink-faint text-ink-soft text-left text-lg text-right text-sm text-tfs-green text-tfs-grey text-white text-white/85 text-xl text-xs");
 
 @theme {
   /* ————— Kurumsal renk paleti (TFS Marka Kimlik Kılavuzu s.28 & s.30) ————— */
@@ -65,14 +71,108 @@
   --shadow-brand-float: 0 2px 4px rgb(29 37 45 / 0.07), 0 8px 24px rgb(29 37 45 / 0.1);
 }
 
+/* ————————————————————————————————————————————————
+   Anlamsal renkler — gece/gündüz modu bunların üzerine kurulu.
+
+   Bileşenler `bg-white`, `text-tfs-dark` gibi SABİT renkler yerine
+   `bg-surface`, `text-ink` gibi ROL adları kullanıyor. Tailwind bu sınıfları
+   `var(--color-surface)` olarak derliyor; değişkeni `[data-theme="dark"]`
+   altında yeniden tanımlamak tüm arayüzü tek hamlede çeviriyor.
+
+   İki kural, ikisi de kırılgan:
+   - `static`: kullanılmasa bile tüm değişkenler :root'a basılsın. Aksi
+     halde Tailwind kullanılmayanları budar ve aşağıdaki gece bloğu boşa
+     düşer.
+   - ASLA `@theme inline` değil: inline değeri sınıfa gömer, çalışma anında
+     değişken değiştirmek hiçbir şeyi değiştirmez.
+
+   Yeni renk yok: hepsi kurumsal paletin (PANTONE 433 C / 7620 C / Warm Grey)
+   izinli tonları. `ink-faint` ve `accent-ink` gece modunda bilerek açılıyor —
+   #777b81 ve #ce2028, #12181d üzerinde küçük yazı için AA kontrastını
+   (4.5:1) geçmiyor.
+   ———————————————————————————————————————————————— */
+@theme static {
+  --color-surface: #ffffff;
+  --color-surface-2: #f8f7f6;
+  --color-surface-3: #f1efec;
+  --color-ink: #1d252d;
+  --color-ink-soft: #4a5057;
+  --color-ink-faint: #777b81;
+  --color-line: #d6d1ca;
+  --color-line-soft: #f1efec;
+  --color-line-strong: #d2d3d5;
+  --color-accent: #ce2028;
+  --color-accent-ink: #ce2028;
+  --color-accent-wash: #fbeaeb;
+  --color-placard: #1d252d;
+}
+
+@layer base {
+  /* Gece modu. Alt ağaç sabitleme de çalışsın diye (yönetim paneli her
+     zaman açık) hem kök hem herhangi bir öğe için tanımlı. */
+  [data-theme="dark"] {
+    --color-surface: #12181d;
+    --color-surface-2: #1d252d;
+    --color-surface-3: #232c35;
+    --color-ink: #f1efec;
+    --color-ink-soft: #d2d3d5;
+    --color-ink-faint: #9aa0a6;
+    --color-line: #343c44;
+    --color-line-soft: #262e36;
+    --color-line-strong: #4a5057;
+    --color-accent: #ce2028;
+    --color-accent-ink: #e8565c;
+    --color-accent-wash: #2a1416;
+    --color-placard: #2a333c;
+    color-scheme: dark;
+  }
+
+  [data-theme="light"] {
+    --color-surface: #ffffff;
+    --color-surface-2: #f8f7f6;
+    --color-surface-3: #f1efec;
+    --color-ink: #1d252d;
+    --color-ink-soft: #4a5057;
+    --color-ink-faint: #777b81;
+    --color-line: #d6d1ca;
+    --color-line-soft: #f1efec;
+    --color-line-strong: #d2d3d5;
+    --color-accent: #ce2028;
+    --color-accent-ink: #ce2028;
+    --color-accent-wash: #fbeaeb;
+    --color-placard: #1d252d;
+    color-scheme: light;
+  }
+
+  /* Basılı çıktı daima açık: koyu zemin toner yakar ve okunmaz. */
+  @media print {
+    [data-theme="dark"] {
+      --color-surface: #ffffff;
+      --color-surface-2: #f8f7f6;
+      --color-surface-3: #f1efec;
+      --color-ink: #1d252d;
+      --color-ink-soft: #4a5057;
+      --color-ink-faint: #777b81;
+      --color-line: #d6d1ca;
+      --color-line-soft: #f1efec;
+      --color-line-strong: #d2d3d5;
+      --color-accent: #ce2028;
+      --color-accent-ink: #ce2028;
+      --color-accent-wash: #fbeaeb;
+      --color-placard: #1d252d;
+      color-scheme: light;
+    }
+  }
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
   }
 
   body {
-    background-color: #ffffff;
-    color: var(--color-tfs-dark);
+    background-color: var(--color-surface);
+    color: var(--color-ink);
     font-family: var(--font-sans);
     font-weight: 400;
     line-height: 1.6;
@@ -112,7 +212,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0;
-  background: var(--color-tfs-dark);
+  background: var(--color-placard);
   color: #fff;
   border-left: 3px solid var(--color-tfs-red);
   padding: 0.1875rem 0.5rem 0.1875rem 0.4375rem;
@@ -128,8 +228,8 @@
 @utility placard-quiet {
   display: inline-flex;
   align-items: center;
-  background: var(--color-tfs-grey-40);
-  color: var(--color-tfs-dark);
+  background: var(--color-surface-3);
+  color: var(--color-ink);
   border-left: 3px solid var(--color-tfs-red);
   padding: 0.125rem 0.375rem 0.125rem 0.3125rem;
   font-size: 0.6875rem;

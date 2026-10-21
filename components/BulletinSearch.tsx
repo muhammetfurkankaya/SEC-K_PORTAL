@@ -123,7 +123,7 @@ export function BulletinSearch({
               fill="none"
               aria-hidden="true"
               className={`pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 ${
-                dark ? "text-tfs-grey/70" : "text-tfs-dark-60"
+                dark ? "text-tfs-grey/70" : "text-ink-faint"
               }`}
               stroke="currentColor"
               strokeWidth={2}
@@ -155,10 +155,10 @@ export function BulletinSearch({
                   ? `${listId}-${matches[activeIndex].id}`
                   : undefined
               }
-              className={`w-full rounded-brand border py-3 pr-4 pl-11 text-sm transition-colors focus:border-tfs-red focus:outline-none ${
+              className={`w-full rounded-brand border py-3 pr-4 pl-11 text-sm transition-colors focus:border-accent focus:outline-none ${
                 dark
-                  ? "border-white/20 bg-white/[0.06] text-white placeholder:text-tfs-grey/60 focus:bg-white/[0.09]"
-                  : "border-tfs-grey bg-white text-tfs-dark placeholder:text-tfs-dark-60"
+                  ? "border-white/20 bg-surface/[0.06] text-white placeholder:text-tfs-grey/60 focus:bg-surface/[0.09]"
+                  : "border-line bg-surface text-ink placeholder:text-ink-faint"
               }`}
             />
           </div>
@@ -178,15 +178,15 @@ export function BulletinSearch({
           id={listId}
           role="listbox"
           aria-label="Arama önerileri"
-          className="fade-in absolute z-30 mt-1 w-full overflow-hidden rounded-brand border border-tfs-grey bg-white shadow-brand-float sm:w-[calc(100%-5.5rem)]"
+          className="fade-in absolute z-30 mt-1 w-full overflow-hidden rounded-brand border border-line bg-surface shadow-brand-float sm:w-[calc(100%-5.5rem)]"
         >
           {matches.length === 0 ? (
-            <p className="px-4 py-3 text-sm font-light text-tfs-dark-60">
+            <p className="px-4 py-3 text-sm font-light text-ink-faint">
               “{query.trim()}” ile eşleşen bülten bulunamadı.
             </p>
           ) : (
             <>
-              <ul className="max-h-80 divide-y divide-tfs-grey-40 overflow-y-auto">
+              <ul className="max-h-80 divide-y divide-line-soft overflow-y-auto">
                 {matches.map((item, index) => (
                   <li key={item.id}>
                     <button
@@ -201,12 +201,12 @@ export function BulletinSearch({
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => openBulletin(item)}
                       className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors ${
-                        index === activeIndex ? "bg-tfs-red-10" : "hover:bg-tfs-grey-20"
+                        index === activeIndex ? "bg-accent-wash" : "hover:bg-surface-2"
                       }`}
                     >
                       <span className="placard-quiet">{item.bulletin_no}</span>
-                      <span className="min-w-0 flex-1 text-sm text-tfs-dark">{item.subject}</span>
-                      <span className="shrink-0 text-[0.625rem] font-semibold tracking-[0.08em] text-tfs-dark-60 uppercase">
+                      <span className="min-w-0 flex-1 text-sm text-ink">{item.subject}</span>
+                      <span className="shrink-0 text-[0.625rem] font-semibold tracking-[0.08em] text-ink-faint uppercase">
                         {item.category_name}
                       </span>
                     </button>
@@ -217,7 +217,7 @@ export function BulletinSearch({
               {totalMatches > matches.length ? (
                 <a
                   href={`/ara?q=${encodeURIComponent(query.trim())}`}
-                  className="block border-t border-tfs-grey bg-tfs-grey-20 px-3 py-2 text-xs font-semibold text-tfs-red hover:bg-tfs-red-10"
+                  className="block border-t border-line bg-surface-2 px-3 py-2 text-xs font-semibold text-accent-ink hover:bg-accent-wash"
                 >
                   {totalMatches} sonucun tamamını gör →
                 </a>

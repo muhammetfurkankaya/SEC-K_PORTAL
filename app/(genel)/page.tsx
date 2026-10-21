@@ -76,7 +76,7 @@ export default function HomePage() {
           olduğunu bilmek zorunda kalmaz. Hero'nun koyusunu içeriğe doğru
           sürdürüyor, böylece fotoğraftan beyaz sayfaya sert düşüş olmuyor. */}
       {settings.show_search_band ? (
-        <div className="bg-tfs-deep print-hidden">
+        <div className="bg-tfs-deep print-hidden dark:border-b dark:border-white/10">
           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
             <BulletinSearch bulletins={suggestions} submitLabel={settings.btn_search} tone="koyu" />
           </div>
@@ -95,13 +95,11 @@ export default function HomePage() {
                 <li key={survey.id}>
                   <Link
                     href={`/anket/${survey.public_token}`}
-                    className="brand-bar flex flex-wrap items-center justify-between gap-3 rounded-brand border border-tfs-grey bg-white py-3 pr-4 pl-4 transition-[border-color,box-shadow] duration-[180ms] hover:border-tfs-red hover:shadow-brand-raised"
+                    className="brand-bar flex flex-wrap items-center justify-between gap-3 rounded-brand border border-line bg-surface py-3 pr-4 pl-4 transition-[border-color,box-shadow] duration-[180ms] hover:border-accent hover:shadow-brand-raised"
                   >
                     <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-tfs-dark">
-                        {survey.title}
-                      </span>
-                      <span className="mt-0.5 block text-xs font-light text-tfs-dark-60">
+                      <span className="block text-sm font-semibold text-ink">{survey.title}</span>
+                      <span className="mt-0.5 block text-xs font-light text-ink-faint">
                         {survey.question_count} soru
                         {survey.closes_at ? ` · son gün ${formatDate(survey.closes_at)}` : ""}
                       </span>
@@ -126,7 +124,7 @@ export default function HomePage() {
           </SectionTitle>
 
           {recent.length === 0 ? (
-            <p className="rounded-brand border border-dashed border-tfs-grey bg-tfs-grey-20 px-4 py-10 text-center text-sm font-light text-tfs-dark-60">
+            <p className="rounded-brand border border-dashed border-line bg-surface-2 px-4 py-10 text-center text-sm font-light text-ink-faint">
               {settings.empty_home}
             </p>
           ) : (
@@ -141,18 +139,16 @@ export default function HomePage() {
               {/* items-start: liste kartlar kadar uzayıp altında boş çerçeve
                   bırakmasın. */}
               {listVisible ? (
-                <ul className="divide-y divide-tfs-grey-40 rounded-brand border border-tfs-grey bg-white">
+                <ul className="divide-y divide-line-soft rounded-brand border border-line bg-surface">
                   {recent.map((bulletin) => (
                     <li key={bulletin.id}>
                       <Link
                         href={`/bultenler/${bulletin.category_slug}?bulten=${bulletin.id}`}
-                        className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-3 transition-colors hover:bg-tfs-grey-20"
+                        className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-3 transition-colors hover:bg-surface-2"
                       >
                         <span className="placard-quiet">{bulletin.bulletin_no}</span>
-                        <span className="min-w-0 flex-1 text-sm text-tfs-dark">
-                          {bulletin.subject}
-                        </span>
-                        <span className="tnum shrink-0 text-xs text-tfs-dark-60">
+                        <span className="min-w-0 flex-1 text-sm text-ink">{bulletin.subject}</span>
+                        <span className="tnum shrink-0 text-xs text-ink-faint">
                           {formatDate(bulletin.published_date)}
                         </span>
                       </Link>

@@ -123,13 +123,13 @@ const SIZE_CLASS: Record<TextSlot, Record<string, string>> = {
  * buradan gelen bir renk onları ezerdi.
  */
 const SLOT_DEFAULT_COLOR: Record<TextSlot, string> = {
-  home_title: "text-tfs-dark",
-  home_kicker: "text-tfs-red",
-  home_intro: "text-tfs-dark-80",
-  page_title: "text-tfs-dark",
-  page_eyebrow: "text-tfs-red",
+  home_title: "text-ink",
+  home_kicker: "text-accent-ink",
+  home_intro: "text-ink-soft",
+  page_title: "text-ink",
+  page_eyebrow: "text-accent-ink",
   nav: "",
-  section_title: "text-tfs-red",
+  section_title: "text-accent-ink",
 };
 
 /** Koyu zemin (hero) karşılıkları. */
@@ -143,12 +143,19 @@ const SLOT_DEFAULT_COLOR_DARK: Record<TextSlot, string> = {
   section_title: "text-tfs-grey",
 };
 
+/**
+ * Açık zemin (sayfa) karşılıkları — ANLAMSAL renkler.
+ *
+ * "Koyu" sabit #1d252d değil `text-ink`: gündüz koyu, gece açık. Aksi halde
+ * gece modunda "Koyu" seçimi koyu zemin üstüne koyu yazı üretirdi. Yeşil iki
+ * temada da okunuyor, sabit kalıyor.
+ */
 const COLOR_CLASS: Record<string, string> = {
   otomatik: "",
-  koyu: "text-tfs-dark",
-  orta: "text-tfs-dark-80",
-  soluk: "text-tfs-dark-60",
-  kirmizi: "text-tfs-red",
+  koyu: "text-ink",
+  orta: "text-ink-soft",
+  soluk: "text-ink-faint",
+  kirmizi: "text-accent-ink",
   yesil: "text-tfs-green",
 };
 

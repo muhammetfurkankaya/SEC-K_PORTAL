@@ -14,13 +14,11 @@ export default function NotFound() {
 
       <div className="mx-auto flex max-w-xl flex-1 flex-col justify-center px-4 py-16">
         <div className="brand-bar pl-4">
-          <p className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+          <p className="text-xs font-semibold tracking-[0.12em] text-accent-ink uppercase">
             Sayfa bulunamadı
           </p>
-          <h1 className="mt-1 text-2xl font-semibold text-tfs-dark">
-            Aradığınız sayfaya ulaşılamadı
-          </h1>
-          <p className="mt-2 text-sm font-light text-tfs-dark-80">
+          <h1 className="mt-1 text-2xl font-semibold text-ink">Aradığınız sayfaya ulaşılamadı</h1>
+          <p className="mt-2 text-sm font-light text-ink-soft">
             Bağlantı değişmiş veya içerik yayından kaldırılmış olabilir.
           </p>
           <Link
