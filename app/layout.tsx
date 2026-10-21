@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: "%s | SEÇ-K Portalı",
   },
   description:
-    "Turkish Fuel Services SEÇ-K Portalı — bültenler, öneri ve olay bildirimi, anketler.",
+    "Turkish Fuel Services SEÇ-K Portalı — sağlık, emniyet, çevre ve kalite bültenleri ve anketler.",
   robots: { index: false, follow: false },
 };
 

@@ -60,7 +60,7 @@ describe("parseSetting", () => {
     const resolved = resolveSettings({});
     assert.deepEqual(Object.keys(resolved).sort(), [...SETTING_KEYS].sort());
     assert.equal(resolved.portal_title, "SEÇ-K Portalı");
-    assert.equal(resolved.show_qdms_section, false);
+    assert.equal(resolved.show_surveys_section, true);
     assert.equal(resolved.home_recent_count, 6);
   });
 });
@@ -92,19 +92,6 @@ describe("buildSettingsSchema", () => {
     const parsed = buildSettingsSchema(["portal_title"]).safeParse({ portal_title: "   " });
     assert.equal(parsed.success, false);
     if (!parsed.success) assert.equal(parsed.error.issues[0].path[0], "portal_title");
-  });
-
-  test("javascript: adresi reddedilir", () => {
-    const kotu = buildSettingsSchema(["qdms_incident_url"]).safeParse({
-      // eslint-disable-next-line no-script-url -- testin konusu bu
-      qdms_incident_url: "javascript:alert(1)",
-    });
-    assert.equal(kotu.success, false);
-
-    const iyi = buildSettingsSchema(["qdms_incident_url"]).safeParse({
-      qdms_incident_url: "https://ornek.turkishfuel.com/qdms",
-    });
-    assert.ok(iyi.success);
   });
 
   test("uzunluk sınırı aşılamaz", () => {

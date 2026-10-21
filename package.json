@@ -2,7 +2,7 @@
   "name": "sec-k-portal",
   "version": "1.0.0",
   "private": true,
-  "description": "TFS SEÇ-K Portalı — bülten yayını, QDMS yönlendirme ve anket/analiz",
+  "description": "TFS SEÇ-K Portalı — bülten yayını ve anket/analiz",
   "engines": {
     "node": ">=20"
   },

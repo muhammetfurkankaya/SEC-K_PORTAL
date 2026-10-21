@@ -23,10 +23,17 @@ export function SettingField({
   name,
   value,
   error,
+  onValueChange,
 }: {
   name: SettingKey;
   value: string;
   error?: string;
+  /**
+   * Değer her değiştiğinde çağrılır — canlı önizleme yazılanı görebilsin
+   * diye. Metin girdileri yine kontrolsüz kalır (form gönderimi değişmez);
+   * seçim düğmeleri ise bu verildiğinde kontrollü olur.
+   */
+  onValueChange?: (value: string) => void;
 }) {
   // `as const satisfies` literal tipleri koruyor; burada ortak biçime
   // genişletiyoruz, yoksa her girdi kendi dar tipiyle gelir ve örneğin
@@ -42,6 +49,9 @@ export function SettingField({
           label={def.label}
           description={def.description ?? def.help ?? ""}
           defaultChecked={value === "1"}
+          onChange={
+            onValueChange ? (event) => onValueChange(event.target.checked ? "1" : "0") : undefined
+          }
         />
       );
 
@@ -54,6 +64,7 @@ export function SettingField({
             rows={def.rows ?? 3}
             maxLength={def.max}
             defaultValue={value}
+            onChange={onValueChange ? (event) => onValueChange(event.target.value) : undefined}
             aria-invalid={error ? true : undefined}
           />
         </Field>
@@ -69,6 +80,7 @@ export function SettingField({
             min={def.min}
             max={def.max}
             defaultValue={value}
+            onChange={onValueChange ? (event) => onValueChange(event.target.value) : undefined}
             aria-invalid={error ? true : undefined}
           />
         </Field>
@@ -80,7 +92,12 @@ export function SettingField({
       if (control === "select") {
         return (
           <Field label={def.label} htmlFor={id} hint={error ?? def.help}>
-            <Select id={id} name={name} defaultValue={value}>
+            <Select
+              id={id}
+              name={name}
+              defaultValue={value}
+              onChange={onValueChange ? (event) => onValueChange(event.target.value) : undefined}
+            >
               {def.options.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -96,7 +113,7 @@ export function SettingField({
 
       return (
         <Field label={def.label} hint={error ?? def.help}>
-          <Choice name={name} value={value} options={def.options} />
+          <Choice name={name} value={value} options={def.options} onChange={onValueChange} />
         </Field>
       );
     }
@@ -112,9 +129,10 @@ export function SettingField({
           <TextInput
             id={id}
             name={name}
-            type={def.kind === "url" ? "url" : "text"}
+            type="text"
             maxLength={def.max}
             defaultValue={value}
+            onChange={onValueChange ? (event) => onValueChange(event.target.value) : undefined}
             aria-invalid={error ? true : undefined}
           />
         </Field>

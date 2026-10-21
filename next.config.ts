@@ -13,9 +13,6 @@ import type { NextConfig } from "next";
  * satır içi betikle taşıması. React çıktıyı kendisi kaçırdığı ve kodda
  * dangerouslySetInnerHTML kullanılmadığı için asıl koruma orada; bu başlık
  * ek bir katman.
- *
- * QDMS bağlantıları bu politikadan etkilenmez: onlar alt kaynak değil,
- * kullanıcının tıkladığı normal bağlantılardır.
  */
 const CSP = [
   "default-src 'self'",

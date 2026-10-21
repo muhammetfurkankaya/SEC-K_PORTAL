@@ -68,20 +68,6 @@ export function resolveSettings(raw: Partial<PortalSettings>): TypedSettings {
 // Yazma yönü
 // ————————————————————————————————————————————————
 
-/**
- * Yalnızca http(s) adreslerini kabul eder.
- *
- * `javascript:` ve `data:` bir bağlantıya konduğunda tıklayan kişinin
- * oturumunda kod çalıştırabilir; protokol açıkça sınırlanıyor.
- */
-const httpUrl = z
-  .string()
-  .trim()
-  .url("Geçerli bir adres girin (https:// ile başlamalı).")
-  .refine((value) => /^https?:\/\//i.test(value), {
-    message: "Adres http:// veya https:// ile başlamalı.",
-  });
-
 /** Bir ayar için, çıktısı DAİMA saklanacak metin olan zod şeması. */
 export function fieldSchema(key: SettingKey): z.ZodType<string> {
   const def: SettingDef = SETTINGS[key];
@@ -107,11 +93,6 @@ export function fieldSchema(key: SettingKey): z.ZodType<string> {
       return z.enum(values, {
         invalid_type_error: "Listeden bir seçenek seçin.",
       });
-    }
-
-    case "url": {
-      if (def.required) return httpUrl;
-      return z.union([httpUrl, z.literal("")]);
     }
 
     default: {

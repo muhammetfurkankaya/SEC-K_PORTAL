@@ -53,7 +53,10 @@ describe("ayar kaydı", () => {
       const def: SettingDef = SETTINGS[key];
 
       if (def.kind === "bool") {
-        assert.ok(def.default === "0" || def.default === "1", `${key}: bool varsayılanı 0/1 olmalı`);
+        assert.ok(
+          def.default === "0" || def.default === "1",
+          `${key}: bool varsayılanı 0/1 olmalı`,
+        );
       }
 
       if (def.kind === "int") {
@@ -62,15 +65,11 @@ describe("ayar kaydı", () => {
         assert.ok(value >= def.min && value <= def.max, `${key}: varsayılan aralık dışında`);
       }
 
-      if (def.kind === "text" || def.kind === "textarea" || def.kind === "url") {
+      if (def.kind === "text" || def.kind === "textarea") {
         assert.ok(
           def.default.length <= def.max,
           `${key}: varsayılan kendi uzunluk sınırını aşıyor`,
         );
-      }
-
-      if (def.kind === "url" && def.default !== "") {
-        assert.match(def.default, /^https?:\/\//, `${key}: adres http(s) ile başlamalı`);
       }
     }
   });
@@ -94,17 +93,12 @@ describe("ayar kaydı", () => {
   test("eski anahtarlar korundu — kaydedilmiş ayarlar kaybolmamalı", () => {
     // Kayıt tablosuna geçerken bu anahtarlar yeniden adlandırılırsa
     // müşterinin veritabanındaki değerler sessizce yok sayılırdı.
+    // (QDMS anahtarları bilinçli olarak kaldırıldı — aşağıdaki teste bakın.)
     const onceki: SettingKey[] = [
       "portal_title",
       "portal_subtitle",
       "home_intro",
       "footer_note",
-      "qdms_suggestion_url",
-      "qdms_suggestion_title",
-      "qdms_suggestion_desc",
-      "qdms_incident_url",
-      "qdms_incident_title",
-      "qdms_incident_desc",
       "announcement",
       "announcement_level",
       "announcement_active",
@@ -113,10 +107,19 @@ describe("ayar kaydı", () => {
       "enable_pdf_preview",
       "show_download_count",
       "show_surveys_section",
-      "show_qdms_section",
     ];
     for (const key of onceki) {
       assert.ok(SETTING_KEYS.includes(key), `${key}: eski anahtar kayıttan düşmüş`);
     }
+  });
+
+  test("QDMS ile ilgili hiçbir ayar yok", () => {
+    // Portaldan QDMS tamamen kaldırıldı; geri sızmasın.
+    const sizan = SETTING_KEYS.filter((key) => {
+      const def: SettingDef = SETTINGS[key];
+      return /qdms/i.test(key) || /qdms/i.test(def.label) || /qdms/i.test(def.help ?? "");
+    });
+    assert.deepEqual(sizan, []);
+    assert.ok(!SETTING_GROUPS.some((g) => /qdms/i.test(g.id + g.title)));
   });
 });

@@ -61,7 +61,6 @@ export const getSettings = cache(function getSettings(): ResolvedSettings {
     pdfPreviewEnabled: typed.enable_pdf_preview,
     downloadCountVisible: typed.show_download_count,
     surveysSectionVisible: typed.show_surveys_section,
-    qdmsSectionVisible: typed.show_qdms_section,
     defaultSort: typed.default_sort,
   };
 });

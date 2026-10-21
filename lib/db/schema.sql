@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
   last_login_at TEXT
 );
 
--- Portal ayarları (QDMS adresleri, portal başlığı, duyuru bandı).
+-- Portal ayarları (metinler, punto/renk, yerleşim, duyuru bandı).
 CREATE TABLE IF NOT EXISTS settings (
   key        TEXT PRIMARY KEY,
   value      TEXT NOT NULL,

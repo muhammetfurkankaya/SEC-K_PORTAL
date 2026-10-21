@@ -20,7 +20,7 @@ describe("ayar veritabanı", () => {
     setSettings({
       portal_title: "TFS Pusula",
       home_recent_count: "9",
-      show_qdms_section: "1",
+      show_search_band: "0",
       default_sort: "no-artan",
       home_block_position: "orta",
     });
@@ -28,7 +28,7 @@ describe("ayar veritabanı", () => {
     const settings = getSettings();
     assert.equal(settings.portal_title, "TFS Pusula");
     assert.equal(settings.home_recent_count, 9, "sayı olarak gelmeli");
-    assert.equal(settings.show_qdms_section, true, "boolean olarak gelmeli");
+    assert.equal(settings.show_search_band, false, "boolean olarak gelmeli");
     assert.equal(settings.default_sort, "no-artan");
     assert.equal(settings.home_block_position, "orta");
   });
@@ -51,10 +51,14 @@ describe("ayar veritabanı", () => {
     const { getRawSettings, getSettings } = await import("../lib/db/queries/settings");
 
     getDb()
-      .prepare(`INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))`)
+      .prepare(
+        `INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))`,
+      )
       .run("kaldirilmis_ayar", "deger");
     getDb()
-      .prepare(`INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))`)
+      .prepare(
+        `INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))`,
+      )
       .run("home_recent_count", "9999");
 
     assert.ok(
@@ -65,9 +69,7 @@ describe("ayar veritabanı", () => {
   });
 
   test("sıfırlama YENİ eklenen anahtarları da varsayılana döndürür", async () => {
-    const { setSettings, resetSettings, getSettings } = await import(
-      "../lib/db/queries/settings"
-    );
+    const { setSettings, resetSettings, getSettings } = await import("../lib/db/queries/settings");
     const { SETTING_KEYS } = await import("../lib/settings-schema");
     const { resolveSettings } = await import("../lib/settings-validate");
 
@@ -77,7 +79,11 @@ describe("ayar veritabanı", () => {
     const settings = getSettings();
     const varsayilan = resolveSettings({});
     for (const key of SETTING_KEYS) {
-      assert.deepEqual(settings[key], varsayilan[key], `${key}: sıfırlamadan sonra varsayılan olmalı`);
+      assert.deepEqual(
+        settings[key],
+        varsayilan[key],
+        `${key}: sıfırlamadan sonra varsayılan olmalı`,
+      );
     }
   });
 });

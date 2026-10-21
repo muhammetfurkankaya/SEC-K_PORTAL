@@ -12,16 +12,17 @@ import {
   type SettingGroupId,
   type SettingKey,
 } from "@/lib/settings-schema";
-import { SettingField } from "./SettingField";
-import { TypographyGroup, type TypographySamples } from "./TypographyGroup";
+import { textCardKeys } from "@/lib/settings-layout";
+import { FieldRows, GroupSection } from "./FieldRows";
+import { TextAppearanceGroup } from "./TextAppearanceGroup";
 import { saveSettingsAction } from "./actions";
 
 /**
  * Portal ayarları formu.
  *
  * ~70 alan tek bir sayfaya sığmıyor, bu yüzden gruplar sekmeye bölündü.
- * Ama hepsi **tek form, tek kaydet düğmesi**: kullanıcı üç sekmede değişiklik
- * yapıp bir kez kaydedebilmeli.
+ * Ama hepsi **tek form, tek kaydet düğmesi**: kullanıcı birden fazla sekmede
+ * değişiklik yapıp bir kez kaydedebilmeli.
  *
  * Pasif sekmeler `hidden` ile gizleniyor, DOM'dan çıkarılmıyor — çıkarılsaydı
  * o sekmedeki alanlar FormData'ya hiç girmez, işaretsiz onay kutuları da
@@ -30,11 +31,11 @@ import { saveSettingsAction } from "./actions";
  */
 export function PortalSettingsForm({
   settings,
-  typographySamples,
+  firstCategory,
 }: {
   settings: PortalSettings;
-  /** Punto önizlemelerinde gösterilecek gerçek metinler. */
-  typographySamples: TypographySamples;
+  /** Önizlemelerde gösterilecek gerçek bülten sekmesi adı. */
+  firstCategory: string;
 }) {
   const [state, action] = useActionState(saveSettingsAction, IDLE);
   const [activeGroup, setActiveGroup] = useState<SettingGroupId>(SETTING_GROUPS[0].id);
@@ -53,6 +54,20 @@ export function PortalSettingsForm({
     return map;
   }, []);
 
+  // Sunucuya bildirilen alan listesi: GERÇEKTEN çizilen anahtarlar.
+  // "Metin ve Görünüm" sekmesi jenerik çiziciyi değil kart düzenini
+  // kullanıyor; bir anahtar karta konmayı unutulursa ekranda olmaz ve tüm
+  // anahtarları bildirseydik sunucu onu boş metin olarak yazardı. Böylece
+  // çizilmeyen bir ayar asla ezilmez (tests/settings-layout.test.ts da
+  // böyle bir boşluğun oluşmadığını ayrıca doğruluyor).
+  const renderedKeys = useMemo(() => {
+    const keys = new Set<SettingKey>(textCardKeys());
+    for (const key of SETTING_KEYS) {
+      if ((SETTINGS[key] as SettingDef).group !== "metin") keys.add(key);
+    }
+    return [...keys];
+  }, []);
+
   // Hatalı alan hangi sekmede? Kullanıcı başka sekmedeyken kaydederse
   // "işaretli alanları düzeltin" mesajı tek başına yetersiz kalıyordu.
   const groupsWithError = new Set<SettingGroupId>();
@@ -65,7 +80,7 @@ export function PortalSettingsForm({
   return (
     <form action={action}>
       {/* Sunucuya hangi alanların gönderildiğini bildirir. */}
-      <input type="hidden" name="__alanlar" value={SETTING_KEYS.join(",")} />
+      <input type="hidden" name="__alanlar" value={renderedKeys.join(",")} />
 
       {state.message ? (
         <div className="mb-4">
@@ -108,10 +123,14 @@ export function PortalSettingsForm({
 
         return (
           <div key={group.id} hidden={group.id !== activeGroup} className="space-y-6">
-            {/* Tipografi grubu kendi bileşenini kullanıyor: buradaki asıl
-                soru "hangi seçenek" değil, "nasıl görünecek". */}
-            {group.id === "tipografi" ? (
-              <TypographyGroup settings={settings} samples={typographySamples} />
+            {/* Metin grubu kart düzeniyle çiziliyor: her yazının metni,
+                puntosu ve rengi bir arada, canlı önizlemeyle. */}
+            {group.id === "metin" ? (
+              <TextAppearanceGroup
+                settings={settings}
+                errors={errors}
+                firstCategory={firstCategory}
+              />
             ) : (
               <>
                 <p className="text-xs font-light text-tfs-dark-60">{group.hint}</p>
@@ -136,77 +155,4 @@ export function PortalSettingsForm({
       </div>
     </form>
   );
-}
-
-/** Alt başlıklı çerçeve; başlıksız bölümler çerçevesiz akar. */
-function GroupSection({ title, children }: { title: string; children: React.ReactNode }) {
-  if (!title) return <div className="space-y-4">{children}</div>;
-
-  return (
-    <fieldset className="rounded-brand border border-tfs-grey bg-tfs-grey-20 p-4">
-      <legend className="px-1 text-xs font-semibold tracking-[0.1em] text-tfs-red uppercase">
-        {title}
-      </legend>
-      <div className="mt-2 space-y-4">{children}</div>
-    </fieldset>
-  );
-}
-
-/**
- * Alanları yerleştirir.
- *
- * `span: "half"` olan ardışık alanlar iki sütuna girer; aç/kapa satırları
- * kendi arasında gruplanır ki aralarında ayırıcı çizgi düzgün görünsün.
- */
-function FieldRows({
-  keys,
-  settings,
-  errors,
-}: {
-  keys: SettingKey[];
-  settings: PortalSettings;
-  errors: Record<string, string>;
-}) {
-  const rows: React.ReactNode[] = [];
-  let buffer: SettingKey[] = [];
-  let bufferKind: "half" | "bool" | null = null;
-
-  function flush(): void {
-    if (buffer.length === 0) return;
-    const items = buffer.map((key) => (
-      <SettingField key={key} name={key} value={settings[key]} error={errors[key]} />
-    ));
-
-    rows.push(
-      bufferKind === "bool" ? (
-        <div key={`b${rows.length}`} className="rounded-brand border border-tfs-grey bg-white px-4">
-          {items}
-        </div>
-      ) : (
-        <div key={`h${rows.length}`} className="grid gap-4 sm:grid-cols-2">
-          {items}
-        </div>
-      ),
-    );
-    buffer = [];
-    bufferKind = null;
-  }
-
-  for (const key of keys) {
-    const def: SettingDef = SETTINGS[key];
-    const kind = def.kind === "bool" ? "bool" : def.span === "half" ? "half" : null;
-
-    if (kind === null) {
-      flush();
-      rows.push(<SettingField key={key} name={key} value={settings[key]} error={errors[key]} />);
-      continue;
-    }
-
-    if (bufferKind !== null && bufferKind !== kind) flush();
-    bufferKind = kind;
-    buffer.push(key);
-  }
-  flush();
-
-  return <>{rows}</>;
 }

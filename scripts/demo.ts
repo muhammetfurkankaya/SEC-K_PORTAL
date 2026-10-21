@@ -91,7 +91,7 @@ const COMMENTS = [
   "Mobil telefondan okumak kolay oldu, teşekkürler.",
   "Bülten indeksinden arama yapmak işimi çok kolaylaştırdı.",
   "Vardiya başında toplu okuma yapmak için basılı kopya da istiyoruz.",
-  "QDMS bağlantısının ana sayfada olması pratik olmuş.",
+  "Ana sayfadaki arama kutusu aradığımı hemen buldu.",
   "Daha kısa ve maddeler halinde bültenler tercih ederim.",
   "Yeni personel için özet bir eğitim bülteni hazırlanabilir.",
 ];

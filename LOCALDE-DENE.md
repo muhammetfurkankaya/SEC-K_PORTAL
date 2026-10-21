@@ -150,7 +150,6 @@ Durdurmak için komut satırında **Ctrl + C**.
 
 | Nerede | Ne deneyin |
 |---|---|
-| Ana sayfa | **Öneri Bildirim** ve **Olay Bildirim** kartları QDMS'i yeni sekmede açar |
 | Sekmeler | SEÇ-K / SMS / İGA / THY — üstteki sekmelerden geçin |
 | Ana sayfa arama | Üstteki kutuya `ucak` yazın — **Ara'ya basmadan** eşleşen bültenler altta listelenir; birini seçince o bülten açılır. Ok tuşları + Enter da çalışır |
 | | Tüm sonuçları görmek için **Ara** düğmesi |
@@ -177,7 +176,7 @@ Sağ üstteki **YÖNETİM** düğmesi → 3. adımdaki kullanıcı adı ve şifr
 | | **CSV indir** → Excel'de açın, Türkçe karakterler bozuk olmamalı |
 | | **Düzenle / QR** → QR kodu, **PNG/SVG indir**, **asılacak afişi yazdır** |
 | | **+ Yeni anket** → soru ekleyin, **Yayınla**, QR'ı telefonla okutup doldurun |
-| **Ayarlar** | Portal metinleri, QDMS kart başlıkları, duyuru bandı ve tonu, şifre |
+| **Ayarlar** | Metin ve Görünüm: her yazının metni, puntosu ve rengi canlı önizlemeyle; duyuru bandı ve tonu, şifre |
 | | **PDF önizlemesini kapatıp** bülten sayfasına dönün — tıklama artık indirir |
 | | Ana sayfadaki bülten sayısını 3 yapıp ana sayfayı yenileyin |
 | | Duyuru metni yazıp tonunu **Kritik** seçin — üstte dolu kırmızı bant çıkar |

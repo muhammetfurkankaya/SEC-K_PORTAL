@@ -6,9 +6,7 @@ Turkish Fuel Services şirket içi SEÇ-K portalı. Üç işi yapar:
    Solda bülten numarası, konu ve yayım tarihi içeren aranabilir indeks; bir
    satıra tıklayınca bülten **sağ tarafta okunabilir biçimde açılır**, indirme
    yalnızca “PDF indir” düğmesiyle olur.
-2. **QDMS yönlendirme** — ana sayfada Öneri Bildirim ve Olay Bildirim için iki
-   belirgin giriş noktası.
-3. **Anket ve analiz** — QR kod ile dağıtılan anketler ve karar vericiye hazır
+2. **Anket ve analiz** — QR kod ile dağıtılan anketler ve karar vericiye hazır
    sunulan soru/cevap analizleri.
 
 Görünüm TFS Marka Kimlik Kılavuzu'na göre kurulmuştur (aşağıya bakın).
@@ -90,7 +88,7 @@ npm run build     # üretim derlemesi
 
 | Adres | İçerik |
 |---|---|
-| `/` | Anlık öneri veren arama, QDMS bildirim eylemleri, açık anketler, son yayımlananlar (liste + kartlar) |
+| `/` | Fotoğraflı hero, anlık öneri veren arama, açık anketler, son yayımlananlar (liste ve/veya kartlar) |
 | `/ara?q=` | Tüm sekmelerde bülten arama (ana sayfadaki kutu buraya gönderir) |
 | `/bultenler/<sekme>` | Aranabilir indeks + yanında PDF önizlemesi |
 | `/bultenler/<sekme>?bulten=<id>` | Belirli bir bülteni açar (paylaşılabilir bağlantı) |
@@ -109,7 +107,7 @@ Eski `/bultenler/<sekme>/<id>` adresleri yeni biçime yönlendirilir.
 | `/admin/anketler` | Anket oluştur, soru editörü, QR kod, yayınla / kapat / kopyala |
 | `/admin/anketler/<id>/analiz` | Analiz ekranı ve CSV dışa aktarım |
 | `/admin/anketler/<id>/qr` | Panoya asılacak yazdırılabilir QR afişi |
-| `/admin/ayarlar` | Portal metinleri, QDMS kartları, duyuru, bülten görünümü, şifre |
+| `/admin/ayarlar` | Metin ve görünüm (punto, renk, canlı önizleme), ana sayfa yerleşimi, duyuru, bülten görünümü, şifre |
 
 **Sekmeler kodda sabit değildir.** Yeni bir bölüm gerektiğinde
 `/admin/kategoriler` üzerinden eklenir ve navigasyonda anında görünür.
@@ -126,8 +124,6 @@ vardır:
 | Portal adı / alt başlık | Üst bant, alt bilgi, sayfa başlıkları |
 | Ana sayfa tanıtım metni | Ana sayfadaki başlık altı açıklama (boşsa gizlenir) |
 | Alt bilgi notu | Her sayfanın altındaki iletişim satırı |
-| QDMS kart başlığı ve açıklaması | Ana sayfadaki iki bildirim eyleminin metni |
-| QDMS adresleri | Kartların açtığı hedef (öneri ve olay için ayrı) |
 | Duyuru metni / tonu / açık-kapalı | Üstteki duyuru şeridi; ton bandın rengini belirler (bilgi · uyarı · kritik) |
 | Ana sayfada bülten sayısı | “Son yayımlananlar” listesinin uzunluğu (3–24) |
 | Varsayılan sıralama | Bülten listesi ilk açıldığında hangi sıraya göre dizilir |
@@ -367,6 +363,3 @@ paylaşarak yan yana çalışır. Ayrıntı, elle kurulum adımları ve sorun gi
 ```bash
 npm run seed   # sekmeleri ve ilk admin hesabını oluşturur (bir kez)
 ```
-
-Ardından `/admin/ayarlar` üzerinden QDMS adreslerini kontrol edin — Öneri ve
-Olay bildirimi için QDMS'te ayrı derin linkler varsa buraya girilir.

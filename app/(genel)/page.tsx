@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { BulletinCard } from "@/components/BulletinCard";
 import { BulletinSearch } from "@/components/BulletinSearch";
-import { ReportAction } from "@/components/ReportAction";
 import { PageHero } from "@/components/brand/PageHero";
 import { SectionTitle } from "@/components/brand/SectionTitle";
 import { listAllPublishedBulletins, listRecentBulletins } from "@/lib/db/queries/bulletins";
@@ -79,31 +78,6 @@ export default function HomePage() {
       ) : null}
 
       <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
-        {/* ————————————— Bildirimler —————————————
-            Varsayılan olarak kapalı: QDMS kartları ana sayfadan kaldırıldı.
-            Ayarlar > QDMS Bildirim Kartları bölümünden geri açılabilir. */}
-        {settings.qdmsSectionVisible ? (
-          <section aria-labelledby="bildirim-baslik">
-            <SectionTitle titleClass={textClass(settings, "section_title")}>
-              <span id="bildirim-baslik">{settings.section_qdms_title}</span>
-            </SectionTitle>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <ReportAction
-                href={settings.qdms_incident_url}
-                title={settings.qdms_incident_title}
-                description={settings.qdms_incident_desc}
-                kind="incident"
-              />
-              <ReportAction
-                href={settings.qdms_suggestion_url}
-                title={settings.qdms_suggestion_title}
-                description={settings.qdms_suggestion_desc}
-                kind="suggestion"
-              />
-            </div>
-          </section>
-        ) : null}
-
         {/* ————————————— Açık anketler ————————————— */}
         {openSurveys.length > 0 ? (
           <section aria-labelledby="anket-baslik">

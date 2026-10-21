@@ -13,8 +13,9 @@ export function ResetSettingsForm() {
     <form action={action} className="space-y-3">
       {state.message ? <Alert kind={state.ok ? "success" : "error"}>{state.message}</Alert> : null}
       <p className="text-sm font-light text-tfs-dark-80">
-        Portal adı, QDMS adresleri, duyuru ve görünüm ayarlarının tamamı ilk kurulum değerlerine
-        döner. Bültenler, anketler ve şifreniz etkilenmez.
+        Portal metinleri, punto ve renk seçimleri, ana sayfa yerleşimi, duyuru ve bülten görünümü
+        ayarlarının tamamı ilk kurulum değerlerine döner. Bültenler, anketler ve şifreniz
+        etkilenmez.
       </p>
       <SubmitButton
         variant="danger"
