@@ -290,11 +290,10 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Standalone çıktısı public/ klasörünü içermez, elle eklenir.
-  const publicOut = path.join(OUT, "public");
-  if (!fs.existsSync(publicOut)) {
-    copyDir(path.join(ROOT, "public"), publicOut);
-  }
+  // Standalone çıktısı public/'in yalnızca kodun dosya sisteminden okuduğu
+  // kısmını (public/brand) taşır; tamamı her zaman üstüne kopyalanır. Eskiden
+  // klasör varsa atlanıyordu ve public/pdfjs pakete girmiyordu.
+  copyDir(path.join(ROOT, "public"), path.join(OUT, "public"));
   log("  + public/ (logolar ve PDF okuyucu dosyaları dahil)");
 
   step("Gereksiz paketler çıkarılıyor");
