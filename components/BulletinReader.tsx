@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PdfViewer } from "@/components/PdfViewer";
 import { formatDate, formatFileSize, formatNumber } from "@/lib/format";
 import { compareBulletinNo, matchesQuery } from "@/lib/search";
 import { SORT_LABELS, SORT_KEYS, type SortKey } from "@/lib/settings-schema";
@@ -395,11 +396,9 @@ function Preview({
       <div className="overflow-hidden rounded-brand border border-line bg-surface">
         {/* Doküman künyesi + eylemler.
 
-            Çubuk KOYU: altındaki tarayıcı PDF görüntüleyicisinin kendi gri
-            araç çubuğu biçimlendirilemiyor. Bizim çubuğumuz da açık gri
-            olduğunda iki gri bant üst üste biniyor ve hiçbiri "bu sayfanın
-            düğmeleri" gibi okunmuyordu. Koyu zemin ikisini ayırıyor; indirme
-            ve yeni sekme düğmeleri ekranın en ağır öğesi oluyor.
+            Çubuk KOYU: altındaki okuyucunun açık renkli yakınlaştırma
+            çubuğuyla karışmasın; indirme ve yeni sekme düğmeleri ekranın en
+            ağır öğesi olsun.
 
             Künye de sadeleşti: birinci satır plaka + konu, ikinci satır
             sessiz künye bilgisi. Önceden hepsi tek satırda yarışıyordu. */}
@@ -420,7 +419,7 @@ function Preview({
           {/* Dar ekranda iki eşit sütun: düğmeler asla kırpılmaz. */}
           <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
             <a
-              href={`/api/dosya/${bulletin.id}`}
+              href={`/goruntule/${bulletin.id}`}
               target="_blank"
               rel="noopener"
               className="inline-flex items-center justify-center gap-1.5 rounded-brand border border-white/30 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-white hover:bg-surface/10"
@@ -443,15 +442,17 @@ function Preview({
           </p>
         ) : null}
 
-        <div className="bg-surface-2 p-2">
-          <iframe
-            // key: bülten değişince görüntüleyici baştan yüklenir.
-            key={bulletin.id}
-            src={`/api/dosya/${bulletin.id}`}
-            title={`${bulletin.bulletin_no} — ${bulletin.subject}`}
-            className="h-[70vh] min-h-[26rem] w-full border border-line bg-surface"
-          />
-        </div>
+        {/* Salt görüntüleme: tarayıcının çizim/not araçlı PDF ekranı yerine
+            sayfalar düz görüntü olarak çiziliyor (components/PdfViewer). */}
+        <PdfViewer
+          // key: bülten değişince görüntüleyici baştan yüklenir.
+          key={bulletin.id}
+          src={`/api/dosya/${bulletin.id}`}
+          title={`${bulletin.bulletin_no} — ${bulletin.subject}`}
+          downloadHref={`/api/dosya/${bulletin.id}?mod=indir`}
+          downloadLabel={labels.download}
+          className="h-[70vh] min-h-[26rem]"
+        />
       </div>
 
       <p className="mt-2 text-xs font-light text-ink-faint">

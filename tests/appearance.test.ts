@@ -8,7 +8,7 @@ import {
   allAppearanceClasses,
   textClassFor,
   alignClass,
-  blockPositionClass,
+  navAlignClass,
   blockWidthClass,
   textClass,
 } from "../lib/appearance";
@@ -90,8 +90,8 @@ describe("appearance", () => {
   test("yerleşim yardımcıları bilinmeyen değerde varsayılan verir", () => {
     assert.equal(alignClass("orta"), "text-center");
     assert.equal(alignClass("yok"), "text-left");
-    assert.equal(blockPositionClass("sag"), "ml-auto");
-    assert.equal(blockPositionClass("yok"), "mr-auto");
+    assert.equal(navAlignClass("sag"), "justify-end-safe");
+    assert.equal(navAlignClass("yok"), "justify-start");
     assert.equal(blockWidthClass("dar"), "max-w-3xl");
     assert.equal(blockWidthClass("yok"), "max-w-none");
   });

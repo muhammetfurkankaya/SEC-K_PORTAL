@@ -178,11 +178,16 @@ const ALIGN_TEXT: Record<string, string> = {
   sag: "text-right",
 };
 
-/** Blok konumu — kalan boşluk hangi tarafa bırakılsın. */
-const ALIGN_BLOCK: Record<string, string> = {
-  sol: "mr-auto",
-  orta: "mx-auto",
-  sag: "ml-auto",
+/**
+ * Menüdeki sekmelerin dizilişi.
+ *
+ * "safe" sürümler: sekmeler sığmayıp şerit kaydırılabilir olduğunda düz
+ * `justify-center` baştaki sekmeleri sola, erişilemeyen alana iterdi.
+ */
+const ALIGN_NAV: Record<string, string> = {
+  sol: "justify-start",
+  orta: "justify-center-safe",
+  sag: "justify-end-safe",
 };
 
 const WIDTH_BLOCK: Record<string, string> = {
@@ -226,8 +231,8 @@ export function alignClass(value: string): string {
   return pick(ALIGN_TEXT, value, "sol");
 }
 
-export function blockPositionClass(value: string): string {
-  return pick(ALIGN_BLOCK, value, "sol");
+export function navAlignClass(value: string): string {
+  return pick(ALIGN_NAV, value, "sol");
 }
 
 export function blockWidthClass(value: string): string {
@@ -248,7 +253,7 @@ export function allAppearanceClasses(): string[] {
     SLOT_DEFAULT_COLOR,
     SLOT_DEFAULT_COLOR_DARK,
     ALIGN_TEXT,
-    ALIGN_BLOCK,
+    ALIGN_NAV,
     WIDTH_BLOCK,
   ]) {
     for (const value of Object.values(table)) {

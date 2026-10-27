@@ -13,10 +13,14 @@ import type { NextConfig } from "next";
  * satır içi betikle taşıması. React çıktıyı kendisi kaçırdığı ve kodda
  * dangerouslySetInnerHTML kullanılmadığı için asıl koruma orada; bu başlık
  * ek bir katman.
+ *
+ * 'wasm-unsafe-eval' yalnızca WebAssembly derlemesine izin verir (JS eval'e
+ * değil): PDF okuyucu (pdf.js) bazı PDF'lerdeki JPEG2000/JBIG2 görselleri
+ * public/pdfjs/wasm/ altındaki çözücülerle açıyor.
  */
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",

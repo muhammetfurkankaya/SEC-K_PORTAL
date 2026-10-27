@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { PortalSettingsForm } from "./SettingsForm";
-import { PasswordForm } from "./PasswordForm";
 import { ResetSettingsForm } from "./ResetForm";
+import { SettingsTabs } from "./SettingsTabs";
 import { AdminHeading, Panel } from "@/components/admin/AdminHeading";
 import { getRawSettings, getSettings } from "@/lib/db/queries/settings";
 import { resolveHomeHero } from "@/lib/hero";
 import { listActiveCategories } from "@/lib/db/queries/categories";
+import { findLogo } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Ayarlar" };
@@ -33,20 +34,21 @@ export default function SettingsPage() {
         description="Portal metinlerini, yazı görünümünü, ana sayfa yerleşimini, duyuruyu ve bülten görünümünü buradan yönetin."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_21rem]">
+      <SettingsTabs active="portal" />
+
+      <div className="space-y-6">
         <Panel title="Portal Ayarları">
-          <PortalSettingsForm settings={settings} firstCategory={firstCategory} hero={hero} />
+          <PortalSettingsForm
+            settings={settings}
+            firstCategory={firstCategory}
+            hero={hero}
+            logoSrc={findLogo("light")}
+          />
         </Panel>
 
-        <div className="space-y-6">
-          <Panel title="Şifre Değiştir">
-            <PasswordForm />
-          </Panel>
-
-          <Panel title="Varsayılanlara Dön">
-            <ResetSettingsForm />
-          </Panel>
-        </div>
+        <Panel title="Varsayılanlara Dön">
+          <ResetSettingsForm />
+        </Panel>
       </div>
     </>
   );

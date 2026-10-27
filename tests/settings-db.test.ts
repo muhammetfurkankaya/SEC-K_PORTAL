@@ -22,7 +22,7 @@ describe("ayar veritabanı", () => {
       home_recent_count: "9",
       show_search_band: "0",
       default_sort: "no-artan",
-      home_block_position: "orta",
+      nav_align: "orta",
     });
 
     const settings = getSettings();
@@ -30,7 +30,7 @@ describe("ayar veritabanı", () => {
     assert.equal(settings.home_recent_count, 9, "sayı olarak gelmeli");
     assert.equal(settings.show_search_band, false, "boolean olarak gelmeli");
     assert.equal(settings.default_sort, "no-artan");
-    assert.equal(settings.home_block_position, "orta");
+    assert.equal(settings.nav_align, "orta");
   });
 
   test("duyuru yalnızca metin doluyken ve bant açıkken görünür", async () => {

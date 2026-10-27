@@ -161,9 +161,7 @@ async function bundleNode(): Promise<void> {
 
   const sums = (await download(`${NODE_DIST}/SHASUMS256.txt`)).toString("utf8");
 
-  const line = sums
-    .split("\n")
-    .find((row) => row.trim().endsWith("win-x64/node.exe"));
+  const line = sums.split("\n").find((row) => row.trim().endsWith("win-x64/node.exe"));
   if (!line) {
     throw new Error("SHASUMS256.txt icinde win-x64/node.exe satiri yok");
   }
@@ -175,9 +173,7 @@ async function bundleNode(): Promise<void> {
 
   const actual = crypto.createHash("sha256").update(exe).digest("hex");
   if (actual !== expected) {
-    throw new Error(
-      `node.exe SHA256 uyusmuyor.\n  beklenen: ${expected}\n  gelen   : ${actual}`,
-    );
+    throw new Error(`node.exe SHA256 uyusmuyor.\n  beklenen: ${expected}\n  gelen   : ${actual}`);
   }
 
   const dir = path.join(OUT, "node");
@@ -287,12 +283,19 @@ async function main(): Promise<void> {
   copyDir(path.join(ROOT, ".next", "static"), path.join(OUT, ".next", "static"));
   log("  + .next/static");
 
+  // PDF okuyucunun worker'ı `npm run build` öncesinde kopyalanır; derleme
+  // `next build` ile doğrudan yapıldıysa eksik kalır ve okuyucu açılmaz.
+  if (!fs.existsSync(path.join(ROOT, "public", "pdfjs", "pdf.worker.min.mjs"))) {
+    console.error("HATA: public/pdfjs bulunamadı. Derlemeyi `npm run build` ile yapın.");
+    process.exit(1);
+  }
+
   // Standalone çıktısı public/ klasörünü içermez, elle eklenir.
   const publicOut = path.join(OUT, "public");
   if (!fs.existsSync(publicOut)) {
     copyDir(path.join(ROOT, "public"), publicOut);
   }
-  log("  + public/ (logolar dahil)");
+  log("  + public/ (logolar ve PDF okuyucu dosyaları dahil)");
 
   step("Gereksiz paketler çıkarılıyor");
   for (const name of DROP) {
@@ -317,7 +320,9 @@ async function main(): Promise<void> {
 
     const outFile = path.join(binDir, `better_sqlite3-abi${target.abi}.node`);
     fs.writeFileSync(outFile, binary);
-    log(`  + sqlite-ikili/better_sqlite3-abi${target.abi}.node (${Math.round(binary.length / 1024)} KB)`);
+    log(
+      `  + sqlite-ikili/better_sqlite3-abi${target.abi}.node (${Math.round(binary.length / 1024)} KB)`,
+    );
   }
 
   // Linux ikilisini paketten çıkarıyoruz: Windows'ta işe yaramaz ve
@@ -430,7 +435,7 @@ function writeBundleFiles(): void {
       "",
       "Portal acilmazsa buradaki en yeni portal_*.log dosyasini acin:",
       "gercek hata orada yazilidir (tarayicidaki 502.5 yalnizca",
-      "\"surec baslamadi\" demektir).",
+      '"surec baslamadi" demektir).',
       "",
       "Bu klasoru silmeyin: yoksa IIS gunluk yazmaktan vazgecer.",
       "",

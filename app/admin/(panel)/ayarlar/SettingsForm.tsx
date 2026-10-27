@@ -41,12 +41,15 @@ export function PortalSettingsForm({
   settings,
   firstCategory,
   hero,
+  logoSrc,
 }: {
   settings: PortalSettings;
   /** Önizlemelerde gösterilecek gerçek bülten sekmesi adı. */
   firstCategory: string;
   /** Ana sayfa görselinin şu anki durumu — seçici için. */
   hero: HeroPickerInfo;
+  /** Alt bilgi/logo önizlemesi için beyaz logonun adresi. */
+  logoSrc: string | null;
 }) {
   const [state, action] = useActionState(saveSettingsAction, IDLE);
   const [activeGroup, setActiveGroup] = useState<SettingGroupId>(SETTING_GROUPS[0].id);
@@ -143,6 +146,7 @@ export function PortalSettingsForm({
                 settings={settings}
                 errors={errors}
                 firstCategory={firstCategory}
+                logoSrc={logoSrc}
               />
             ) : (
               <>

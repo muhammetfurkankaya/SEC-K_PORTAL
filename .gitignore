@@ -6,6 +6,9 @@
 /out/
 next-env.d.ts
 
+# PDF okuyucunun yardımcı dosyaları (npm run build öncesi kopyalanır)
+/public/pdfjs/
+
 # çalışma zamanı verileri (veritabanı + yüklenen PDF'ler)
 # Yedekleme için sunucuda bu klasörü kopyalamak yeterlidir.
 /data/

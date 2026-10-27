@@ -49,6 +49,7 @@ export async function saveSettingsAction(
   // Ayarlar üst bant, alt bilgi, ana sayfa ve bülten sayfalarını etkiler.
   revalidatePath("/", "layout");
   revalidatePath("/admin/ayarlar");
+  revalidatePath("/admin/kategoriler");
 
   return succeed("Ayarlar kaydedildi. Portalı yenileyerek görebilirsiniz.");
 }

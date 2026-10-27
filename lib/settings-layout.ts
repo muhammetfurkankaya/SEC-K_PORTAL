@@ -28,6 +28,8 @@ export type TextCard = {
    */
   previewKey?: SettingKey;
   fields: readonly SettingKey[];
+  /** Yuvası olmayan kartlar için özel önizleme. */
+  preview?: "footer";
   /** Kartın altında küçük bir not (ör. bu yazının başka ekranda düzenlendiği). */
   note?: { text: string; href?: string; linkText?: string };
 };
@@ -63,7 +65,7 @@ export const TEXT_CARDS: readonly TextCard[] = [
     where: "Üstteki gezinme çubuğu",
     slot: "nav",
     previewKey: "nav_home_label",
-    fields: ["nav_home_label", "nav_surveys_label", "nav_admin_label"],
+    fields: ["nav_home_label", "nav_surveys_label", "nav_admin_label", "nav_align"],
     note: {
       text: "Bülten sekmelerinin adları Sekmeler ekranından değiştirilir.",
       href: "/admin/kategoriler",
@@ -127,7 +129,14 @@ export const TEXT_CARDS: readonly TextCard[] = [
     id: "alt-bilgi",
     title: "Alt bilgi ve logo",
     where: "Sayfanın en altı ve logonun yanı",
-    fields: ["footer_company", "footer_note", "logo_subtitle_show", "logo_subtitle_text"],
+    preview: "footer",
+    fields: [
+      "footer_company",
+      "footer_note",
+      "footer_show_year",
+      "logo_subtitle_show",
+      "logo_subtitle_text",
+    ],
   },
 ];
 

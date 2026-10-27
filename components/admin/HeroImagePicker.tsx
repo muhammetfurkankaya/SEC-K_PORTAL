@@ -140,24 +140,32 @@ export function HeroImagePicker({
 
       {/* Gerçek kompozisyon: aynı perde, aynı beyaz başlık. Yazının okunup
           okunmayacağı yüklemeden ÖNCE görülsün. */}
-      <div className="relative isolate h-44 overflow-hidden bg-tfs-dark sm:h-52">
+      {/* Ana sayfanın tam ekran düzeni: 16:9, menü fotoğrafın üstünde, başlık
+          ortada. */}
+      <div className="relative isolate aspect-[16/9] overflow-hidden bg-tfs-dark">
         {showing.src ? (
           /* eslint-disable-next-line @next/next/no-img-element -- önizleme */
-          <img
-            src={showing.src}
-            alt=""
-            className="absolute inset-0 size-full object-cover object-[center_38%]"
-          />
+          <img src={showing.src} alt="" className="absolute inset-0 size-full object-cover" />
         ) : (
           <div aria-hidden="true" className="hero-brand absolute inset-0" />
         )}
         {showing.src ? (
           <div
             aria-hidden="true"
-            className={`absolute inset-0 ${showing.strong ? "hero-scrim-strong" : "hero-scrim"}`}
+            className={`absolute inset-0 ${
+              showing.strong ? "hero-scrim-center-strong" : "hero-scrim-center"
+            }`}
           />
         ) : null}
-        <p className="hero-ink absolute bottom-5 left-5 max-w-[85%] text-[1.75rem] leading-[1.1] font-semibold tracking-[-0.02em] break-words text-white sm:text-[2.25rem]">
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 flex gap-4 border-b border-white/15 px-4 py-2.5 text-[0.625rem] text-white/80"
+        >
+          <span className="border-b-2 border-tfs-red pb-1 font-semibold text-white">Ana Sayfa</span>
+          <span>Bültenler</span>
+          <span>Anketler</span>
+        </div>
+        <p className="hero-ink absolute inset-x-6 top-1/2 -translate-y-1/3 text-center text-[1.5rem] leading-[1.1] font-semibold tracking-[-0.02em] break-words text-white sm:text-[2.25rem]">
           {title}
         </p>
       </div>

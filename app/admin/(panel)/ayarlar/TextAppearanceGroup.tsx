@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { LogoView } from "@/components/brand/LogoView";
+import { NavPreview } from "@/components/admin/NavPreview";
 import { ColorChoice, Field, SizeChoice } from "@/components/ui/form";
-import { TEXT_SLOT_META, textClassFor, type TextSlot } from "@/lib/appearance";
+import { footerLines } from "@/lib/footer";
+import { TEXT_SLOT_META, navAlignClass, textClassFor, type TextSlot } from "@/lib/appearance";
 import { TEXT_CARDS, textCardKeys, type TextCard } from "@/lib/settings-layout";
 import {
   COLOR_OPTIONS,
@@ -26,11 +29,13 @@ export function TextAppearanceGroup({
   settings,
   errors,
   firstCategory,
+  logoSrc,
 }: {
   settings: PortalSettings;
   errors: Record<string, string>;
   /** Sayfa başlığı ve sekme önizlemelerinde gösterilecek gerçek sekme adı. */
   firstCategory: string;
+  logoSrc: string | null;
 }) {
   // Kartların çizdiği tüm alanların canlı değeri. Önizleme buradan okur.
   const [values, setValues] = useState<Record<string, string>>(() => {
@@ -58,6 +63,7 @@ export function TextAppearanceGroup({
           settings={settings}
           errors={errors}
           firstCategory={firstCategory}
+          logoSrc={logoSrc}
           onChange={set}
         />
       ))}
@@ -71,6 +77,7 @@ function CardBlock({
   settings,
   errors,
   firstCategory,
+  logoSrc,
   onChange,
 }: {
   card: TextCard;
@@ -78,6 +85,7 @@ function CardBlock({
   settings: PortalSettings;
   errors: Record<string, string>;
   firstCategory: string;
+  logoSrc: string | null;
   onChange: (key: string, value: string) => void;
 }) {
   const slot = card.slot;
@@ -99,11 +107,14 @@ function CardBlock({
         <span className="text-[0.6875rem] font-light text-tfs-dark-60">{card.where}</span>
       </div>
 
+      {card.preview === "footer" ? <FooterPreview values={values} logoSrc={logoSrc} /> : null}
+
       {slot ? (
         <SlotPreview
           slot={slot}
           text={previewText}
           secondTab={firstCategory}
+          values={values}
           appearance={textClassFor(
             slot,
             values[sizeKey],
@@ -116,7 +127,9 @@ function CardBlock({
       <div className="space-y-4 p-4">
         <FieldRows
           keys={card.fields}
-          settings={settings}
+          // Güncel değerler: seçim düğmeleri kontrollü, ilk değerle
+          // beslenirse tıklama hiçbir şeyi değiştirmez.
+          settings={{ ...settings, ...values }}
           errors={errors}
           onValueChange={(key: SettingKey, value: string) => onChange(key, value)}
         />
@@ -167,11 +180,13 @@ function SlotPreview({
   slot,
   text: sample,
   secondTab,
+  values,
   appearance,
 }: {
   slot: TextSlot;
   text: string;
   secondTab: string;
+  values: Record<string, string>;
   appearance: string;
 }) {
   // Uzun bir başlık önizlemeyi taşırmasın; gerçek sayfada da sarıyor.
@@ -196,14 +211,11 @@ function SlotPreview({
 
   if (slot === "nav") {
     return (
-      <div className="flex gap-1 border-b border-tfs-grey bg-white px-3">
-        <span className="border-b-[3px] border-tfs-red px-3 py-3 font-semibold text-tfs-dark">
-          <span className={appearance}>{sample}</span>
-        </span>
-        <span className="border-b-[3px] border-transparent px-3 py-3 text-tfs-dark-80">
-          <span className={appearance}>{secondTab}</span>
-        </span>
-      </div>
+      <NavPreview
+        labels={[sample, secondTab, values.nav_surveys_label ?? ""]}
+        appearance={appearance}
+        alignClass={navAlignClass(values.nav_align ?? "sol")}
+      />
     );
   }
 
@@ -223,6 +235,56 @@ function SlotPreview({
           <span className="block font-semibold tracking-[0.16em] uppercase">{text}</span>
         ) : (
           <span className="block font-semibold tracking-[-0.015em]">{text}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Alt bilgi ve logo yanı yazısı — kapatılan ya da boşaltılan parça
+ * önizlemeden de anında kalkar.
+ */
+function FooterPreview({
+  values,
+  logoSrc,
+}: {
+  values: Record<string, string>;
+  logoSrc: string | null;
+}) {
+  const showSubtitle = values.logo_subtitle_show === "1";
+  const subtitle = values.logo_subtitle_text?.trim() || values.portal_title?.trim() || "";
+  const { brand, legal } = footerLines(
+    {
+      portal_title: values.portal_title ?? "",
+      portal_subtitle: values.portal_subtitle ?? "",
+      footer_company: values.footer_company ?? "",
+      footer_note: values.footer_note ?? "",
+      footer_show_year: values.footer_show_year === "1",
+    },
+    new Date().getFullYear(),
+  );
+  const footerEmpty = !brand.title && !brand.rest && !legal;
+
+  return (
+    <div>
+      <div className="bg-tfs-dark px-5 py-3.5">
+        <LogoView variant="light" file={logoSrc} subtitle={showSubtitle ? subtitle : undefined} />
+      </div>
+      <div className="border-t border-tfs-grey bg-tfs-grey-20 px-5 py-4 text-xs text-tfs-dark-60">
+        {footerEmpty ? (
+          <p className="italic">Alt bilgi gizli — gösterilecek bir şey yok.</p>
+        ) : (
+          <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
+            <p>
+              {brand.title ? (
+                <span className="font-semibold text-tfs-dark">{brand.title}</span>
+              ) : null}
+              {brand.title && brand.rest ? " · " : ""}
+              {brand.rest}
+            </p>
+            {legal ? <p>{legal}</p> : null}
+          </div>
         )}
       </div>
     </div>

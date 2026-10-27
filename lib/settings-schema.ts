@@ -75,6 +75,7 @@ export const LIST_MODE_OPTIONS = [
 ] as const satisfies readonly EnumOption[];
 
 export const HERO_HEIGHT_OPTIONS = [
+  { value: "tam", label: "Tam ekran" },
   { value: "kisa", label: "Kısa" },
   { value: "orta", label: "Orta" },
   { value: "yuksek", label: "Yüksek" },
@@ -234,6 +235,13 @@ export const SETTINGS = {
     span: "half",
     label: "Alt bilgi şirket adı",
   },
+  footer_show_year: {
+    kind: "bool",
+    default: "1",
+    group: "metin",
+    label: "Alt bilgide yıl görünsün",
+    description: "Şirket adının yanında içinde bulunulan yıl.",
+  },
   logo_subtitle_show: {
     kind: "bool",
     default: "0",
@@ -254,17 +262,18 @@ export const SETTINGS = {
   // ————— Ana sayfa yerleşimi —————
   hero_height: {
     kind: "enum",
-    default: "yuksek",
+    default: "tam",
     control: "segment",
     options: HERO_HEIGHT_OPTIONS,
     group: "anasayfa",
     section: "Hero",
     span: "half",
     label: "Hero yüksekliği",
+    help: "Tam ekran, görseli masaüstünde kırpmadan bütünüyle gösterir.",
   },
   hero_align: {
     kind: "enum",
-    default: "sol",
+    default: "orta",
     control: "segment",
     options: [ALIGN_OPTIONS[0], ALIGN_OPTIONS[1]],
     group: "anasayfa",
@@ -360,17 +369,6 @@ export const SETTINGS = {
     span: "half",
     label: "Görünüm",
     help: "Liste taramak, kart göz gezdirmek için. İkisi birden de olabilir.",
-  },
-  home_block_position: {
-    kind: "enum",
-    default: "sol",
-    control: "segment",
-    options: ALIGN_OPTIONS,
-    group: "anasayfa",
-    section: "Son yayımlananlar",
-    span: "half",
-    label: "Bloğun konumu",
-    help: "Bölümün sayfadaki yeri.",
   },
   home_block_width: {
     kind: "enum",
@@ -733,6 +731,16 @@ export const SETTINGS = {
     section: "Sayfa üst etiketleri",
     span: "half",
     label: "Renk",
+  },
+  nav_align: {
+    kind: "enum",
+    default: "sol",
+    control: "segment",
+    options: ALIGN_OPTIONS,
+    group: "metin",
+    span: "half",
+    label: "Sekmelerin hizası",
+    help: "Sekmeler menü çubuğunda sola mı, ortaya mı, sağa mı dizilsin.",
   },
   type_nav_size: {
     kind: "enum",

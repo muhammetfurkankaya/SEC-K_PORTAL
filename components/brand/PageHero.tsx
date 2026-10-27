@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 export type HeroTone = "photo" | "brand" | "flat";
-export type HeroSize = "sm" | "md" | "lg";
+export type HeroSize = "sm" | "md" | "lg" | "full";
 export type EyebrowPlace = "ustte" | "altta" | "gizli";
 
 type PageHeroProps = {
@@ -35,6 +35,11 @@ const MIN_HEIGHT: Record<HeroSize, string> = {
   sm: "min-h-[13rem] sm:min-h-[15rem]",
   md: "min-h-[17rem] sm:min-h-[20rem] lg:min-h-[23rem]",
   lg: "min-h-[20rem] sm:min-h-[24rem] lg:min-h-[28rem]",
+  // Görselin kendi oranı (16:9): masaüstünde fotoğraf kırpılmadan bütünüyle
+  // görünür. Dar ekranda bu oran başlığa yetmeyeceği için sabit bir yükseklik
+  // var; orada fotoğraf yanlardan kırpılır. (Oran ve alt sınır aynı anda
+  // verilmemeli: tarayıcı alt sınırı genişliğe aktarır, sayfa yana taşar.)
+  full: "min-h-[34rem] lg:aspect-[16/9] lg:min-h-0",
 };
 
 /** Kadraj: fotoğrafın dikeyde hangi bölümü görünsün. */
@@ -48,6 +53,7 @@ const TITLE_SIZE: Record<HeroSize, string> = {
   sm: "text-[1.75rem] sm:text-[2.25rem]",
   md: "text-[2rem] sm:text-[2.75rem] lg:text-[3.25rem]",
   lg: "text-[2.25rem] sm:text-[3.25rem] lg:text-[4rem]",
+  full: "text-[2.5rem] sm:text-[3.75rem] lg:text-[4.75rem]",
 };
 
 /**
@@ -97,6 +103,10 @@ export function PageHero({
   }
 
   const centered = align === "orta";
+  // Tam ekran hero'da üst menü fotoğrafın üzerinde saydam duruyor
+  // (SiteHeader); metin bloğu dikeyde ortalanıyor ve menünün altında
+  // kalmasın diye üstten boşluk bırakılıyor.
+  const full = size === "full";
   const showEyebrow = Boolean(eyebrow) && eyebrowPlace !== "gizli";
 
   const eyebrowNode = showEyebrow ? (
@@ -112,7 +122,11 @@ export function PageHero({
   ) : null;
 
   return (
-    <section className="relative isolate overflow-hidden bg-tfs-dark print-hidden">
+    <section
+      className={`relative isolate overflow-hidden bg-tfs-dark print-hidden ${
+        full ? `flex ${MIN_HEIGHT.full}` : ""
+      }`}
+    >
       {/* Bulanık yer tutucu: fotoğraf inerken boş koyu kare yerine
           kompozisyonun soluk bir izi görünür. */}
       {blurDataUrl ? (
@@ -141,21 +155,31 @@ export function PageHero({
       {resolvedTone === "photo" ? (
         <div
           aria-hidden="true"
-          className={`absolute inset-0 ${scrim === "strong" ? "hero-scrim-strong" : "hero-scrim"}`}
+          className={`absolute inset-0 ${
+            full
+              ? scrim === "strong"
+                ? "hero-scrim-center-strong"
+                : "hero-scrim-center"
+              : scrim === "strong"
+                ? "hero-scrim-strong"
+                : "hero-scrim"
+          }`}
         />
       ) : null}
 
       <div
-        className={`relative mx-auto flex w-full max-w-7xl flex-col justify-end px-4 pt-24 pb-10 sm:px-6 sm:pt-32 sm:pb-14 lg:px-8 ${MIN_HEIGHT[size]} ${
-          centered ? "items-center text-center" : ""
-        }`}
+        className={`relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8 ${
+          full
+            ? "justify-center pt-40 pb-16 sm:pt-44"
+            : `justify-end pt-24 pb-10 sm:pt-32 sm:pb-14 ${MIN_HEIGHT[size]}`
+        } ${centered ? "items-center text-center" : ""}`}
       >
         {eyebrowPlace === "ustte" ? eyebrowNode : null}
 
         <h1
-          className={`hero-ink hero-rise hero-rise-2 font-semibold tracking-[-0.02em] leading-[1.06] ${
-            titleClass || `${TITLE_SIZE[size]} text-white`
-          } ${
+          className={`hero-ink hero-rise hero-rise-2 tracking-[-0.02em] leading-[1.06] ${
+            full ? "font-bold" : "font-semibold"
+          } ${titleClass || `${TITLE_SIZE[size]} text-white`} ${
             eyebrowPlace === "ustte" && showEyebrow ? "mt-3" : ""
           } ${centered ? "max-w-[22ch]" : "max-w-[18ch]"}`}
         >

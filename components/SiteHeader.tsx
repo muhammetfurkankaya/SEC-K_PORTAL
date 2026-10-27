@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { HeaderFrame } from "@/components/HeaderFrame";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { listActiveCategories } from "@/lib/db/queries/categories";
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
-import { textClass } from "@/lib/appearance";
+import { navAlignClass, textClass } from "@/lib/appearance";
 
 /**
  * Portalın üst bandı, sekmeleri ve duyuru şeridi.
@@ -35,15 +36,18 @@ export function SiteHeader() {
     });
   }
 
+  // Tam ekran hero'da sekmeler fotoğrafın üzerinde duruyor (HeaderFrame).
+  const overlayOnHome = settings.hero_height === "tam";
+
   return (
-    <header>
-      {/* Kılavuz s.51: koyu zemin (#1D252D) + beyaz logo */}
-      <div className="bg-tfs-dark print-hidden">
+    <HeaderFrame
+      overlayOnHome={overlayOnHome}
+      bar={
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
-          {/* Logo yanındaki yazı varsayılan olarak KAPALI: aynı ad hemen
-              altındaki hero başlığında zaten büyük puntoyla duruyor.
-              Ayarlardan açılabilir ve metni değiştirilebilir. */}
-          <Link href="/" className="flex items-center" aria-label="Ana sayfa">
+          {/* Logo yanındaki yazı varsayılan olarak KAPALI: aynı ad hero
+              başlığında zaten büyük puntoyla duruyor. Ayarlardan açılabilir
+              ve metni değiştirilebilir. */}
+          <Link href="/" className="flex min-w-0 items-center" aria-label="Ana sayfa">
             <Logo
               variant="light"
               subtitle={
@@ -54,7 +58,7 @@ export function SiteHeader() {
             />
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {settings.theme_toggle_visible ? <ThemeToggle /> : null}
             <Link
               href="/admin"
@@ -64,16 +68,22 @@ export function SiteHeader() {
             </Link>
           </div>
         </div>
-      </div>
-
-      <div className="brand-seam print-hidden" aria-hidden="true" />
-
-      <SiteNav items={items} linkClass={textClass(settings, "nav")} />
-
-      {settings.announcementVisible ? (
-        <AnnouncementStrip text={settings.announcement} level={settings.announcementLevel} />
-      ) : null}
-    </header>
+      }
+      nav={
+        <SiteNav
+          items={items}
+          linkClass={textClass(settings, "nav")}
+          linkClassOnDark={textClass(settings, "nav", { onDark: true })}
+          alignClass={navAlignClass(settings.nav_align)}
+          overlayOnHome={overlayOnHome}
+        />
+      }
+      announcement={
+        settings.announcementVisible ? (
+          <AnnouncementStrip text={settings.announcement} level={settings.announcementLevel} />
+        ) : null
+      }
+    />
   );
 }
 

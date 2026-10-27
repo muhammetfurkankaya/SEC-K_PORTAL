@@ -7,7 +7,7 @@ import { listAllPublishedBulletins, listRecentBulletins } from "@/lib/db/queries
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
 import { resolveHomeHero } from "@/lib/hero";
-import { alignClass, blockPositionClass, blockWidthClass, textClass } from "@/lib/appearance";
+import { alignClass, blockWidthClass, textClass } from "@/lib/appearance";
 import { formatDate, formatNumber } from "@/lib/format";
 
 // Bültenler ve anketler admin panelinden değiştiğinde ana sayfa güncel
@@ -28,15 +28,17 @@ export default function HomePage() {
   // Görsel: yüklenen → paketle gelen → marka gradyanı (lib/hero.ts).
   const hero = resolveHomeHero(settings);
 
-  const heroSize = ({ kisa: "sm", orta: "md", yuksek: "lg" } as const)[settings.hero_height];
+  const heroSize = ({ tam: "full", kisa: "sm", orta: "md", yuksek: "lg" } as const)[
+    settings.hero_height
+  ];
 
-  // "Son yayımlananlar" bloğunun yerleşimi: hangi görünüm, nerede, ne
-  // genişlikte, yazılar nasıl hizalı.
+  // "Son yayımlananlar" bloğunun yerleşimi: hangi görünüm, ne genişlikte,
+  // yazılar nasıl hizalı. Tam genişlikten dar bir blok her zaman ortalanır.
   const listVisible = settings.home_list_mode !== "kart";
   const cardsVisible = settings.home_list_mode !== "liste";
   const blockClass = [
     blockWidthClass(settings.home_block_width),
-    blockPositionClass(settings.home_block_position),
+    "mx-auto",
     alignClass(settings.home_block_align),
   ].join(" ");
 

@@ -26,7 +26,7 @@
    garanti ediyor. tests/appearance.test.ts bu listenin tablolarla birebir
    aynı olduğunu doğruluyor — elle güncellemeyin, test söyler.
    ———————————————————————————————————————————————— */
-@source inline("lg:text-[2.75rem] lg:text-[4.75rem] lg:text-[4rem] lg:text-[5.5rem] max-w-3xl max-w-5xl max-w-6xl max-w-none ml-auto mr-auto mx-auto sm:text-2xl sm:text-[1.75rem] sm:text-[2.25rem] sm:text-[2.75rem] sm:text-[3.25rem] sm:text-[3.75rem] sm:text-[4.25rem] sm:text-lg sm:text-xl text-[#ff8f94] text-[0.625rem] text-[0.6875rem] text-[1.375rem] text-[1.75rem] text-[2.25rem] text-[2.5rem] text-[2.75rem] text-[2rem] text-accent-ink text-base text-center text-ink text-ink-faint text-ink-soft text-left text-lg text-right text-sm text-tfs-green text-tfs-grey text-white text-white/85 text-xl text-xs");
+@source inline("justify-center-safe justify-end-safe justify-start lg:text-[2.75rem] lg:text-[4.75rem] lg:text-[4rem] lg:text-[5.5rem] max-w-3xl max-w-5xl max-w-6xl max-w-none sm:text-2xl sm:text-[1.75rem] sm:text-[2.25rem] sm:text-[2.75rem] sm:text-[3.25rem] sm:text-[3.75rem] sm:text-[4.25rem] sm:text-lg sm:text-xl text-[#ff8f94] text-[0.625rem] text-[0.6875rem] text-[1.375rem] text-[1.75rem] text-[2.25rem] text-[2.5rem] text-[2.75rem] text-[2rem] text-accent-ink text-base text-center text-ink text-ink-faint text-ink-soft text-left text-lg text-right text-sm text-tfs-green text-tfs-grey text-white text-white/85 text-xl text-xs");
 
 @theme {
   /* ————— Kurumsal renk paleti (TFS Marka Kimlik Kılavuzu s.28 & s.30) ————— */
@@ -325,6 +325,46 @@
       rgb(18 24 29 / 0) 100%
     ),
     rgb(29 37 45 / 0.45);
+}
+
+/* Tam ekran hero: yazı ortada, menü üstte fotoğrafın üzerinde.
+   Üç katman: üstte menüyü okutan koyu bant, ortada başlığın arkasında
+   yumuşak bir koyulaşma, altta arama bandına geçişi yumuşatan gölge.
+   Fotoğrafın geri kalanı olabildiğince açık bırakılıyor. */
+@utility hero-scrim-center {
+  background:
+    radial-gradient(
+      ellipse 62% 48% at 50% 54%,
+      rgb(18 24 29 / 0.58) 0%,
+      rgb(18 24 29 / 0.3) 55%,
+      rgb(18 24 29 / 0) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgb(18 24 29 / 0.78) 0%,
+      rgb(18 24 29 / 0.32) 16%,
+      rgb(18 24 29 / 0.08) 34%,
+      rgb(18 24 29 / 0.08) 70%,
+      rgb(18 24 29 / 0.6) 100%
+    );
+}
+
+@utility hero-scrim-center-strong {
+  background:
+    radial-gradient(
+      ellipse 66% 52% at 50% 54%,
+      rgb(18 24 29 / 0.66) 0%,
+      rgb(18 24 29 / 0.36) 55%,
+      rgb(18 24 29 / 0.06) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgb(18 24 29 / 0.85) 0%,
+      rgb(18 24 29 / 0.42) 18%,
+      rgb(18 24 29 / 0.16) 36%,
+      rgb(18 24 29 / 0.16) 68%,
+      rgb(18 24 29 / 0.7) 100%
+    );
 }
 
 /* Fotoğraf yokken: kurumsal koyu + sol üstten kırmızı, sağ alttan çok
