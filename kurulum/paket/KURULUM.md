@@ -20,6 +20,31 @@ Yani yapılacak iş: **dosyaları kopyala → IIS'te siteyi göster → Browse.*
 
 ---
 
+## Önce kendi bilgisayarınızda deneyin (isteğe bağlı)
+
+Sunucuya almadan önce portalı Windows bilgisayarınızda açıp her şeye
+bakabilirsiniz. Kurulum, yönetici yetkisi ve IIS gerekmez.
+
+1. İki arşivi (`SEC-K-Portali-sunucu.zip` ve `SEC-K-Portali-node.zip`)
+   **aynı** boş klasöre açın; ör. `C:\SECK-DENEME`.
+2. Klasördeki **`YERELDE-DENE.cmd`** dosyasına çift tıklayın.
+3. Birkaç saniye sonra tarayıcıda `http://localhost:3000` açılır.
+   Yönetim paneli: `http://localhost:3000/admin`, giriş `admin` / `Tfs2026...`
+
+İlk açılışta örnek bültenler ve bir örnek anket eklenir. Durdurmak için
+siyah pencereyi kapatın.
+
+- Deneme verileri **ayrı** bir klasöre yazılır (`data-deneme\`). Sunucuya
+  gidecek `data\` klasörüne dokunulmaz.
+- Sıfırdan başlamak için `data-deneme` klasörünü silip tekrar çift tıklayın.
+- 3000 portu doluysa komut isteminde `YERELDE-DENE.cmd 3010` yazın.
+- Windows "bilgisayarınız korundu" derse **Ek bilgi → Yine de çalıştır**.
+  Bunu hiç görmemek için zip dosyalarını açmadan önce: dosyaya sağ tık →
+  Özellikler → **Engellemeyi kaldır**.
+
+> Sunucuya **deneme klasörünü değil**, zip dosyalarını yeniden açarak
+> aktarın. Böylece örnek veriler sunucuya taşınmaz.
+
 ## Kurulum
 
 ### 1. Klasörü yerine koyun
