@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { getDb } from "../lib/db";
 import { UPLOADS_DIR } from "../lib/paths";
+import { coverAbsolutePath } from "../lib/uploads";
 import { generateToken, generateFileId } from "../lib/token";
 import { makeSimplePdf } from "./lib/make-pdf";
 import { createBulletin, bulletinNoExists } from "../lib/db/queries/bulletins";
@@ -277,10 +278,14 @@ function clean(): void {
     .all(`${DEMO_MARK}%`) as { id: number; file_path: string }[];
 
   for (const bulletin of bulletins) {
-    try {
-      fs.unlinkSync(path.join(UPLOADS_DIR, bulletin.file_path));
-    } catch {
-      // Dosya zaten silinmiş olabilir.
+    // PDF ve (panelden üretildiyse) kapak görseli.
+    const files = [path.join(UPLOADS_DIR, bulletin.file_path), coverAbsolutePath(bulletin.file_path)];
+    for (const file of files) {
+      try {
+        if (file) fs.unlinkSync(file);
+      } catch {
+        // Dosya zaten silinmiş olabilir.
+      }
     }
   }
   db.prepare(`DELETE FROM bulletins WHERE description LIKE ?`).run(`${DEMO_MARK}%`);

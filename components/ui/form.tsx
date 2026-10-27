@@ -123,8 +123,11 @@ export function SubmitButton({
   const { pending } = useFormStatus();
 
   return (
+    // `props` önce yayılıyor: dışarıdan verilen `disabled` gönderim sırasındaki
+    // kilidi ezmesin.
     <button
       type="submit"
+      {...props}
       disabled={pending || props.disabled}
       onClick={
         confirm
@@ -133,7 +136,6 @@ export function SubmitButton({
             }
           : props.onClick
       }
-      {...props}
       className={`rounded-brand px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTS[variant]} ${className}`}
     >
       {pending && pendingLabel ? pendingLabel : children}

@@ -17,9 +17,9 @@ type BulletinCardProps = {
  * indirme köşedeki ayrı düğmeyle yapılır. Bu, listedeki davranışla aynı.
  *
  * Konu kartta yalnızca bir kez yazılır: koyu kapak bülten numarasını
- * (plakayı) taşır, gövde konuyu. Kapak görseli PDF'ten üretilmiyor — bunun
- * için sunucuya poppler kurmak gerekirdi; tipografik kapak aynı işi
- * bağımlılık eklemeden yapıyor.
+ * (plakayı) taşır, gövde konuyu. PDF'in ilk sayfasını gösteren kapaklı kart
+ * ayrı bir bileşen (BulletinCoverCard) ve yalnızca "Yalnızca kart"
+ * görünümünde kullanılıyor; bu küçük kart "Liste ve kart" düzeni için.
  */
 export function BulletinCard({ bulletin, openLabel, showCategory = false }: BulletinCardProps) {
   return (

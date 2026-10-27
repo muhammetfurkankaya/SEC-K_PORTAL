@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { loadPdf } from "@/lib/pdfjs-client";
 
 /**
  * Yalnızca görüntüleme amaçlı PDF okuyucu.
@@ -12,11 +13,8 @@ import type { PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
  * etkileşimli not/form katmanı YOK. Kullanıcı yalnızca bakar, yakınlaştırır,
  * sayfalar arasında gezinir.
  *
- * pdf.js'in yardımcı dosyaları (worker, yazı tipleri, çözücüler) portalın
- * kendi adresinden gelir: public/pdfjs/ (scripts/pdfjs-kopyala.cjs).
+ * pdf.js'in yüklenmesi lib/pdfjs-client.ts'te.
  */
-
-const ASSETS = "/pdfjs/";
 
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 4;
@@ -70,20 +68,7 @@ export function PdfViewer({
 
     (async () => {
       try {
-        const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-        pdfjs.GlobalWorkerOptions.workerSrc = `${ASSETS}pdf.worker.min.mjs`;
-
-        const loading = pdfjs.getDocument({
-          url: src,
-          wasmUrl: `${ASSETS}wasm/`,
-          standardFontDataUrl: `${ASSETS}standard_fonts/`,
-          cMapUrl: `${ASSETS}cmaps/`,
-          cMapPacked: true,
-          iccUrl: `${ASSETS}iccs/`,
-          // Sunucu parçalı (Range) istek desteklemiyor; tek seferde iner.
-          disableRange: true,
-          enableXfa: false,
-        });
+        const loading = await loadPdf(src);
         task = loading;
         const loaded = await loading.promise;
         if (cancelled) {

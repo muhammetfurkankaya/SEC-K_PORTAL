@@ -2,9 +2,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { AdminHeading } from "@/components/admin/AdminHeading";
 import { BulletinTable } from "@/components/admin/BulletinTable";
+import { CoverBackfill } from "@/components/admin/CoverBackfill";
 import { Alert } from "@/components/ui/form";
 import { listAllBulletins } from "@/lib/db/queries/bulletins";
 import { listAllCategories } from "@/lib/db/queries/categories";
+import { coverExists } from "@/lib/uploads";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Bültenler" };
@@ -27,6 +29,12 @@ export default async function AdminBulletinsPage({ searchParams }: Props) {
   const bulletins = listAllBulletins();
   const categories = listAllCategories();
 
+  // Kapağı olmayan yayındaki bültenler (yayında olmayanın PDF'i dışarıya
+  // sunulmadığı için tarayıcı onu çizemez; yayına alınınca listeye girer).
+  const missingCovers = bulletins
+    .filter((bulletin) => bulletin.is_published && !coverExists(bulletin.file_path))
+    .map((bulletin) => ({ id: bulletin.id, label: bulletin.bulletin_no }));
+
   return (
     <>
       <AdminHeading
@@ -46,6 +54,8 @@ export default async function AdminBulletinsPage({ searchParams }: Props) {
           <Alert kind={status.kind}>{status.text}</Alert>
         </div>
       ) : null}
+
+      <CoverBackfill missing={missingCovers} />
 
       <BulletinTable bulletins={bulletins} categories={categories} />
     </>

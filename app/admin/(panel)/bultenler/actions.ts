@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { fail, succeed, zodFieldErrors, type ActionState } from "@/lib/action-state";
-import { UploadError, deletePdf, savePdf } from "@/lib/uploads";
+import { UploadError, deletePdf, saveCover, savePdf } from "@/lib/uploads";
 import { logAction } from "@/lib/db/queries/audit";
 import { getCategoryById } from "@/lib/db/queries/categories";
 import {
@@ -27,6 +27,21 @@ const MetaSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Yayım tarihini gün/ay/yıl olarak seçin."),
   is_published: z.coerce.boolean().optional(),
 });
+
+/**
+ * Formla gelen kapak görselini (PDF'in tarayıcıda çizilmiş ilk sayfası)
+ * kaydeder. Kapak isteğe bağlı: üretilemediyse ya da hatalıysa bülten yine
+ * kaydedilir, kartta tipografik kapak görünür.
+ */
+async function saveCoverFromForm(formData: FormData, pdfPath: string): Promise<void> {
+  const cover = formData.get("kapak");
+  if (!(cover instanceof File) || cover.size === 0) return;
+  try {
+    await saveCover(pdfPath, cover);
+  } catch (error) {
+    if (!(error instanceof UploadError)) throw error;
+  }
+}
 
 /** Portalın bültenle ilgili sayfalarını tazeler. */
 function revalidateBulletinPages(categorySlug?: string): void {
@@ -96,6 +111,8 @@ export async function createBulletinAction(
     throw error;
   }
 
+  await saveCoverFromForm(formData, saved.file_path);
+
   logAction(user, "bulten.olustur", {
     entity: "bulletin",
     entityId: bulletinId,
@@ -160,6 +177,7 @@ export async function updateBulletinAction(
     const oldPath = existing.file_path;
     replaceBulletinFile(id, saved);
     await deletePdf(oldPath);
+    await saveCoverFromForm(formData, saved.file_path);
   }
 
   logAction(user, "bulten.guncelle", {
@@ -221,4 +239,28 @@ export async function togglePublishAction(formData: FormData): Promise<void> {
 
   revalidateBulletinPages(existing.category_slug);
   redirect(`/admin/bultenler?durum=${next ? "yayinlandi" : "kaldirildi"}`);
+}
+
+/**
+ * Mevcut bir bültenin kapak görselini kaydeder — "Kapakları oluştur" düğmesi
+ * eksik kapakları tarayıcıda üretip tek tek buraya gönderir.
+ */
+export async function saveCoverAction(formData: FormData): Promise<ActionState> {
+  await requireUser();
+
+  const existing = getBulletin(Number(formData.get("id")));
+  if (!existing) return fail("Bülten bulunamadı.");
+
+  const cover = formData.get("kapak");
+  if (!(cover instanceof File)) return fail("Kapak görseli gelmedi.");
+
+  try {
+    await saveCover(existing.file_path, cover);
+  } catch (error) {
+    if (error instanceof UploadError) return fail(error.message);
+    throw error;
+  }
+
+  revalidateBulletinPages(existing.category_slug);
+  return succeed("Kapak kaydedildi.");
 }

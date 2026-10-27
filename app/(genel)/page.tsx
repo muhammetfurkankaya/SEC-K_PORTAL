@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BulletinCard } from "@/components/BulletinCard";
+import { BulletinCoverCard } from "@/components/BulletinCoverCard";
 import { BulletinSearch } from "@/components/BulletinSearch";
 import { PageHero } from "@/components/brand/PageHero";
 import { SectionTitle } from "@/components/brand/SectionTitle";
@@ -9,6 +10,7 @@ import { getSettings } from "@/lib/db/queries/settings";
 import { resolveHomeHero } from "@/lib/hero";
 import { alignClass, blockWidthClass, textClass } from "@/lib/appearance";
 import { formatDate, formatNumber } from "@/lib/format";
+import { coverExists, coverVersion } from "@/lib/uploads";
 
 // Bültenler ve anketler admin panelinden değiştiğinde ana sayfa güncel
 // görünmelidir; bu yüzden her istekte yeniden oluşturulur.
@@ -22,6 +24,14 @@ export default function HomePage() {
   // Kart alanı listenin yanına sığdığı kadar bülten gösterir; listenin
   // tamamını tekrar etmesi gerekmiyor.
   const cards = recent.slice(0, 4);
+
+  // "Yalnızca kart" görünümünde kartlar kapaklı (PDF'in ilk sayfası).
+  // Kapağı henüz üretilmemiş bültende kart yazılı kapağa düşer.
+  const coverCards = settings.home_list_mode === "kart";
+  const coverUrl = (bulletin: (typeof recent)[number]) =>
+    coverExists(bulletin.file_path)
+      ? `/api/kapak/${bulletin.id}?v=${coverVersion(bulletin.file_path)}`
+      : null;
 
   // Hero yüksekliği ayardan; kayıttaki değerler bileşenin boyut adlarına
   // çevriliyor.
@@ -159,7 +169,22 @@ export default function HomePage() {
                 </ul>
               ) : null}
 
-              {cardsVisible ? (
+              {coverCards ? (
+                <div
+                  className={`grid gap-4 ${
+                    settings.home_block_width === "dar" ? "" : "lg:grid-cols-2"
+                  }`}
+                >
+                  {recent.map((bulletin) => (
+                    <BulletinCoverCard
+                      key={bulletin.id}
+                      bulletin={bulletin}
+                      coverUrl={coverUrl(bulletin)}
+                      openLabel={settings.btn_open}
+                    />
+                  ))}
+                </div>
+              ) : cardsVisible ? (
                 <div className={`grid gap-3 sm:grid-cols-2 ${listVisible ? "" : "lg:grid-cols-4"}`}>
                   {(listVisible ? cards : recent).map((bulletin) => (
                     <BulletinCard

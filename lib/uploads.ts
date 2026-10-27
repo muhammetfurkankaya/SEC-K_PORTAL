@@ -71,6 +71,82 @@ export async function deletePdf(relativePath: string): Promise<void> {
   } catch {
     // Dosya zaten yok.
   }
+
+  // Kapak görseli PDF'e bağlı: PDF değiştirilince ya da silinince o da gider.
+  await deleteCover(relativePath);
+}
+
+// ————————————————————————————————————————————————
+// Bülten kapak görseli (PDF'in ilk sayfası)
+// ————————————————————————————————————————————————
+
+/**
+ * Kapak görseli için üst sınır. Görsel yönetim panelinde, tarayıcıda 480 px
+ * genişliğinde JPEG olarak üretilir ve ~40-80 KB gelir.
+ */
+export const MAX_COVER_BYTES = 1024 * 1024;
+
+/** Kapak görsellerinin UPLOADS_DIR altındaki klasörü. */
+export const COVER_DIR = "_kapak";
+
+const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
+/**
+ * PDF yolundan kapak yolunu türetir: `sec-k/<uuid>.pdf` → `_kapak/sec-k-<uuid>.jpg`.
+ *
+ * Veritabanında ayrı bir sütun yok: kapak, PDF'in rastgele adını taşıyor.
+ * PDF değiştirildiğinde yeni ad gelir ve eski kapak kendiliğinden geçersiz
+ * olur. Yol yalnızca veritabanındaki file_path'ten türetilir, istekten asla.
+ * Windows'ta path.join ters bölü kullandığı için iki ayırıcı da kabul edilir.
+ */
+export function coverPathFor(pdfPath: string): string | null {
+  const match = new RegExp(`^([a-z0-9-]+)[\\\\/](${UUID})\\.pdf$`, "i").exec(pdfPath);
+  if (!match) return null;
+  return `${COVER_DIR}/${match[1].toLowerCase()}-${match[2].toLowerCase()}.jpg`;
+}
+
+/** Kapak dosyasının mutlak yolu; türetilemezse ya da kök dışına çıkarsa null. */
+export function coverAbsolutePath(pdfPath: string): string | null {
+  const relative = coverPathFor(pdfPath);
+  if (!relative) return null;
+  const root = path.resolve(UPLOADS_DIR);
+  const absolute = path.resolve(root, ...relative.split("/"));
+  return absolute.startsWith(root + path.sep) ? absolute : null;
+}
+
+/** Kapak adresindeki sürüm: PDF'in rastgele adı (önbellek kırıcı). */
+export function coverVersion(pdfPath: string): string {
+  return /([0-9a-f-]{36})\.pdf$/i.exec(pdfPath)?.[1].toLowerCase() ?? "";
+}
+
+export function coverExists(pdfPath: string): boolean {
+  const absolute = coverAbsolutePath(pdfPath);
+  return absolute ? fs.existsSync(absolute) : false;
+}
+
+/** Kapak görselini kaydeder (varsa üzerine yazar). Yalnızca JPEG. */
+export async function saveCover(pdfPath: string, file: File): Promise<void> {
+  if (file.size === 0) throw new UploadError("Kapak görseli boş.");
+  if (file.size > MAX_COVER_BYTES) throw new UploadError("Kapak görseli çok büyük.");
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (sniffImageType(bytes) !== "jpg") throw new UploadError("Kapak görseli JPEG olmalı.");
+
+  const absolute = coverAbsolutePath(pdfPath);
+  if (!absolute) throw new UploadError("Kapak görseli kaydedilemedi.");
+
+  await fs.promises.mkdir(path.dirname(absolute), { recursive: true });
+  await fs.promises.writeFile(absolute, bytes);
+}
+
+export async function deleteCover(pdfPath: string): Promise<void> {
+  const absolute = coverAbsolutePath(pdfPath);
+  if (!absolute) return;
+  try {
+    await fs.promises.unlink(absolute);
+  } catch {
+    // Dosya zaten yok.
+  }
 }
 
 // ————————————————————————————————————————————————

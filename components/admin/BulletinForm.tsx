@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   Alert,
   Checkbox,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { IDLE, type ActionState } from "@/lib/action-state";
 import { formatFileSize } from "@/lib/format";
+import { renderCoverJpeg } from "@/lib/pdfjs-client";
 import type { BulletinWithCategory, CategoryWithCount } from "@/lib/types";
 
 type BulletinFormProps = {
@@ -30,26 +31,44 @@ type BulletinFormProps = {
  * düzenleme kipinde zorunlu olmaması (dosya değiştirilmek istenmezse boş
  * bırakılır).
  */
-export function BulletinForm({
-  categories,
-  bulletin,
-  action,
-  maxUploadBytes,
-}: BulletinFormProps) {
+export function BulletinForm({ categories, bulletin, action, maxUploadBytes }: BulletinFormProps) {
   const [state, formAction] = useActionState(action, IDLE);
   const isEdit = Boolean(bulletin);
+
+  // Kapak görseli: PDF seçilince ilk sayfası tarayıcıda küçük bir JPEG'e
+  // çevrilir ve formla birlikte gönderilir (sunucuda görüntü işleme yok).
+  const [cover, setCover] = useState<{ blob: Blob; url: string } | null>(null);
+  const [coverStatus, setCoverStatus] = useState<"bos" | "hazirlaniyor" | "hazir" | "hata">("bos");
+
+  useEffect(() => () => (cover ? URL.revokeObjectURL(cover.url) : undefined), [cover]);
+
+  async function handleFile(file: File | undefined): Promise<void> {
+    setCover(null);
+    if (!file) return setCoverStatus("bos");
+    setCoverStatus("hazirlaniyor");
+    try {
+      const blob = await renderCoverJpeg(await file.arrayBuffer());
+      setCover({ blob, url: URL.createObjectURL(blob) });
+      setCoverStatus("hazir");
+    } catch {
+      setCoverStatus("hata");
+    }
+  }
+
+  function submit(formData: FormData) {
+    if (cover) formData.set("kapak", cover.blob, "kapak.jpg");
+    return formAction(formData);
+  }
   const errors = state.fieldErrors ?? {};
 
   // Yeni bültende varsayılan tarih bugün olsun.
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={submit} className="space-y-5">
       {bulletin ? <input type="hidden" name="id" value={bulletin.id} /> : null}
 
-      {state.message ? (
-        <Alert kind={state.ok ? "success" : "error"}>{state.message}</Alert>
-      ) : null}
+      {state.message ? <Alert kind={state.ok ? "success" : "error"}>{state.message}</Alert> : null}
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Sekme" htmlFor="category_id" required hint="Bültenin görüneceği bölüm.">
@@ -109,12 +128,7 @@ export function BulletinForm({
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field
-          label="Yayım tarihi"
-          htmlFor="published_date"
-          required
-          hint={errors.published_date}
-        >
+        <Field label="Yayım tarihi" htmlFor="published_date" required hint={errors.published_date}>
           <TextInput
             id="published_date"
             name="published_date"
@@ -141,10 +155,31 @@ export function BulletinForm({
             type="file"
             accept="application/pdf,.pdf"
             required={!isEdit}
+            onChange={(event) => void handleFile(event.target.files?.[0])}
             className="file:mr-3 file:rounded-brand file:border-0 file:bg-tfs-dark file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
           />
         </Field>
       </div>
+
+      {coverStatus !== "bos" ? (
+        <div className="flex items-center gap-3 rounded-brand border border-tfs-grey bg-tfs-grey-20 p-3">
+          {cover ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- yerel önizleme */
+            <img
+              src={cover.url}
+              alt="Kapak önizlemesi"
+              className="h-24 w-auto border border-tfs-grey bg-white shadow-sm"
+            />
+          ) : null}
+          <p className="text-xs text-tfs-dark-80">
+            {coverStatus === "hazirlaniyor"
+              ? "Kapak görseli hazırlanıyor…"
+              : coverStatus === "hazir"
+                ? "Kapak görseli hazır — ana sayfadaki kartlarda PDF'in ilk sayfası olarak görünecek."
+                : "Kapak görseli üretilemedi; bülten yine kaydedilir, kartta yazılı kapak görünür."}
+          </p>
+        </div>
+      ) : null}
 
       {bulletin ? (
         <p className="rounded-brand bg-tfs-grey-20 px-3 py-2 text-xs text-tfs-dark-60">
@@ -168,7 +203,12 @@ export function BulletinForm({
       />
 
       <div className="flex flex-wrap items-center gap-3 border-t border-tfs-grey pt-4">
-        <SubmitButton pendingLabel={isEdit ? "Kaydediliyor…" : "Yükleniyor…"}>
+        {/* Kapak hazırlanırken (genelde bir saniyeden kısa) gönderilmesin;
+            yoksa bülten kapaksız kaydedilir. */}
+        <SubmitButton
+          pendingLabel={isEdit ? "Kaydediliyor…" : "Yükleniyor…"}
+          disabled={coverStatus === "hazirlaniyor"}
+        >
           {isEdit ? "Değişiklikleri kaydet" : "Bülteni yayımla"}
         </SubmitButton>
         <Link

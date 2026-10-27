@@ -162,6 +162,13 @@ Komut satırı erişiminiz varsa ek araçlar (`komutlar\OKU.txt`):
 | Örnek veri ekle | `nodejs.cmd komutlar\demo.cjs` |
 | Örnek veriyi sil | `nodejs.cmd komutlar\demo.cjs --temizle` |
 
+**Bülten kapak görselleri:** ana sayfada "Yalnızca kart" görünümü PDF'in ilk
+sayfasını kapak olarak gösterir. Kapak, bülten panelden yüklenirken
+tarayıcıda kendiliğinden üretilir. Komutla eklenen (ör. örnek veri) ya da bu
+özellikten önce yüklenmiş bültenler için **Yönetim → Bültenler → Kapakları
+oluştur** düğmesine bir kez basın. Kapaklar `data\uploads\_kapak\` altında
+durur; yedeğe `data` klasörüyle birlikte girer.
+
 ---
 
 ## Güvenlik
