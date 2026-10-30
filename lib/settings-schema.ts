@@ -604,30 +604,6 @@ export const SETTINGS = {
     label: "Kaç gün yeni sayılsın",
     help: "Bu süre içinde yayımlananlar rozet alır.",
   },
-  empty_home: {
-    kind: "text",
-    default: "Henüz bülten yayımlanmamış. Yönetim panelinden PDF yükleyerek başlayabilirsiniz.",
-    max: 240,
-    group: "metin",
-    section: "Boş liste mesajları",
-    label: "Ana sayfa",
-  },
-  empty_category: {
-    kind: "text",
-    default: "Bu bölümde henüz yayımlanmış bülten yok.",
-    max: 240,
-    group: "metin",
-    section: "Boş liste mesajları",
-    label: "Bülten sekmesi",
-  },
-  empty_surveys: {
-    kind: "text",
-    default: "Şu anda doldurulmaya açık anket bulunmuyor.",
-    max: 240,
-    group: "metin",
-    section: "Boş liste mesajları",
-    label: "Anketler sayfası",
-  },
 
   // ————— Punto ve renk —————
   // Yedi metin yuvası; her biri için boyut + renk. Sınıf karşılıkları
@@ -784,6 +760,17 @@ export const SETTINGS = {
   },
 
   // ————— Bülten görünümü —————
+  category_hero_height: {
+    kind: "enum",
+    default: "kisa",
+    control: "segment",
+    // "Tam ekran" bilinçli olarak yok: okuma ekranı sayfanın aşağısına itilirdi.
+    options: HERO_HEIGHT_OPTIONS.filter((option) => option.value !== "tam"),
+    group: "bulten",
+    span: "half",
+    label: "Bülten sekmelerinde görsel yüksekliği",
+    help: "Sekme sayfalarının başındaki görsel. Görsel, ana sayfadakiyle aynıdır.",
+  },
   default_sort: {
     kind: "enum",
     default: "tarih-yeni",

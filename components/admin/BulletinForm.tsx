@@ -13,13 +13,15 @@ import {
 } from "@/components/ui/form";
 import { IDLE, type ActionState } from "@/lib/action-state";
 import { formatFileSize } from "@/lib/format";
-import { renderCoverJpeg } from "@/lib/pdfjs-client";
+import { CoverPagePicker, type CoverStatus } from "@/components/admin/CoverPagePicker";
 import type { BulletinWithCategory, CategoryWithCount } from "@/lib/types";
 
 type BulletinFormProps = {
   categories: CategoryWithCount[];
   /** Doldurulmuşsa düzenleme kipinde çalışır. */
   bulletin?: BulletinWithCategory;
+  /** Düzenlemede mevcut kapak görselinin adresi (yoksa null). */
+  currentCoverUrl?: string | null;
   action: (previous: ActionState, formData: FormData) => Promise<ActionState>;
   maxUploadBytes: number;
 };
@@ -31,29 +33,41 @@ type BulletinFormProps = {
  * düzenleme kipinde zorunlu olmaması (dosya değiştirilmek istenmezse boş
  * bırakılır).
  */
-export function BulletinForm({ categories, bulletin, action, maxUploadBytes }: BulletinFormProps) {
+export function BulletinForm({
+  categories,
+  bulletin,
+  currentCoverUrl = null,
+  action,
+  maxUploadBytes,
+}: BulletinFormProps) {
   const [state, formAction] = useActionState(action, IDLE);
   const isEdit = Boolean(bulletin);
 
-  // Kapak görseli: PDF seçilince ilk sayfası tarayıcıda küçük bir JPEG'e
-  // çevrilir ve formla birlikte gönderilir (sunucuda görüntü işleme yok).
-  const [cover, setCover] = useState<{ blob: Blob; url: string } | null>(null);
-  const [coverStatus, setCoverStatus] = useState<"bos" | "hazirlaniyor" | "hazir" | "hata">("bos");
-
-  useEffect(() => () => (cover ? URL.revokeObjectURL(cover.url) : undefined), [cover]);
+  // Kapak görseli: PDF'in seçilen sayfası (varsayılan ilk) tarayıcıda küçük
+  // bir JPEG'e çevrilir ve formla birlikte gönderilir (sunucuda görüntü
+  // işleme yok). Kaynak: yeni seçilen dosya ya da düzenlemede mevcut PDF.
+  const [pdfSource, setPdfSource] = useState<ArrayBuffer | string | null>(null);
+  const [cover, setCover] = useState<{ blob: Blob; page: number } | null>(null);
+  const [coverStatus, setCoverStatus] = useState<CoverStatus | "bos">("bos");
 
   async function handleFile(file: File | undefined): Promise<void> {
     setCover(null);
-    if (!file) return setCoverStatus("bos");
-    setCoverStatus("hazirlaniyor");
-    try {
-      const blob = await renderCoverJpeg(await file.arrayBuffer());
-      setCover({ blob, url: URL.createObjectURL(blob) });
-      setCoverStatus("hazir");
-    } catch {
-      setCoverStatus("hata");
+    if (!file) {
+      setPdfSource(null);
+      setCoverStatus("bos");
+      return;
     }
+    setCoverStatus("hazirlaniyor");
+    setPdfSource(await file.arrayBuffer());
   }
+
+  // Kayıt başarılı olunca seçici kapanır; aynı kapak bir daha gönderilmez.
+  useEffect(() => {
+    if (!state.ok) return;
+    setPdfSource(null);
+    setCover(null);
+    setCoverStatus("bos");
+  }, [state]);
 
   function submit(formData: FormData) {
     if (cover) formData.set("kapak", cover.blob, "kapak.jpg");
@@ -161,24 +175,36 @@ export function BulletinForm({ categories, bulletin, action, maxUploadBytes }: B
         </Field>
       </div>
 
-      {coverStatus !== "bos" ? (
+      {isEdit && !pdfSource ? (
         <div className="flex items-center gap-3 rounded-brand border border-tfs-grey bg-tfs-grey-20 p-3">
-          {cover ? (
-            /* eslint-disable-next-line @next/next/no-img-element -- yerel önizleme */
+          {currentCoverUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- küçük kapak görseli */
             <img
-              src={cover.url}
-              alt="Kapak önizlemesi"
-              className="h-24 w-auto border border-tfs-grey bg-white shadow-sm"
+              src={currentCoverUrl}
+              alt="Mevcut kapak"
+              className="aspect-[1/1.414] w-16 border border-tfs-grey bg-white object-cover object-top shadow-sm"
             />
           ) : null}
-          <p className="text-xs text-tfs-dark-80">
-            {coverStatus === "hazirlaniyor"
-              ? "Kapak görseli hazırlanıyor…"
-              : coverStatus === "hazir"
-                ? "Kapak görseli hazır — ana sayfadaki kartlarda PDF'in ilk sayfası olarak görünecek."
-                : "Kapak görseli üretilemedi; bülten yine kaydedilir, kartta yazılı kapak görünür."}
-          </p>
+          <div className="min-w-0 flex-1 text-xs text-tfs-dark-80">
+            <p className="font-semibold text-tfs-dark">Kapak görseli</p>
+            <p>
+              {currentCoverUrl
+                ? "Ana sayfadaki kapaklı kartta bu görsel görünüyor."
+                : "Bu bültenin kapak görseli yok; kartta yazılı kapak görünüyor."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => bulletin && setPdfSource(`/api/dosya/${bulletin.id}`)}
+            className="shrink-0 rounded-brand border border-tfs-grey bg-white px-3 py-1.5 text-xs font-semibold text-tfs-dark transition-colors hover:border-tfs-red hover:text-tfs-red"
+          >
+            {currentCoverUrl ? "Kapak sayfasını değiştir" : "Kapak sayfası seç"}
+          </button>
         </div>
+      ) : null}
+
+      {pdfSource ? (
+        <CoverPagePicker source={pdfSource} onCover={setCover} onStatus={setCoverStatus} />
       ) : null}
 
       {bulletin ? (

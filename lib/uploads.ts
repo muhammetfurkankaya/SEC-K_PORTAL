@@ -114,9 +114,20 @@ export function coverAbsolutePath(pdfPath: string): string | null {
   return absolute.startsWith(root + path.sep) ? absolute : null;
 }
 
-/** Kapak adresindeki sürüm: PDF'in rastgele adı (önbellek kırıcı). */
+/**
+ * Kapak adresindeki sürüm (önbellek kırıcı): PDF'in rastgele adı + kapak
+ * dosyasının değişme zamanı. Kapak sayfası PDF değişmeden de
+ * değiştirilebildiği için yalnızca PDF adı yetmiyor — yoksa tarayıcılar
+ * "değişmez" diye önbelleğe aldıkları eski kapağı göstermeye devam ederdi.
+ */
 export function coverVersion(pdfPath: string): string {
-  return /([0-9a-f-]{36})\.pdf$/i.exec(pdfPath)?.[1].toLowerCase() ?? "";
+  const pdfId = /([0-9a-f-]{36})\.pdf$/i.exec(pdfPath)?.[1].toLowerCase() ?? "";
+  const absolute = coverAbsolutePath(pdfPath);
+  try {
+    return absolute ? `${pdfId}-${Math.round(fs.statSync(absolute).mtimeMs)}` : pdfId;
+  } catch {
+    return pdfId;
+  }
 }
 
 export function coverExists(pdfPath: string): boolean {

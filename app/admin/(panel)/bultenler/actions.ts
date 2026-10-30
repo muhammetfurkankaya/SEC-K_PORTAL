@@ -178,6 +178,9 @@ export async function updateBulletinAction(
     replaceBulletinFile(id, saved);
     await deletePdf(oldPath);
     await saveCoverFromForm(formData, saved.file_path);
+  } else {
+    // PDF aynı, yalnızca kapak sayfası değiştirilmiş olabilir.
+    await saveCoverFromForm(formData, existing.file_path);
   }
 
   logAction(user, "bulten.guncelle", {

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { NextResponse } from "next/server";
-import { getPublishedBulletin } from "@/lib/db/queries/bulletins";
+import { getSessionUser } from "@/lib/auth";
+import { getBulletin, getPublishedBulletin } from "@/lib/db/queries/bulletins";
 import { coverAbsolutePath, coverVersion } from "@/lib/uploads";
 
 /**
@@ -9,7 +10,7 @@ import { coverAbsolutePath, coverVersion } from "@/lib/uploads";
  *   /api/kapak/12?v=<pdf-adı>
  *
  * Dosya yolu istekten DEĞİL, yalnızca veritabanındaki file_path'ten türetilir;
- * yayında olmayan bültenin kapağı sunulmaz. `v` güncel PDF'in adıyla
+ * yayında olmayan bültenin kapağı yalnızca yöneticiye sunulur. `v` güncel PDF'in adıyla
  * eşleşiyorsa adres içerikle birebir bağlı demektir ve görsel uzun süre
  * önbelleğe alınabilir: PDF değişirse adres de değişir.
  */
@@ -20,7 +21,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return new NextResponse("Geçersiz bülten numarası", { status: 400 });
   }
 
-  const bulletin = getPublishedBulletin(bulletinId);
+  // Yayında olmayanın kapağını yalnızca oturum açmış yönetici görebilir.
+  const bulletin =
+    getPublishedBulletin(bulletinId) ??
+    ((await getSessionUser()) ? getBulletin(bulletinId) : undefined);
   const absolute = bulletin ? coverAbsolutePath(bulletin.file_path) : null;
   if (!bulletin || !absolute) return new NextResponse("Bulunamadı", { status: 404 });
 
@@ -38,7 +42,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     headers: {
       "Content-Type": "image/jpeg",
       "Content-Length": String(file.length),
-      "Cache-Control": pinned ? "public, max-age=31536000, immutable" : "public, max-age=300",
+      // Yayında olmayanın kapağı (yalnızca yönetici) paylaşılan önbelleğe girmez.
+      "Cache-Control": !bulletin.is_published
+        ? "private, no-store"
+        : pinned
+          ? "public, max-age=31536000, immutable"
+          : "public, max-age=300",
       ETag: `"${version}"`,
       "X-Content-Type-Options": "nosniff",
     },

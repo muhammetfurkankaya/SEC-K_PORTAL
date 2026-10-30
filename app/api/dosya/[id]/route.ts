@@ -1,7 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { getPublishedBulletin, incrementDownloadCount } from "@/lib/db/queries/bulletins";
+import { getSessionUser } from "@/lib/auth";
+import {
+  getBulletin,
+  getPublishedBulletin,
+  incrementDownloadCount,
+} from "@/lib/db/queries/bulletins";
 import { UPLOADS_DIR } from "@/lib/paths";
 
 /**
@@ -14,10 +19,7 @@ import { UPLOADS_DIR } from "@/lib/paths";
  * indirme adını bültenin konusundan üretebiliyor, yayından kaldırılmış
  * bültenleri engelleyebiliyor ve indirme sayacını tutabiliyoruz.
  */
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const bulletinId = Number(id);
 
@@ -25,7 +27,11 @@ export async function GET(
     return new NextResponse("Geçersiz bülten numarası", { status: 400 });
   }
 
-  const bulletin = getPublishedBulletin(bulletinId);
+  // Yayında olmayan bülteni yalnızca oturum açmış yönetici görebilir
+  // (düzenleme ekranında kapak sayfası seçmek için).
+  const bulletin =
+    getPublishedBulletin(bulletinId) ??
+    ((await getSessionUser()) ? getBulletin(bulletinId) : undefined);
   if (!bulletin) {
     return new NextResponse("Bülten bulunamadı", { status: 404 });
   }

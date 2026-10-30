@@ -213,6 +213,26 @@ export function textClassFor(slot: TextSlot, size: string, color: string, onDark
     .join(" ");
 }
 
+/**
+ * Punto ve rengi AYRI verir; renk "Varsayılan" ise boş.
+ *
+ * Sekmeler gibi durum renkleri olan (etkin/pasif/üzerine gelince) yerlerde
+ * gerekli: seçilen renk durum rengiyle aynı elemana birlikte verilirse CSS
+ * sırasında biri kaybeder. Çağıran, renk seçilmişse durum rengini hiç
+ * yazmaz.
+ */
+export function textPartsFor(
+  slot: TextSlot,
+  size: string,
+  color: string,
+  onDark = false,
+): { size: string; color: string } {
+  return {
+    size: pick(SIZE_CLASS[slot], size, "normal"),
+    color: pick(onDark ? COLOR_CLASS_ON_DARK : COLOR_CLASS, color, "otomatik"),
+  };
+}
+
 /** Ayarlardan okuyan sarmalayıcı — sayfalar bunu kullanır. */
 export function textClass(
   settings: TypedSettings,

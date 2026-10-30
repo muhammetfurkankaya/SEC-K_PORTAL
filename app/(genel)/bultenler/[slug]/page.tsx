@@ -6,6 +6,8 @@ import { textClass } from "@/lib/appearance";
 import { getCategoryBySlug } from "@/lib/db/queries/categories";
 import { listBulletinsByCategory } from "@/lib/db/queries/bulletins";
 import { getSettings } from "@/lib/db/queries/settings";
+import { resolveHomeHero } from "@/lib/hero";
+import { EMPTY_MESSAGES } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   if (!category) notFound();
 
   const settings = getSettings();
+  const hero = resolveHomeHero(settings);
+  const heroHeight =
+    settings.category_hero_height === "orta" || settings.category_hero_height === "yuksek"
+      ? settings.category_hero_height
+      : "kisa";
   const bulletins = listBulletinsByCategory(category.id);
 
   // "Yeni" etiketi için tek tarih kaynağı (hidrasyon uyuşmazlığını önler).
@@ -42,17 +49,23 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   return (
     <>
-      {/* Fotoğraf yalnızca ana sayfada; sekmeler sade bantla çalışır.
-          Başlığın üstündeki "Bültenler" etiketi kaldırıldı: sekme adı zaten
-          "… Bültenleri" diyor, iki kez yazmanın bilgi değeri yoktu. */}
+      {/* Ana sayfanın görseli sekmelerde de: aynı görsel, aynı kadraj ve
+          perde; üst menü onun üzerinde saydam durur (lib/routes.ts).
+          Yükseklik ayrı ayarlanır — okuma ekranı aşağı itilmesin. */}
       <PageHero
-        tone="flat"
+        size={({ kisa: "sm", orta: "md", yuksek: "lg" } as const)[heroHeight]}
+        align={settings.hero_align === "orta" ? "orta" : "sol"}
         title={category.name}
         eyebrow={settings.page_category_eyebrow}
         eyebrowPlace={settings.page_category_eyebrow_pos}
-        titleClass={textClass(settings, "page_title")}
-        eyebrowClass={textClass(settings, "page_eyebrow")}
+        titleClass={textClass(settings, "page_title", { onDark: true })}
+        eyebrowClass={textClass(settings, "page_eyebrow", { onDark: true })}
         description={category.description}
+        imageSrc={hero.imageSrc}
+        blurDataUrl={hero.blurDataUrl}
+        scrim={hero.scrim}
+        focal={hero.focal}
+        fadeTo="surface"
       />
       <BulletinReader
         bulletins={bulletins}
@@ -68,7 +81,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         defaultSort={settings.defaultSort}
         todayIso={todayIso}
         initialSelectedId={initialSelectedId}
-        emptyNote={settings.empty_category}
+        emptyNote={EMPTY_MESSAGES.category}
       />
     </>
   );

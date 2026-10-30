@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { Alert, SubmitButton } from "@/components/ui/form";
+import { Alert, SubmitButton, submitWithoutReset } from "@/components/ui/form";
 import { IDLE } from "@/lib/action-state";
 import {
   SETTINGS,
@@ -51,7 +51,7 @@ export function PortalSettingsForm({
   /** Alt bilgi/logo önizlemesi için beyaz logonun adresi. */
   logoSrc: string | null;
 }) {
-  const [state, action] = useActionState(saveSettingsAction, IDLE);
+  const [state, action, pending] = useActionState(saveSettingsAction, IDLE);
   const [activeGroup, setActiveGroup] = useState<SettingGroupId>(SETTING_GROUPS[0].id);
   const errors = state.fieldErrors ?? {};
 
@@ -94,7 +94,7 @@ export function PortalSettingsForm({
   }
 
   return (
-    <form action={action}>
+    <form onSubmit={submitWithoutReset(action)}>
       {/* Sunucuya hangi alanların gönderildiğini bildirir. */}
       <input type="hidden" name="__alanlar" value={renderedKeys.join(",")} />
 
@@ -170,7 +170,9 @@ export function PortalSettingsForm({
 
       {/* Yapışkan: 70 alanlık bir formda kaydet düğmesi hep erişilebilir olmalı. */}
       <div className="sticky bottom-0 -mx-4 mt-6 flex flex-wrap items-center gap-3 border-t border-tfs-grey bg-white px-4 py-3 sm:-mx-5 sm:px-5">
-        <SubmitButton pendingLabel="Kaydediliyor…">Ayarları kaydet</SubmitButton>
+        <SubmitButton pending={pending} pendingLabel="Kaydediliyor…">
+          Ayarları kaydet
+        </SubmitButton>
         <span className="text-xs font-light text-tfs-dark-60">
           Değişiklikler kaydettiğiniz anda portalda geçerli olur.
         </span>

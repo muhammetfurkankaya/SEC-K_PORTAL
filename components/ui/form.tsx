@@ -1,5 +1,6 @@
 "use client";
 
+import { startTransition } from "react";
 import { useFormStatus } from "react-dom";
 
 /**
@@ -8,6 +9,28 @@ import { useFormStatus } from "react-dom";
  * Tek yerde toplanmaları, alan görünümünün tüm ekranlarda aynı kalmasını
  * ve marka renklerinin (odak halkası #CE2028) tutarlı uygulanmasını sağlar.
  */
+
+/**
+ * Formu React'ın otomatik sıfırlaması OLMADAN gönderir.
+ *
+ * React 19, `<form action={...}>` başarıyla gönderilince formu sıfırlıyor.
+ * Kontrollü seçim düğmelerinde (canlı önizlemeli punto/renk/konum) bu,
+ * işaretleri ilk açılıştaki değere geri atıyordu: ekranda "Normal" görünüyor,
+ * tekrar kaydedilince eski değer veritabanına geri yazılıyordu. `onSubmit`
+ * ile gönderilen formda sıfırlama hiç devreye girmez.
+ *
+ * Kullanım: `<form onSubmit={submitWithoutReset(action)}>` ve gönder
+ * düğmesine `pending` (useActionState'in üçüncü değeri) — `useFormStatus`
+ * bu yolla gönderilen formu izlemez.
+ */
+export function submitWithoutReset(dispatch: (formData: FormData) => void) {
+  return (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const formData = new FormData(event.currentTarget, submitter);
+    startTransition(() => dispatch(formData));
+  };
+}
 
 const INPUT_CLASS =
   "w-full rounded-brand border border-line bg-surface px-3 py-2 text-sm text-ink " +
@@ -113,14 +136,18 @@ export function SubmitButton({
   pendingLabel,
   confirm,
   className = "",
+  pending: pendingProp,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   pendingLabel?: string;
+  /** `submitWithoutReset` ile gönderilen formlarda bekleme durumu. */
+  pending?: boolean;
   /** Doldurulmuşsa tıklamada onay penceresi gösterir. */
   confirm?: string;
 }) {
-  const { pending } = useFormStatus();
+  const status = useFormStatus();
+  const pending = pendingProp ?? status.pending;
 
   return (
     // `props` önce yayılıyor: dışarıdan verilen `disabled` gönderim sırasındaki

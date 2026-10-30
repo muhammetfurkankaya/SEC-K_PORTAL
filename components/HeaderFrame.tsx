@@ -2,31 +2,29 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { isPhotoRoute } from "@/lib/routes";
 
 /**
  * Üst bandın çerçevesi.
  *
- * Ana sayfada (tam ekran hero açıkken) logo şeridi ve sekmeler fotoğrafın
- * ÜZERİNDE saydam durur; diğer sayfalarda bugünkü koyu şerit + beyaz sekme
- * çubuğu. Yerleşim sunucuda çizildiği ve yolu bilmediği için bu karar
+ * Fotoğraflı sayfalarda (ana sayfa, bülten sekmeleri — lib/routes.ts) logo
+ * şeridi ve sekmeler fotoğrafın ÜZERİNDE saydam durur; diğer sayfalarda koyu
+ * şerit + beyaz sekme çubuğu. Yerleşim sunucuda çizildiği ve yolu bilmediği için bu karar
  * burada, istemcide veriliyor.
  *
  * Duyuru şeridi saydam düzende en üste alınıyor: fotoğrafın üzerinde
  * değil, akışta kalsın ki okunurluğu fotoğrafa bağlı olmasın.
  */
 export function HeaderFrame({
-  overlayOnHome,
   bar,
   nav,
   announcement,
 }: {
-  overlayOnHome: boolean;
   bar: ReactNode;
   nav: ReactNode;
   announcement: ReactNode;
 }) {
-  const pathname = usePathname();
-  const overlay = overlayOnHome && pathname === "/";
+  const overlay = isPhotoRoute(usePathname());
 
   if (!overlay) {
     return (

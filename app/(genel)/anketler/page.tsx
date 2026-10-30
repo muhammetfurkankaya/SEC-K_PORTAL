@@ -6,6 +6,7 @@ import { textClass } from "@/lib/appearance";
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
 import { formatDate } from "@/lib/format";
+import { EMPTY_MESSAGES } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Anketler" };
@@ -33,7 +34,7 @@ export default function SurveysPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {surveys.length === 0 ? (
           <p className="rounded-brand border border-dashed border-line bg-surface-2 px-4 py-12 text-center text-sm font-light text-ink-faint">
-            {settings.empty_surveys}
+            {EMPTY_MESSAGES.surveys}
           </p>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

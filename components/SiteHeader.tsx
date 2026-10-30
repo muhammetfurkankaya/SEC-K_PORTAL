@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { listActiveCategories } from "@/lib/db/queries/categories";
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
-import { navAlignClass, textClass } from "@/lib/appearance";
+import { navAlignClass, textPartsFor } from "@/lib/appearance";
 
 /**
  * Portalın üst bandı, sekmeleri ve duyuru şeridi.
@@ -36,12 +36,11 @@ export function SiteHeader() {
     });
   }
 
-  // Tam ekran hero'da sekmeler fotoğrafın üzerinde duruyor (HeaderFrame).
-  const overlayOnHome = settings.hero_height === "tam";
+  const nav = textPartsFor("nav", settings.type_nav_size, settings.type_nav_color);
+  const navOnDark = textPartsFor("nav", settings.type_nav_size, settings.type_nav_color, true);
 
   return (
     <HeaderFrame
-      overlayOnHome={overlayOnHome}
       bar={
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
           {/* Logo yanındaki yazı varsayılan olarak KAPALI: aynı ad hero
@@ -62,7 +61,8 @@ export function SiteHeader() {
             {settings.theme_toggle_visible ? <ThemeToggle /> : null}
             <Link
               href="/admin"
-              className="rounded-brand border border-tfs-dark-80 px-3 py-1.5 text-xs font-semibold tracking-wide text-tfs-grey uppercase transition-colors hover:border-accent hover:text-white"
+              // Hem koyu şeritte hem fotoğrafın üzerinde okunan beyaz çerçeve.
+              className="rounded-brand border border-white/35 px-3 py-1.5 text-xs font-semibold tracking-wide text-white uppercase transition-colors hover:border-accent hover:bg-tfs-red"
             >
               {settings.nav_admin_label}
             </Link>
@@ -72,10 +72,10 @@ export function SiteHeader() {
       nav={
         <SiteNav
           items={items}
-          linkClass={textClass(settings, "nav")}
-          linkClassOnDark={textClass(settings, "nav", { onDark: true })}
+          sizeClass={nav.size}
+          colorClass={nav.color}
+          colorClassOnDark={navOnDark.color}
           alignClass={navAlignClass(settings.nav_align)}
-          overlayOnHome={overlayOnHome}
         />
       }
       announcement={

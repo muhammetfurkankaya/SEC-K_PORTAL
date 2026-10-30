@@ -26,6 +26,7 @@ describe("bülten kapak görseli", () => {
     const expected = "_kapak/sec-k-7fc8060c-04d4-4192-b25e-786cbb2bf2d1.jpg";
     assert.equal(up.coverPathFor(PDF), expected);
     assert.equal(up.coverPathFor(PDF.replace("/", "\\")), expected);
+    // Kapak yokken sürüm yalnızca PDF'in adı.
     assert.equal(up.coverVersion(PDF), "7fc8060c-04d4-4192-b25e-786cbb2bf2d1");
   });
 
@@ -52,6 +53,15 @@ describe("bülten kapak görseli", () => {
     big.set(JPEG);
     await assert.rejects(up.saveCover(PDF, file(big)), up.UploadError);
     assert.equal(up.coverExists(PDF), false);
+  });
+
+  test("kapak değişince adres sürümü de değişir", async () => {
+    await up.saveCover(PDF, file(JPEG));
+    const first = up.coverVersion(PDF);
+    assert.match(first, /^7fc8060c-04d4-4192-b25e-786cbb2bf2d1-\d+$/);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await up.saveCover(PDF, file(JPEG));
+    assert.notEqual(up.coverVersion(PDF), first);
   });
 
   test("kaydedilen kapak PDF silinince o da silinir", async () => {

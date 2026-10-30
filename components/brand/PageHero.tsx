@@ -5,6 +5,12 @@ export type HeroSize = "sm" | "md" | "lg" | "full";
 export type EyebrowPlace = "ustte" | "altta" | "gizli";
 
 type PageHeroProps = {
+  /**
+   * Hero'nun altı hangi renge aksın: arama bandının koyusuna ("deep") ya da
+   * sayfa zeminine ("surface", gece/gündüz temasına uyar). Kırmızı ayırıcı
+   * çizginin yerine yumuşak geçiş.
+   */
+  fadeTo?: "deep" | "surface";
   title: string;
   /** Başlığın üstünde ya da altında duran küçük etiket. */
   eyebrow?: string | null;
@@ -31,10 +37,17 @@ type PageHeroProps = {
   children?: ReactNode;
 };
 
+/**
+ * Yükseklik kademeleri.
+ *
+ * Fotoğraflı hero'nun üstünde saydam menü duruyor (~7.5rem, HeaderFrame);
+ * kademeler bu payı ve alttaki geçiş gradyanını içeriyor, yazı ikisinin
+ * arasında kalıyor.
+ */
 const MIN_HEIGHT: Record<HeroSize, string> = {
-  sm: "min-h-[13rem] sm:min-h-[15rem]",
-  md: "min-h-[17rem] sm:min-h-[20rem] lg:min-h-[23rem]",
-  lg: "min-h-[20rem] sm:min-h-[24rem] lg:min-h-[28rem]",
+  sm: "min-h-[21rem] sm:min-h-[23rem]",
+  md: "min-h-[25rem] sm:min-h-[28rem] lg:min-h-[31rem]",
+  lg: "min-h-[29rem] sm:min-h-[33rem] lg:min-h-[37rem]",
   // Görselin kendi oranı (16:9): masaüstünde fotoğraf kırpılmadan bütünüyle
   // görünür. Dar ekranda bu oran başlığa yetmeyeceği için sabit bir yükseklik
   // var; orada fotoğraf yanlardan kırpılır. (Oran ve alt sınır aynı anda
@@ -83,6 +96,7 @@ export function PageHero({
   blurDataUrl,
   scrim = "normal",
   focal = "orta",
+  fadeTo = "surface",
   children,
 }: PageHeroProps) {
   const resolvedTone: HeroTone = tone ?? (imageSrc ? "photo" : "brand");
@@ -103,9 +117,9 @@ export function PageHero({
   }
 
   const centered = align === "orta";
-  // Tam ekran hero'da üst menü fotoğrafın üzerinde saydam duruyor
-  // (SiteHeader); metin bloğu dikeyde ortalanıyor ve menünün altında
-  // kalmasın diye üstten boşluk bırakılıyor.
+  // Üst menü fotoğrafın üzerinde saydam duruyor (HeaderFrame); metin
+  // menünün altında kalmasın diye üstten boşluk bırakılıyor. Tam ekranda
+  // metin dikeyde ortalanıyor, diğer kademelerde alta yaslı.
   const full = size === "full";
   const showEyebrow = Boolean(eyebrow) && eyebrowPlace !== "gizli";
 
@@ -152,6 +166,10 @@ export function PageHero({
         <div aria-hidden="true" className="hero-brand absolute inset-0" />
       )}
 
+      {/* Menünün okunması için üstte ayrı bir koyu geçiş — fotoğrafsız
+          gradyanda da (orada da menü aynı yerde). */}
+      <div aria-hidden="true" className="hero-scrim-top absolute inset-0" />
+
       {resolvedTone === "photo" ? (
         <div
           aria-hidden="true"
@@ -170,8 +188,8 @@ export function PageHero({
       <div
         className={`relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8 ${
           full
-            ? "justify-center pt-40 pb-16 sm:pt-44"
-            : `justify-end pt-24 pb-10 sm:pt-32 sm:pb-14 ${MIN_HEIGHT[size]}`
+            ? "justify-center pt-40 pb-24 sm:pt-44"
+            : `justify-end pt-36 pb-20 sm:pt-40 sm:pb-24 ${MIN_HEIGHT[size]}`
         } ${centered ? "items-center text-center" : ""}`}
       >
         {eyebrowPlace === "ustte" ? eyebrowNode : null}
@@ -207,7 +225,14 @@ export function PageHero({
         ) : null}
       </div>
 
-      <div aria-hidden="true" className="brand-seam absolute inset-x-0 bottom-0" />
+      {/* Alt kenar: sert bir çizgi yerine bir sonraki bandın rengine akış.
+          Yazı bu geçişin üstünde kalıyor (alt boşluk geçişten büyük). */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-b from-transparent sm:h-24 ${
+          fadeTo === "deep" ? "to-tfs-deep" : "to-surface"
+        }`}
+      />
     </section>
   );
 }

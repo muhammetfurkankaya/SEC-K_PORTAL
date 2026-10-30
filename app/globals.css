@@ -367,6 +367,18 @@
     );
 }
 
+/* Saydam menünün arkası: fotoğrafın en üstü, menü yüksekliği boyunca
+   koyulaşıyor. Uzunluklar sabit (rem) — menü her hero yüksekliğinde aynı. */
+@utility hero-scrim-top {
+  background: linear-gradient(
+    to bottom,
+    rgb(18 24 29 / 0.78) 0,
+    rgb(18 24 29 / 0.5) 4.5rem,
+    rgb(18 24 29 / 0.22) 8rem,
+    rgb(18 24 29 / 0) 13rem
+  );
+}
+
 /* Fotoğraf yokken: kurumsal koyu + sol üstten kırmızı, sağ alttan çok
    hafif yeşil bir soluk. Yeni renk girmiyor; ikisi de paletten. */
 @utility hero-brand {
@@ -382,6 +394,14 @@
   text-shadow:
     0 1px 2px rgb(18 24 29 / 0.55),
     0 2px 12px rgb(18 24 29 / 0.35);
+}
+
+/* Fotoğrafın üzerindeki küçük menü yazıları için: ince yazı, büyük başlıktan
+   daha çok desteğe ihtiyaç duyuyor. */
+@utility hero-ink-strong {
+  text-shadow:
+    0 1px 2px rgb(18 24 29 / 0.8),
+    0 1px 10px rgb(18 24 29 / 0.55);
 }
 
 @layer base {

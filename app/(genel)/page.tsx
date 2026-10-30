@@ -11,6 +11,7 @@ import { resolveHomeHero } from "@/lib/hero";
 import { alignClass, blockWidthClass, textClass } from "@/lib/appearance";
 import { formatDate, formatNumber } from "@/lib/format";
 import { coverExists, coverVersion } from "@/lib/uploads";
+import { EMPTY_MESSAGES } from "@/lib/messages";
 
 // Bültenler ve anketler admin panelinden değiştiğinde ana sayfa güncel
 // görünmelidir; bu yüzden her istekte yeniden oluşturulur.
@@ -81,6 +82,7 @@ export default function HomePage() {
         blurDataUrl={hero.blurDataUrl}
         scrim={hero.scrim}
         focal={hero.focal}
+        fadeTo={settings.show_search_band ? "deep" : "surface"}
       />
 
       {/* ————————————— Koyu arama bandı —————————————
@@ -137,7 +139,7 @@ export default function HomePage() {
 
           {recent.length === 0 ? (
             <p className="rounded-brand border border-dashed border-line bg-surface-2 px-4 py-10 text-center text-sm font-light text-ink-faint">
-              {settings.empty_home}
+              {EMPTY_MESSAGES.home}
             </p>
           ) : (
             /* Solda tam liste, sağda en yenilerin kartları. Liste taramak,

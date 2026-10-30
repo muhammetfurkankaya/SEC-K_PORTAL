@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { Alert, Field, SubmitButton, TextInput } from "@/components/ui/form";
 import { IDLE, type ActionState } from "@/lib/action-state";
 import { resetSettingsAction } from "./actions";
@@ -8,6 +8,12 @@ import { resetSettingsAction } from "./actions";
 /** Ayarları varsayılana döndürme — ayrı form, kazara gönderilmesin. */
 export function ResetSettingsForm() {
   const [state, action] = useActionState<ActionState, FormData>(() => resetSettingsAction(), IDLE);
+
+  // Büyük ayar formu canlı önizleme için kendi durumunu tutuyor; sıfırlamadan
+  // sonra varsayılanları göstermesi için sayfa baştan yüklenir.
+  useEffect(() => {
+    if (state.ok) window.location.reload();
+  }, [state]);
 
   return (
     <form action={action} className="space-y-3">

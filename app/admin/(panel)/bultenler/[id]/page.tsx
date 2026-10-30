@@ -6,7 +6,7 @@ import { updateBulletinAction } from "../actions";
 import { getBulletin } from "@/lib/db/queries/bulletins";
 import { listAllCategories } from "@/lib/db/queries/categories";
 import { formatNumber } from "@/lib/format";
-import { MAX_UPLOAD_BYTES } from "@/lib/uploads";
+import { MAX_UPLOAD_BYTES, coverExists, coverVersion } from "@/lib/uploads";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Bülteni Düzenle" };
@@ -19,6 +19,9 @@ export default async function EditBulletinPage({ params }: Props) {
   if (!bulletin) notFound();
 
   const categories = listAllCategories();
+  const currentCoverUrl = coverExists(bulletin.file_path)
+    ? `/api/kapak/${bulletin.id}?v=${coverVersion(bulletin.file_path)}`
+    : null;
 
   return (
     <>
@@ -31,6 +34,7 @@ export default async function EditBulletinPage({ params }: Props) {
         <BulletinForm
           categories={categories}
           bulletin={bulletin}
+          currentCoverUrl={currentCoverUrl}
           action={updateBulletinAction}
           maxUploadBytes={MAX_UPLOAD_BYTES}
         />

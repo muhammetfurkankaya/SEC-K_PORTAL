@@ -120,12 +120,6 @@ export const TEXT_CARDS: readonly TextCard[] = [
     ],
   },
   {
-    id: "bos-liste",
-    title: "Boş liste mesajları",
-    where: "Gösterilecek kayıt olmadığında",
-    fields: ["empty_home", "empty_category", "empty_surveys"],
-  },
-  {
     id: "alt-bilgi",
     title: "Alt bilgi ve logo",
     where: "Sayfanın en altı ve logonun yanı",

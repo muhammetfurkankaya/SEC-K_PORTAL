@@ -10,6 +10,7 @@ import {
   Segmented,
   SizeChoice,
   SubmitButton,
+  submitWithoutReset,
 } from "@/components/ui/form";
 import { IDLE } from "@/lib/action-state";
 import { navAlignClass, textClassFor } from "@/lib/appearance";
@@ -34,7 +35,7 @@ export function NavAppearancePanel({
   labels: string[];
   initial: Record<(typeof KEYS)[number], string>;
 }) {
-  const [state, action] = useActionState(saveSettingsAction, IDLE);
+  const [state, action, pending] = useActionState(saveSettingsAction, IDLE);
   const [values, setValues] = useState(initial);
 
   function set(key: (typeof KEYS)[number], value: string): void {
@@ -42,7 +43,10 @@ export function NavAppearancePanel({
   }
 
   return (
-    <form action={action} className="overflow-hidden rounded-brand border border-tfs-grey bg-white">
+    <form
+      onSubmit={submitWithoutReset(action)}
+      className="overflow-hidden rounded-brand border border-tfs-grey bg-white"
+    >
       <input type="hidden" name="__alanlar" value={KEYS.join(",")} />
 
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-tfs-grey bg-tfs-grey-20 px-4 py-2.5">
@@ -93,7 +97,9 @@ export function NavAppearancePanel({
         </div>
 
         <div className="flex justify-end">
-          <SubmitButton pendingLabel="Kaydediliyor…">Görünümü kaydet</SubmitButton>
+          <SubmitButton pending={pending} pendingLabel="Kaydediliyor…">
+            Görünümü kaydet
+          </SubmitButton>
         </div>
       </div>
     </form>

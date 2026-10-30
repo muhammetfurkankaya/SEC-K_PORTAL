@@ -4,6 +4,7 @@ import { PageHero } from "@/components/brand/PageHero";
 import { textClass } from "@/lib/appearance";
 import { listAllPublishedBulletins } from "@/lib/db/queries/bulletins";
 import { getSettings } from "@/lib/db/queries/settings";
+import { EMPTY_MESSAGES } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Bülten Arama" };
@@ -58,7 +59,7 @@ export default async function SearchPage({ searchParams }: Props) {
         initialQuery={query}
         initialSelectedId={initialSelectedId}
         showCategory
-        emptyNote={settings.empty_category}
+        emptyNote={EMPTY_MESSAGES.category}
       />
     </>
   );
