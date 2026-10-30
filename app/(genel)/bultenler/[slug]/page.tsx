@@ -66,6 +66,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         scrim={hero.scrim}
         focal={hero.focal}
         fadeTo="surface"
+        motion={settings.category_hero_motion ? settings.hero_motion : "yok"}
       />
       <BulletinReader
         bulletins={bulletins}

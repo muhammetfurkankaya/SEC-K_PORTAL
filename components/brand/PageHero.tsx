@@ -1,8 +1,38 @@
 import type { ReactNode } from "react";
+import { HeroParallax } from "./HeroParallax";
 
 export type HeroTone = "photo" | "brand" | "flat";
 export type HeroSize = "sm" | "md" | "lg" | "full";
 export type EyebrowPlace = "ustte" | "altta" | "gizli";
+export type HeroMotion = "paralaks" | "perde" | "alttan" | "yanlar" | "yok";
+
+/**
+ * Yazı giriş hareketlerinin sınıfları (app/globals.css → .hm-*).
+ * Statik tablo: Tailwind çalışma anında birleştirilen sınıfı göremez.
+ */
+const MOTION: Record<
+  HeroMotion,
+  { title: string; eyebrow: string; eyebrowText: string; line: string; desc: string }
+> = {
+  // Paralaks girişte alttan gelir; asıl hareketi kaydırırken (HeroParallax).
+  paralaks: {
+    title: "hm-rise hm-d1",
+    eyebrow: "hm-rise hm-d2",
+    eyebrowText: "",
+    line: "",
+    desc: "hm-rise hm-d3",
+  },
+  alttan: {
+    title: "hm-rise hm-d1",
+    eyebrow: "hm-rise hm-d2",
+    eyebrowText: "",
+    line: "",
+    desc: "hm-rise hm-d3",
+  },
+  yanlar: { title: "hm-left", eyebrow: "hm-pop", eyebrowText: "", line: "", desc: "hm-right" },
+  perde: { title: "", eyebrow: "", eyebrowText: "hm-track", line: "hm-line", desc: "hm-soft" },
+  yok: { title: "", eyebrow: "", eyebrowText: "", line: "", desc: "" },
+};
 
 type PageHeroProps = {
   /**
@@ -11,6 +41,8 @@ type PageHeroProps = {
    * çizginin yerine yumuşak geçiş.
    */
   fadeTo?: "deep" | "surface";
+  /** Yazının giriş hareketi (ayar: hero_motion). */
+  motion?: HeroMotion;
   title: string;
   /** Başlığın üstünde ya da altında duran küçük etiket. */
   eyebrow?: string | null;
@@ -97,6 +129,7 @@ export function PageHero({
   scrim = "normal",
   focal = "orta",
   fadeTo = "surface",
+  motion = "yok",
   children,
 }: PageHeroProps) {
   const resolvedTone: HeroTone = tone ?? (imageSrc ? "photo" : "brand");
@@ -123,15 +156,23 @@ export function PageHero({
   const full = size === "full";
   const showEyebrow = Boolean(eyebrow) && eyebrowPlace !== "gizli";
 
+  const m = MOTION[motion];
+
+  // Perde açılışında kırmızı çizgiler ortadan dışa doğru uzar: soldaki
+  // sağdan, sağdaki soldan büyür.
   const eyebrowNode = showEyebrow ? (
     <p
-      className={`hero-ink hero-rise flex items-center gap-2.5 font-semibold tracking-[0.18em] uppercase ${
-        eyebrowClass || "text-[0.6875rem] text-tfs-grey"
-      } ${centered ? "justify-center" : ""} ${eyebrowPlace === "altta" ? "mt-4 hero-rise-3" : ""}`}
+      className={`hero-ink flex items-center gap-2.5 font-semibold tracking-[0.18em] uppercase ${
+        m.eyebrow
+      } ${eyebrowClass || "text-[0.6875rem] text-tfs-grey"} ${centered ? "justify-center" : ""} ${
+        eyebrowPlace === "altta" ? "mt-4" : ""
+      }`}
     >
-      <span aria-hidden="true" className="h-px w-6 bg-tfs-red" />
-      {eyebrow}
-      {centered ? <span aria-hidden="true" className="h-px w-6 bg-tfs-red" /> : null}
+      <span aria-hidden="true" className={`h-px w-6 bg-tfs-red ${m.line ? "hm-line-l" : ""}`} />
+      <span className={m.eyebrowText}>{eyebrow}</span>
+      {centered ? (
+        <span aria-hidden="true" className={`h-px w-6 bg-tfs-red ${m.line ? "hm-line-r" : ""}`} />
+      ) : null}
     </p>
   ) : null;
 
@@ -160,10 +201,11 @@ export function PageHero({
           aria-hidden="true"
           decoding="async"
           fetchPriority="high"
+          data-paralaks="gorsel"
           className={`hero-zoom absolute inset-0 size-full object-cover ${FOCAL_POSITION[focal]}`}
         />
       ) : (
-        <div aria-hidden="true" className="hero-brand absolute inset-0" />
+        <div aria-hidden="true" data-paralaks="gorsel" className="hero-brand absolute inset-0" />
       )}
 
       {/* Menünün okunması için üstte ayrı bir koyu geçiş — fotoğrafsız
@@ -185,30 +227,40 @@ export function PageHero({
         />
       ) : null}
 
+      {/* Üst boşluk: tek satırlık menü geniş ekranda (≥1280 px) 4.5rem,
+          daha dar ekranda sekmeler alt satırda (~6.5rem). */}
       <div
+        data-paralaks="metin"
         className={`relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8 ${
           full
-            ? "justify-center pt-40 pb-24 sm:pt-44"
-            : `justify-end pt-36 pb-20 sm:pt-40 sm:pb-24 ${MIN_HEIGHT[size]}`
+            ? "justify-center pt-36 pb-24 xl:pt-28"
+            : `justify-end pt-36 pb-20 sm:pb-24 xl:pt-28 ${MIN_HEIGHT[size]}`
         } ${centered ? "items-center text-center" : ""}`}
       >
         {eyebrowPlace === "ustte" ? eyebrowNode : null}
 
         <h1
-          className={`hero-ink hero-rise hero-rise-2 tracking-[-0.02em] leading-[1.06] ${
+          className={`hero-ink tracking-[-0.02em] leading-[1.06] ${m.title} ${
             full ? "font-bold" : "font-semibold"
           } ${titleClass || `${TITLE_SIZE[size]} text-white`} ${
             eyebrowPlace === "ustte" && showEyebrow ? "mt-3" : ""
           } ${centered ? "max-w-[22ch]" : "max-w-[18ch]"}`}
         >
-          {title}
+          {/* Perde açılışı: başlık görünmez bir çizginin arkasından çıkar. */}
+          {motion === "perde" ? (
+            <span className="hm-mask">
+              <span>{title}</span>
+            </span>
+          ) : (
+            title
+          )}
         </h1>
 
         {eyebrowPlace === "altta" ? eyebrowNode : null}
 
         {description ? (
           <p
-            className={`hero-ink hero-rise hero-rise-3 mt-4 max-w-[46ch] leading-relaxed font-light ${
+            className={`hero-ink mt-4 max-w-[46ch] leading-relaxed font-light ${m.desc} ${
               descriptionClass || "text-base text-white/85 sm:text-lg"
             } ${centered ? "mx-auto" : ""}`}
           >
@@ -224,6 +276,8 @@ export function PageHero({
           </div>
         ) : null}
       </div>
+
+      {motion === "paralaks" ? <HeroParallax /> : null}
 
       {/* Alt kenar: sert bir çizgi yerine bir sonraki bandın rengine akış.
           Yazı bu geçişin üstünde kalıyor (alt boşluk geçişten büyük). */}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { AdminIconLink } from "@/components/AdminIconLink";
 import { HeaderFrame } from "@/components/HeaderFrame";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
 import { listActiveCategories } from "@/lib/db/queries/categories";
@@ -35,47 +36,47 @@ export function SiteHeader() {
     });
   }
 
-  const nav = textPartsFor("nav", settings.type_nav_size, settings.type_nav_color);
-  const navOnDark = textPartsFor("nav", settings.type_nav_size, settings.type_nav_color, true);
+  // Menü her sayfada koyu zeminde (fotoğraf ya da koyu şerit): renk seçimi
+  // koyu zemin karşılığıyla uygulanır.
+  const nav = textPartsFor("nav", settings.type_nav_size, settings.type_nav_color, true);
+
+  // Sekmelerin hizası: ortalıysa sekmeler sayfanın ortasında (iki yan sütun
+  // eşit paylaşılır), değilse logonun ya da simgenin yanına yaslanır.
+  // Yan sütunlar içeriklerinden dar olamaz (logo yanı yazısı kesilmesin);
+  // orta sütun daralabilir — sekmeler sığmazsa kendi içinde yatay kayar,
+  // sayfa yana taşmaz.
+  const gridClass =
+    settings.nav_align === "orta"
+      ? "xl:grid-cols-[minmax(max-content,1fr)_minmax(0,auto)_minmax(max-content,1fr)]"
+      : "xl:grid-cols-[auto_minmax(0,1fr)_auto]";
 
   return (
     <HeaderFrame
-      bar={
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
-          {/* Logo yanındaki yazı varsayılan olarak KAPALI: aynı ad hero
-              başlığında zaten büyük puntoyla duruyor. Ayarlardan açılabilir
-              ve metni değiştirilebilir. */}
-          <Link href="/" className="flex min-w-0 items-center" aria-label="Ana sayfa">
-            <Logo
-              variant="light"
-              subtitle={
-                settings.logo_subtitle_show
-                  ? settings.logo_subtitle_text || settings.portal_title
-                  : undefined
-              }
-            />
-          </Link>
-
-          <div className="flex shrink-0 items-center gap-2">
-            <Link
-              href="/admin"
-              // Hem koyu şeritte hem fotoğrafın üzerinde okunan beyaz çerçeve.
-              className="rounded-brand border border-white/35 px-3 py-1.5 text-xs font-semibold tracking-wide text-white uppercase transition-colors hover:border-accent hover:bg-tfs-red"
-            >
-              {settings.nav_admin_label}
-            </Link>
-          </div>
-        </div>
+      sticky={settings.header_sticky}
+      gridClass={gridClass}
+      logo={
+        // Logo yanındaki yazı varsayılan olarak KAPALI: aynı ad hero
+        // başlığında zaten büyük puntoyla duruyor. Ayarlardan açılabilir.
+        <Link href="/" className="flex min-w-0 items-center" aria-label="Ana sayfa">
+          <Logo
+            variant="light"
+            subtitle={
+              settings.logo_subtitle_show
+                ? settings.logo_subtitle_text || settings.portal_title
+                : undefined
+            }
+          />
+        </Link>
       }
       nav={
         <SiteNav
           items={items}
           sizeClass={nav.size}
           colorClass={nav.color}
-          colorClassOnDark={navOnDark.color}
           alignClass={navAlignClass(settings.nav_align)}
         />
       }
+      admin={<AdminIconLink label={settings.nav_admin_label} />}
       announcement={
         settings.announcementVisible ? (
           <AnnouncementStrip text={settings.announcement} level={settings.announcementLevel} />

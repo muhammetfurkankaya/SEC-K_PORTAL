@@ -83,6 +83,7 @@ export default function HomePage() {
         scrim={hero.scrim}
         focal={hero.focal}
         fadeTo={settings.show_search_band ? "deep" : "surface"}
+        motion={settings.hero_motion}
       />
 
       {/* ————————————— Koyu arama bandı —————————————

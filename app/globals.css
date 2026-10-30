@@ -411,23 +411,156 @@
       animation: route-enter 220ms var(--ease-out-brand) both;
     }
 
-    /* Hero: tek giriş hareketi, sonra tamamen durur. Sürekli animasyon
-       (Ken-Burns/parallax) bilinçli olarak yok — eski ofis makinelerinde ve
-       RDP üzerinde bedeli var. */
+    /* Hero görseli açılışta hafifçe yakınlaşarak yerine oturur. Dolgu
+       "backwards": bitince hiçbir şey bırakmaz, paralaksın satır içi
+       transform'una karışmaz (HeroParallax). */
     .hero-zoom {
-      animation: hero-zoom 900ms var(--ease-out-soft) both;
+      animation: hero-zoom 1.6s var(--ease-out-soft) backwards;
     }
 
-    .hero-rise {
-      animation: hero-rise 320ms var(--ease-out-brand) both;
+    /* ——— Hero yazısının giriş hareketleri (ayar: hero_motion) ———
+       Yalnızca transform/opacity — eski ofis makinelerinde de akıcı. Sınıf
+       adları components/brand/PageHero.tsx'te statik tabloda. */
+
+    /* Alttan sırayla (paralaks da girişte bunu kullanır) */
+    .hm-rise {
+      animation: hm-rise 0.8s var(--ease-out-brand) both;
+    }
+    .hm-d1 {
+      animation-delay: 0.15s;
+    }
+    .hm-d2 {
+      animation-delay: 0.4s;
+    }
+    .hm-d3 {
+      animation-delay: 0.65s;
     }
 
-    .hero-rise-2 {
-      animation-delay: 60ms;
+    /* Yanlardan süzülme */
+    .hm-left {
+      animation: hm-left 1s var(--ease-out-brand) 0.1s both;
+    }
+    .hm-right {
+      animation: hm-right 1s var(--ease-out-brand) 0.3s both;
+    }
+    .hm-pop {
+      animation: hm-pop 0.7s var(--ease-out-brand) 0.75s both;
     }
 
-    .hero-rise-3 {
-      animation-delay: 120ms;
+    /* Perde açılışı: başlık görünmez bir çizginin arkasından çıkar, üst
+       etiketin kırmızı çizgileri ortadan dışa açılır, yazısı toplanarak
+       belirir, giriş metni en son gelir. */
+    .hm-mask > span {
+      display: block;
+      animation: hm-mask 0.9s var(--ease-out-brand) 0.15s both;
+    }
+    .hm-line-l,
+    .hm-line-r {
+      animation: hm-line 0.5s var(--ease-out-brand) 0.75s both;
+    }
+    .hm-line-l {
+      transform-origin: right;
+    }
+    .hm-line-r {
+      transform-origin: left;
+    }
+    .hm-track {
+      animation: hm-track 0.7s var(--ease-out-brand) 0.85s both;
+    }
+    .hm-soft {
+      animation: hm-soft 0.7s var(--ease-out-brand) 1.15s both;
+    }
+  }
+
+  /* Perde maskesi hareket kapalıyken de kırpmasın diye kapsayıcı ayrı:
+     taşma yalnızca hareket sırasında gizli. */
+  .hm-mask {
+    display: block;
+    overflow: hidden;
+    padding: 0.06em 0.1em 0.12em;
+    margin: -0.06em -0.1em -0.12em;
+  }
+
+  @keyframes hm-rise {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes hm-left {
+    from {
+      opacity: 0;
+      transform: translateX(-90px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes hm-right {
+    from {
+      opacity: 0;
+      transform: translateX(90px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes hm-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes hm-mask {
+    from {
+      transform: translateY(105%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes hm-line {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes hm-track {
+    from {
+      opacity: 0;
+      letter-spacing: 0.5em;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes hm-soft {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
     }
   }
 
@@ -444,20 +577,9 @@
 
   @keyframes hero-zoom {
     from {
-      transform: scale(1.04);
+      transform: scale(1.07);
     }
     to {
-      transform: none;
-    }
-  }
-
-  @keyframes hero-rise {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
       transform: none;
     }
   }
@@ -473,5 +595,74 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+/* ————————————————————————————————————————————————
+   Üst menü (components/HeaderFrame.tsx)
+
+   Katmansız yazıldı: Tailwind yardımcı sınıflarından (ör. logonun h-9'u)
+   öncelikli olsun diye. Yükseklik değişkenleri sekmelere de geçer
+   (SiteNav .site-nav-link), menü incelince sekmeler de incelir.
+   ———————————————————————————————————————————————— */
+.site-bar {
+  --bar-h: 4.5rem;
+  --nav-h: 2.75rem;
+  --logo-row-h: 3.625rem;
+  background-color: var(--color-tfs-dark);
+  transition:
+    background-color 0.35s var(--ease-out-brand),
+    box-shadow 0.35s var(--ease-out-brand),
+    backdrop-filter 0.35s var(--ease-out-brand);
+}
+
+/* Fotoğrafın üzerinde saydam; okunurluğu hero'nun üst perdesi sağlıyor. */
+.site-bar[data-overlay] {
+  background-color: transparent;
+}
+
+/* Kaydırmaya başlayınca: koyu, hafif buzlu zemin. */
+.site-bar[data-kaydirildi] {
+  background-color: rgb(18 24 29 / 0.92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.06),
+    0 10px 30px rgb(0 0 0 / 0.35);
+}
+
+/* Biraz daha kaydırınca: daha ince. */
+.site-bar[data-ince] {
+  --bar-h: 3.5rem;
+  --logo-row-h: 3rem;
+}
+
+.site-bar-logo {
+  height: var(--logo-row-h);
+  transition: height 0.35s var(--ease-out-brand);
+}
+
+.site-bar-logo img {
+  transition: height 0.35s var(--ease-out-brand);
+}
+
+.site-bar[data-ince] .site-bar-logo img {
+  height: 1.75rem;
+}
+
+.site-nav-link {
+  height: var(--nav-h);
+  transition:
+    height 0.35s var(--ease-out-brand),
+    color 0.15s ease-out;
+}
+
+@media (min-width: 80rem) {
+  .site-bar-logo {
+    height: var(--bar-h);
+  }
+
+  .site-nav-link {
+    height: var(--bar-h);
   }
 }

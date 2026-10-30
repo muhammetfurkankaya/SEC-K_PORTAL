@@ -82,6 +82,14 @@ export const HERO_HEIGHT_OPTIONS = [
   { value: "yuksek", label: "Yüksek" },
 ] as const satisfies readonly EnumOption[];
 
+export const HERO_MOTION_OPTIONS = [
+  { value: "paralaks", label: "Kaydırdıkça paralaks" },
+  { value: "perde", label: "Perde açılışı" },
+  { value: "alttan", label: "Alttan sırayla" },
+  { value: "yanlar", label: "Yanlardan süzülme" },
+  { value: "yok", label: "Hareket yok" },
+] as const satisfies readonly EnumOption[];
+
 export const HERO_STYLE_OPTIONS = [
   { value: "fotograf", label: "Fotoğraflı" },
   { value: "gradyan", label: "Fotoğrafsız (marka gradyanı)" },
@@ -340,6 +348,25 @@ export const SETTINGS = {
     hidden: true,
     group: "anasayfa",
     label: "Hero görseli parlaklığı",
+  },
+  hero_motion: {
+    kind: "enum",
+    default: "paralaks",
+    control: "select",
+    options: HERO_MOTION_OPTIONS,
+    group: "anasayfa",
+    section: "Hero",
+    span: "half",
+    label: "Yazı giriş hareketi",
+    help: "Paralakste sayfa kaydırıldıkça yazı görselden yavaş kayıp soluklaşır. Ziyaretçinin cihazında hareketler kapalıysa yazı hareketsiz görünür.",
+  },
+  header_sticky: {
+    kind: "bool",
+    default: "1",
+    group: "anasayfa",
+    section: "Üst menü",
+    label: "Menü kaydırırken üstte sabit kalsın",
+    description: "Logo, sekmeler ve yönetim simgesi sayfa kaydırılınca ekranın üstünde kalır.",
   },
   show_search_band: {
     kind: "bool",
@@ -700,7 +727,7 @@ export const SETTINGS = {
   },
   nav_align: {
     kind: "enum",
-    default: "sol",
+    default: "orta",
     control: "segment",
     options: ALIGN_OPTIONS,
     group: "metin",
@@ -750,6 +777,13 @@ export const SETTINGS = {
   },
 
   // ————— Bülten görünümü —————
+  category_hero_motion: {
+    kind: "bool",
+    default: "1",
+    group: "bulten",
+    label: "Bülten sekmelerinde yazı hareketi",
+    description: "Açıkken sekme başlığı da ana sayfadaki yazı giriş hareketini kullanır.",
+  },
   category_hero_height: {
     kind: "enum",
     default: "kisa",
