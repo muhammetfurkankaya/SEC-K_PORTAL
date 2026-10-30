@@ -90,7 +90,7 @@ export default function HomePage() {
           olduğunu bilmek zorunda kalmaz. Hero'nun koyusunu içeriğe doğru
           sürdürüyor, böylece fotoğraftan beyaz sayfaya sert düşüş olmuyor. */}
       {settings.show_search_band ? (
-        <div className="bg-tfs-deep print-hidden dark:border-b dark:border-white/10">
+        <div className="bg-tfs-deep print-hidden">
           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
             <BulletinSearch bulletins={suggestions} submitLabel={settings.btn_search} tone="koyu" />
           </div>

@@ -17,15 +17,15 @@ export function DefaultPasswordNotice({ userId }: { userId: number }) {
   return (
     <div className="border-b-2 border-tfs-red bg-tfs-red/10 print-hidden">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 sm:px-6 lg:px-8">
-        <span className="text-xs font-bold tracking-wide text-tfs-red uppercase">Güvenlik</span>
-        <p className="text-sm text-tfs-dark">
+        <span className="text-xs font-bold tracking-wide text-accent-ink uppercase">Güvenlik</span>
+        <p className="text-sm text-ink">
           <strong className="font-semibold">{user.username}</strong> hesabı hâlâ kurulumla gelen
           varsayılan şifreyi kullanıyor. Bu şifre kurulum belgelerinde yazılı — değiştirene kadar
           portala herkes yönetici olarak girebilir.
         </p>
         <Link
           href="/admin/ayarlar/sifre"
-          className="rounded-brand bg-tfs-red px-3 py-1.5 text-xs font-semibold tracking-wide text-white uppercase transition-colors hover:bg-tfs-dark"
+          className="rounded-brand bg-tfs-red px-3 py-1.5 text-xs font-semibold tracking-wide text-white uppercase transition-colors hover:bg-[#a81a20]"
         >
           Şifreyi değiştir
         </Link>

@@ -7,7 +7,7 @@ export type EyebrowPlace = "ustte" | "altta" | "gizli";
 type PageHeroProps = {
   /**
    * Hero'nun altı hangi renge aksın: arama bandının koyusuna ("deep") ya da
-   * sayfa zeminine ("surface", gece/gündüz temasına uyar). Kırmızı ayırıcı
+   * sayfa zeminine ("surface"). Kırmızı ayırıcı
    * çizginin yerine yumuşak geçiş.
    */
   fadeTo?: "deep" | "surface";

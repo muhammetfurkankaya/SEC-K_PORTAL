@@ -43,7 +43,7 @@ export default async function AdminBulletinsPage({ searchParams }: Props) {
       >
         <Link
           href="/admin/bultenler/yeni"
-          className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-dark"
+          className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a81a20]"
         >
           + Bülten yükle
         </Link>

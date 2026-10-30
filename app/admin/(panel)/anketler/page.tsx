@@ -1,10 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import {
-  deleteSurveyAction,
-  duplicateSurveyAction,
-  toggleSurveyActiveAction,
-} from "./actions";
+import { deleteSurveyAction, duplicateSurveyAction, toggleSurveyActiveAction } from "./actions";
 import { AdminHeading } from "@/components/admin/AdminHeading";
 import { Alert, SubmitButton } from "@/components/ui/form";
 import { listSurveys } from "@/lib/db/queries/surveys";
@@ -35,7 +31,7 @@ export default async function AdminSurveysPage({ searchParams }: Props) {
       >
         <Link
           href="/admin/anketler/yeni"
-          className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-dark"
+          className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a81a20]"
         >
           + Yeni anket
         </Link>
@@ -48,40 +44,37 @@ export default async function AdminSurveysPage({ searchParams }: Props) {
       ) : null}
 
       {surveys.length === 0 ? (
-        <p className="rounded-brand border border-dashed border-tfs-grey bg-white px-4 py-12 text-center text-sm font-light text-tfs-dark-60">
+        <p className="rounded-brand border border-dashed border-line bg-surface px-4 py-12 text-center text-sm font-light text-ink-faint">
           Henüz anket oluşturulmadı.
         </p>
       ) : (
         <ul className="space-y-3">
           {surveys.map((survey) => (
-            <li
-              key={survey.id}
-              className="rounded-brand border border-tfs-grey bg-white p-4"
-            >
+            <li key={survey.id} className="rounded-brand border border-line bg-surface p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/admin/anketler/${survey.id}`}
-                      className="text-base font-semibold text-tfs-dark hover:text-tfs-red"
+                      className="text-base font-semibold text-ink hover:text-accent-ink"
                     >
                       {survey.title}
                     </Link>
 
                     {survey.is_active ? (
-                      <span className="rounded-brand bg-tfs-green/20 px-2 py-0.5 text-[0.6875rem] font-semibold text-tfs-dark">
+                      <span className="rounded-brand bg-tfs-green/20 px-2 py-0.5 text-[0.6875rem] font-semibold text-ink">
                         Açık
                       </span>
                     ) : (
-                      <span className="rounded-brand bg-tfs-grey-40 px-2 py-0.5 text-[0.6875rem] font-semibold text-tfs-dark-60">
+                      <span className="rounded-brand bg-surface-3 px-2 py-0.5 text-[0.6875rem] font-semibold text-ink-faint">
                         Kapalı
                       </span>
                     )}
                   </div>
 
-                  <p className="mt-1 text-xs text-tfs-dark-60">
+                  <p className="mt-1 text-xs text-ink-faint">
                     {formatNumber(survey.question_count)} soru ·{" "}
-                    <span className="font-semibold text-tfs-dark">
+                    <span className="font-semibold text-ink">
                       {formatNumber(survey.response_count)} cevap
                     </span>
                     {survey.last_response_at
@@ -93,28 +86,34 @@ export default async function AdminSurveysPage({ searchParams }: Props) {
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Link
                     href={`/admin/anketler/${survey.id}/analiz`}
-                    className="rounded-brand bg-tfs-dark px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-tfs-red"
+                    className="rounded-brand border border-line-strong bg-surface-3 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-tfs-red"
                   >
                     Analiz
                   </Link>
 
                   <Link
                     href={`/admin/anketler/${survey.id}`}
-                    className="rounded-brand border border-tfs-grey px-3 py-1.5 text-xs text-tfs-dark-80 hover:border-tfs-dark-20 hover:text-tfs-dark"
+                    className="rounded-brand border border-line px-3 py-1.5 text-xs text-ink-soft hover:border-line-strong hover:text-ink"
                   >
                     Düzenle / QR
                   </Link>
 
                   <form action={toggleSurveyActiveAction}>
                     <input type="hidden" name="id" value={survey.id} />
-                    <SubmitButton variant="secondary" className="!px-3 !py-1.5 !text-xs !font-normal">
+                    <SubmitButton
+                      variant="secondary"
+                      className="!px-3 !py-1.5 !text-xs !font-normal"
+                    >
                       {survey.is_active ? "Kapat" : "Yayınla"}
                     </SubmitButton>
                   </form>
 
                   <form action={duplicateSurveyAction}>
                     <input type="hidden" name="id" value={survey.id} />
-                    <SubmitButton variant="secondary" className="!px-3 !py-1.5 !text-xs !font-normal">
+                    <SubmitButton
+                      variant="secondary"
+                      className="!px-3 !py-1.5 !text-xs !font-normal"
+                    >
                       Kopyala
                     </SubmitButton>
                   </form>

@@ -20,19 +20,19 @@ export function QuestionAnalysisCard({
   const { question } = analysis;
 
   return (
-    <section className="rounded-brand border border-tfs-grey bg-white">
-      <header className="border-b border-tfs-grey px-4 py-3">
+    <section className="rounded-brand border border-line bg-surface">
+      <header className="border-b border-line px-4 py-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold text-tfs-dark">
-            <span className="mr-1.5 text-tfs-red">{index + 1}.</span>
+          <h3 className="text-sm font-semibold text-ink">
+            <span className="mr-1.5 text-accent-ink">{index + 1}.</span>
             {question.text}
           </h3>
-          <span className="shrink-0 rounded-brand bg-tfs-grey-40 px-2 py-0.5 text-[0.625rem] font-semibold text-tfs-dark-60">
+          <span className="shrink-0 rounded-brand bg-surface-3 px-2 py-0.5 text-[0.625rem] font-semibold text-ink-faint">
             {QUESTION_TYPE_LABELS[question.type as QuestionType]}
           </span>
         </div>
 
-        <p className="tnum mt-1 text-xs text-tfs-dark-60">
+        <p className="tnum mt-1 text-xs text-ink-faint">
           {formatNumber(analysis.answeredCount)} cevap
           {analysis.skippedCount > 0
             ? ` · ${formatNumber(analysis.skippedCount)} kişi boş bıraktı`
@@ -58,9 +58,9 @@ function Body({ analysis }: { analysis: QuestionAnalysis }) {
         <>
           <BarTally items={analysis.options ?? []} />
           {question.type === "multi_choice" && (analysis.options?.length ?? 0) > 0 ? (
-            <p className="mt-3 text-[0.6875rem] font-light text-tfs-dark-60">
-              Çok seçimli soru: katılımcılar birden fazla seçenek işaretleyebildiği için
-              yüzdeler toplamı %100&apos;ü aşabilir.
+            <p className="mt-3 text-[0.6875rem] font-light text-ink-faint">
+              Çok seçimli soru: katılımcılar birden fazla seçenek işaretleyebildiği için yüzdeler
+              toplamı %100&apos;ü aşabilir.
             </p>
           ) : null}
         </>
@@ -71,9 +71,7 @@ function Body({ analysis }: { analysis: QuestionAnalysis }) {
       const max = question.scale_max ?? (question.type === "nps" ? 10 : 5);
       return (
         <>
-          {analysis.numeric ? (
-            <ScoreSummary stats={analysis.numeric} unit={`/ ${max}`} />
-          ) : null}
+          {analysis.numeric ? <ScoreSummary stats={analysis.numeric} unit={`/ ${max}`} /> : null}
           <div className="mt-5">
             <Histogram items={analysis.distribution ?? []} />
           </div>
@@ -108,24 +106,24 @@ function TextAnswers({ analysis }: { analysis: QuestionAnalysis }) {
     <>
       {words.length > 0 ? (
         <div className="mb-4">
-          <p className="mb-2 text-[0.625rem] font-semibold tracking-[0.08em] text-tfs-dark-60 uppercase">
+          <p className="mb-2 text-[0.625rem] font-semibold tracking-[0.08em] text-ink-faint uppercase">
             Sık geçen kelimeler
           </p>
           <ul className="flex flex-wrap gap-1.5">
             {words.map((word) => (
               <li
                 key={word.word}
-                className="rounded-brand border border-tfs-grey bg-tfs-grey-20 px-2 py-0.5 text-xs text-tfs-dark"
+                className="rounded-brand border border-line bg-surface-2 px-2 py-0.5 text-xs text-ink"
               >
                 {word.word}
-                <span className="tnum ml-1.5 text-tfs-dark-60">{formatNumber(word.count)}</span>
+                <span className="tnum ml-1.5 text-ink-faint">{formatNumber(word.count)}</span>
               </li>
             ))}
           </ul>
         </div>
       ) : null}
 
-      <p className="mb-2 text-[0.625rem] font-semibold tracking-[0.08em] text-tfs-dark-60 uppercase">
+      <p className="mb-2 text-[0.625rem] font-semibold tracking-[0.08em] text-ink-faint uppercase">
         Cevaplar ({formatNumber(texts.length)})
       </p>
 
@@ -134,11 +132,11 @@ function TextAnswers({ analysis }: { analysis: QuestionAnalysis }) {
         {texts.map((item, index) => (
           <li
             key={`${item.responseId}-${index}`}
-            className="brand-bar rounded-brand bg-tfs-grey-20 py-2 pr-3 pl-3"
+            className="brand-bar rounded-brand bg-surface-2 py-2 pr-3 pl-3"
           >
-            <p className="text-sm text-tfs-dark">{item.text}</p>
+            <p className="text-sm text-ink">{item.text}</p>
             {item.department ? (
-              <p className="mt-1 text-[0.6875rem] text-tfs-dark-60">{item.department}</p>
+              <p className="mt-1 text-[0.6875rem] text-ink-faint">{item.department}</p>
             ) : null}
           </li>
         ))}

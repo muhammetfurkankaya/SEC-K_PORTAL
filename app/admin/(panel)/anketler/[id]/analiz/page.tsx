@@ -58,13 +58,13 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
       <AdminHeading title={survey.title} description="Anket sonuçları ve değerlendirme özeti">
         <a
           href={`/api/anket/${survey.id}/csv${csvQuery.size > 0 ? `?${csvQuery}` : ""}`}
-          className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-dark print-hidden"
+          className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a81a20] print-hidden"
         >
           CSV indir
         </a>
         <Link
           href={`/admin/anketler/${survey.id}`}
-          className="rounded-brand border border-tfs-grey bg-white px-4 py-2 text-sm font-semibold text-tfs-dark transition-colors hover:border-tfs-dark-20 print-hidden"
+          className="rounded-brand border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-line-strong print-hidden"
         >
           Düzenle / QR
         </Link>
@@ -73,13 +73,10 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
       {/* ————— Filtreler ————— */}
       <form
         method="get"
-        className="mb-6 flex flex-wrap items-end gap-3 rounded-brand border border-tfs-grey bg-white p-4 print-hidden"
+        className="mb-6 flex flex-wrap items-end gap-3 rounded-brand border border-line bg-surface p-4 print-hidden"
       >
         <div>
-          <label
-            htmlFor="baslangic"
-            className="block text-xs font-semibold text-tfs-dark"
-          >
+          <label htmlFor="baslangic" className="block text-xs font-semibold text-ink">
             Başlangıç tarihi
           </label>
           <input
@@ -87,12 +84,12 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
             name="baslangic"
             type="date"
             defaultValue={filters.baslangic ?? ""}
-            className="mt-1 rounded-brand border border-tfs-grey px-3 py-2 text-sm text-tfs-dark focus:border-tfs-red focus:outline-none"
+            className="mt-1 rounded-brand border border-line px-3 py-2 text-sm text-ink focus:border-tfs-red focus:outline-none"
           />
         </div>
 
         <div>
-          <label htmlFor="bitis" className="block text-xs font-semibold text-tfs-dark">
+          <label htmlFor="bitis" className="block text-xs font-semibold text-ink">
             Bitiş tarihi
           </label>
           <input
@@ -100,20 +97,20 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
             name="bitis"
             type="date"
             defaultValue={filters.bitis ?? ""}
-            className="mt-1 rounded-brand border border-tfs-grey px-3 py-2 text-sm text-tfs-dark focus:border-tfs-red focus:outline-none"
+            className="mt-1 rounded-brand border border-line px-3 py-2 text-sm text-ink focus:border-tfs-red focus:outline-none"
           />
         </div>
 
         {departments.length > 0 ? (
           <div>
-            <label htmlFor="departman" className="block text-xs font-semibold text-tfs-dark">
+            <label htmlFor="departman" className="block text-xs font-semibold text-ink">
               Departman
             </label>
             <select
               id="departman"
               name="departman"
               defaultValue={filters.departman ?? ""}
-              className="mt-1 rounded-brand border border-tfs-grey px-3 py-2 text-sm text-tfs-dark focus:border-tfs-red focus:outline-none"
+              className="mt-1 rounded-brand border border-line px-3 py-2 text-sm text-ink focus:border-tfs-red focus:outline-none"
             >
               <option value="">Tümü</option>
               {departments.map((department) => (
@@ -127,7 +124,7 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
 
         <button
           type="submit"
-          className="rounded-brand bg-tfs-dark px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-red"
+          className="rounded-brand border border-line-strong bg-surface-3 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-red"
         >
           Filtrele
         </button>
@@ -135,7 +132,7 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
         {hasFilter ? (
           <Link
             href={`/admin/anketler/${survey.id}/analiz`}
-            className="rounded-brand border border-tfs-grey px-4 py-2 text-sm font-semibold text-tfs-dark transition-colors hover:border-tfs-dark-20"
+            className="rounded-brand border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-line-strong"
           >
             Filtreyi temizle
           </Link>
@@ -165,9 +162,7 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
         />
         <StatTile
           label="Son cevap"
-          value={
-            analysis.lastResponseAt ? formatDate(analysis.lastResponseAt) : "—"
-          }
+          value={analysis.lastResponseAt ? formatDate(analysis.lastResponseAt) : "—"}
           hint={
             analysis.firstResponseAt
               ? `ilk cevap ${formatDate(analysis.firstResponseAt)}`
@@ -177,7 +172,7 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
       </div>
 
       {analysis.responseCount === 0 ? (
-        <p className="mt-6 rounded-brand border border-dashed border-tfs-grey bg-white px-4 py-12 text-center text-sm font-light text-tfs-dark-60">
+        <p className="mt-6 rounded-brand border border-dashed border-line bg-surface px-4 py-12 text-center text-sm font-light text-ink-faint">
           {hasFilter
             ? "Seçtiğiniz filtreye uyan cevap bulunamadı."
             : "Bu ankete henüz cevap gelmemiş. QR kodu paylaşarak katılım toplayabilirsiniz."}
@@ -185,9 +180,9 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
       ) : (
         <>
           {analysis.departments.length > 0 ? (
-            <section className="mt-6 rounded-brand border border-tfs-grey bg-white">
-              <header className="border-b border-tfs-grey px-4 py-3">
-                <h2 className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+            <section className="mt-6 rounded-brand border border-line bg-surface">
+              <header className="border-b border-line px-4 py-3">
+                <h2 className="text-xs font-semibold tracking-[0.12em] text-accent-ink uppercase">
                   Departman Kırılımı
                 </h2>
               </header>
@@ -207,9 +202,9 @@ export default async function SurveyAnalysisPage({ params, searchParams }: Props
             ))}
           </div>
 
-          <p className="mt-6 text-xs font-light text-tfs-dark-60 print-hidden">
-            Bu sayfayı Ctrl+P (⌘+P) ile yazdırıp toplantıya rapor olarak
-            götürebilirsiniz; filtre ve düğmeler çıktıda görünmez.
+          <p className="mt-6 text-xs font-light text-ink-faint print-hidden">
+            Bu sayfayı Ctrl+P (⌘+P) ile yazdırıp toplantıya rapor olarak götürebilirsiniz; filtre ve
+            düğmeler çıktıda görünmez.
           </p>
         </>
       )}

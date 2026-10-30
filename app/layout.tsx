@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { safeThemeSettings } from "@/lib/db/queries/settings";
-import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
-// Tema varsayılanı ayarlardan okunuyor; her istekte güncel olmalı.
+// Sayfalar veritabanından okuyor; her istekte güncel olmalı.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -19,27 +17,15 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#1d252d",
+  themeColor: "#12181d",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const theme = safeThemeSettings();
-
   return (
-    // data-theme sunucuda belirleniyor, sonra <head>'deki betik ziyaretçinin
-    // kendi seçimini (ve "Sistem" için cihaz tercihini) sayfa BOYANMADAN
-    // uyguluyor. suppressHydrationWarning zorunlu: betik özniteliği React
-    // devreye girmeden değiştiriyor, bu bilinçli bir farklılık.
-    <html
-      lang="tr"
-      data-theme={theme.themeDefault === "koyu" ? "dark" : "light"}
-      data-theme-default={theme.themeDefault}
-      data-theme-lock={theme.toggleVisible ? undefined : "1"}
-      suppressHydrationWarning
-    >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
+    // Portalın tamamı (yönetim paneli dahil) koyu görünümde; gece/gündüz
+    // seçimi kaldırıldı. Renkler globals.css'teki [data-theme="dark"]
+    // değerlerinden gelir. Yazdırma çıktısı yine açık zeminlidir.
+    <html lang="tr" data-theme="dark">
       <body className="min-h-screen bg-surface text-ink antialiased">{children}</body>
     </html>
   );

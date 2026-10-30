@@ -18,9 +18,9 @@ export default function NewBulletinPage() {
         description="PDF dosyasını seçin ve bülten bilgilerini girin."
       />
 
-      <div className="max-w-3xl rounded-brand border border-tfs-grey bg-white p-6">
+      <div className="max-w-3xl rounded-brand border border-line bg-surface p-6">
         {categories.length === 0 ? (
-          <p className="text-sm text-tfs-dark-80">
+          <p className="text-sm text-ink-soft">
             Önce Sekmeler bölümünden en az bir sekme oluşturmanız gerekiyor.
           </p>
         ) : (

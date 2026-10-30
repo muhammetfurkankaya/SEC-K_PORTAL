@@ -16,10 +16,8 @@ export default async function LoginPage() {
   const settings = getSettings();
 
   return (
-    // Yönetim paneli her zaman gündüz görünümünde: bileşenleri henüz
-    // gece moduna göre taşınmadı. data-theme bu alt ağaçtaki tüm anlamsal
-    // renkleri gündüz değerlerine sabitliyor.
-    <div data-theme="light" className="flex min-h-screen flex-col bg-tfs-grey-20">
+    // Portalın tamamı gibi yönetim paneli de koyu görünümde (app/layout.tsx).
+    <div className="flex min-h-screen flex-col bg-surface">
       <div className="bg-tfs-dark">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" aria-label="Portala dön">
@@ -29,23 +27,23 @@ export default async function LoginPage() {
       </div>
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-12">
-        <div className="rounded-brand border border-tfs-grey bg-white p-6">
+        <div className="rounded-brand border border-line bg-surface p-6">
           <div className="brand-bar mb-6 pl-4">
-            <p className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+            <p className="text-xs font-semibold tracking-[0.12em] text-accent-ink uppercase">
               Yönetim Paneli
             </p>
-            <h1 className="mt-1 text-xl font-semibold text-tfs-dark">Giriş yapın</h1>
+            <h1 className="mt-1 text-xl font-semibold text-ink">Giriş yapın</h1>
           </div>
 
           <LoginForm />
         </div>
 
-        <p className="mt-4 text-center text-xs font-light text-tfs-dark-60">
+        <p className="mt-4 text-center text-xs font-light text-ink-faint">
           Bültenleri ve anketleri yönetmek için yetkili hesabınızla giriş yapın.
         </p>
         <Link
           href="/"
-          className="mt-2 text-center text-xs font-semibold text-tfs-red hover:underline"
+          className="mt-2 text-center text-xs font-semibold text-accent-ink hover:underline"
         >
           ← Portala dön
         </Link>

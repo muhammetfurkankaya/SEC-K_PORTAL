@@ -83,26 +83,3 @@ export function setSettings(values: Partial<Record<SettingKey, string>>): void {
 export function resetSettings(): void {
   getDb().prepare(`DELETE FROM settings`).run();
 }
-
-/**
- * Kök yerleşim için tema ayarları — ASLA hata fırlatmaz.
- *
- * Kök yerleşim (app/layout.tsx) ilk kez veritabanı okuyor. `next build`
- * sırasında 404 sayfası önceden üretilirken de bu yerleşim çalışıyor; o
- * ortamda veritabanı olmayabilir. Okuma başarısız olursa gündüz varsayılanı
- * dönülür ve derleme kırılmaz.
- */
-export function safeThemeSettings(): {
-  themeDefault: "acik" | "koyu" | "sistem";
-  toggleVisible: boolean;
-} {
-  try {
-    const settings = getSettings();
-    return {
-      themeDefault: settings.theme_default,
-      toggleVisible: settings.theme_toggle_visible,
-    };
-  } catch {
-    return { themeDefault: "acik", toggleVisible: true };
-  }
-}

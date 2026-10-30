@@ -119,7 +119,7 @@ export function SwitchRow({
 type ButtonVariant = "primary" | "secondary" | "danger";
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-tfs-red text-white hover:bg-tfs-dark",
+  primary: "bg-tfs-red text-white hover:bg-[#a81a20]",
   secondary: "border border-line bg-surface text-ink hover:border-line-strong",
   danger: "border border-accent bg-surface text-accent-ink hover:bg-tfs-red hover:text-white",
 };

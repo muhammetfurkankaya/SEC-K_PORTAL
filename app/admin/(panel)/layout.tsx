@@ -19,10 +19,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const settings = getSettings();
 
   return (
-    // Yönetim paneli her zaman gündüz görünümünde: bileşenleri henüz
-    // gece moduna göre taşınmadı. data-theme bu alt ağaçtaki tüm anlamsal
-    // renkleri gündüz değerlerine sabitliyor.
-    <div data-theme="light" className="flex min-h-screen flex-col bg-tfs-grey-20">
+    // Portalın tamamı gibi yönetim paneli de koyu görünümde (app/layout.tsx).
+    <div className="flex min-h-screen flex-col bg-surface">
       <header>
         <div className="bg-tfs-dark print-hidden">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
@@ -40,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 Portalı görüntüle ↗
               </Link>
 
-              <span className="hidden text-xs text-tfs-dark-60 sm:inline" aria-hidden="true">
+              <span className="hidden text-xs text-ink-faint sm:inline" aria-hidden="true">
                 |
               </span>
 

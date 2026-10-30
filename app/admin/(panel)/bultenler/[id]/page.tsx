@@ -30,7 +30,7 @@ export default async function EditBulletinPage({ params }: Props) {
         description={`${bulletin.bulletin_no} — ${formatNumber(bulletin.download_count)} indirme`}
       />
 
-      <div className="max-w-3xl rounded-brand border border-tfs-grey bg-white p-6">
+      <div className="max-w-3xl rounded-brand border border-line bg-surface p-6">
         <BulletinForm
           categories={categories}
           bulletin={bulletin}

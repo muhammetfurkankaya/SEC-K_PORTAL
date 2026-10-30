@@ -14,15 +14,15 @@ export function NavPreview({
   alignClass: string;
 }) {
   return (
-    <div className="border-b border-tfs-grey bg-white px-3">
+    <div className="border-b border-line bg-surface px-3">
       <div className={`flex gap-1 overflow-x-auto ${alignClass}`}>
         {labels.map((label, index) => (
           <span
             key={`${index}-${label}`}
             className={`shrink-0 border-b-[3px] px-3 py-3 whitespace-nowrap ${
               index === 0
-                ? "border-tfs-red font-semibold text-tfs-dark"
-                : "border-transparent text-tfs-dark-80"
+                ? "border-tfs-red font-semibold text-ink"
+                : "border-transparent text-ink-soft"
             }`}
           >
             <span className={appearance}>{label || "—"}</span>

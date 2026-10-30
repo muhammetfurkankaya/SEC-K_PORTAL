@@ -47,25 +47,25 @@ export function CoverBackfill({ missing }: { missing: { id: number; label: strin
   }
 
   return (
-    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-brand border border-tfs-grey bg-white px-4 py-3">
-      <div className="text-sm text-tfs-dark">
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-brand border border-line bg-surface px-4 py-3">
+      <div className="text-sm text-ink">
         <p>
           <span className="font-semibold">{missing.length} bültenin</span> kapak görseli yok. Ana
           sayfada "Yalnızca kart" görünümünde PDF'in ilk sayfası kapak olarak gösterilir.
         </p>
         {running ? (
-          <p className="tnum mt-1 text-xs text-tfs-dark-60">
+          <p className="tnum mt-1 text-xs text-ink-faint">
             Hazırlanıyor… {done} / {missing.length}
           </p>
         ) : failed.length > 0 ? (
-          <p className="mt-1 text-xs text-tfs-red">Üretilemeyenler: {failed.join(", ")}</p>
+          <p className="mt-1 text-xs text-accent-ink">Üretilemeyenler: {failed.join(", ")}</p>
         ) : null}
       </div>
       <button
         type="button"
         onClick={() => void run()}
         disabled={running}
-        className="rounded-brand bg-tfs-dark px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-red disabled:opacity-60"
+        className="rounded-brand border border-line-strong bg-surface-3 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-red disabled:opacity-60"
       >
         {running ? "Oluşturuluyor…" : "Kapakları oluştur"}
       </button>

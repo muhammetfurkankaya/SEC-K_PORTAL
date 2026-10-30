@@ -8,8 +8,8 @@ export function GroupSection({ title, children }: { title: string; children: Rea
   if (!title) return <div className="space-y-4">{children}</div>;
 
   return (
-    <fieldset className="rounded-brand border border-tfs-grey bg-tfs-grey-20 p-4">
-      <legend className="px-1 text-xs font-semibold tracking-[0.1em] text-tfs-red uppercase">
+    <fieldset className="rounded-brand border border-line bg-surface-2 p-4">
+      <legend className="px-1 text-xs font-semibold tracking-[0.1em] text-accent-ink uppercase">
         {title}
       </legend>
       <div className="mt-2 space-y-4">{children}</div>
@@ -54,7 +54,7 @@ export function FieldRows({
 
     rows.push(
       bufferKind === "bool" ? (
-        <div key={`b${rows.length}`} className="rounded-brand border border-tfs-grey bg-white px-4">
+        <div key={`b${rows.length}`} className="rounded-brand border border-line bg-surface px-4">
           {items}
         </div>
       ) : (

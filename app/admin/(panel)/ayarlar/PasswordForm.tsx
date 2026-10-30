@@ -32,7 +32,7 @@ export function PasswordForm() {
         <TextInput id="repeat" name="repeat" type="password" autoComplete="new-password" required />
       </Field>
 
-      <div className="border-t border-tfs-grey pt-4">
+      <div className="border-t border-line pt-4">
         <SubmitButton variant="secondary" pendingLabel="Güncelleniyor…">
           Şifreyi değiştir
         </SubmitButton>

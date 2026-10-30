@@ -170,23 +170,23 @@ export function BulletinForm({
             accept="application/pdf,.pdf"
             required={!isEdit}
             onChange={(event) => void handleFile(event.target.files?.[0])}
-            className="file:mr-3 file:rounded-brand file:border-0 file:bg-tfs-dark file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
+            className="file:mr-3 file:rounded-brand file:border-0 file:bg-surface-3 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
           />
         </Field>
       </div>
 
       {isEdit && !pdfSource ? (
-        <div className="flex items-center gap-3 rounded-brand border border-tfs-grey bg-tfs-grey-20 p-3">
+        <div className="flex items-center gap-3 rounded-brand border border-line bg-surface-2 p-3">
           {currentCoverUrl ? (
             /* eslint-disable-next-line @next/next/no-img-element -- küçük kapak görseli */
             <img
               src={currentCoverUrl}
               alt="Mevcut kapak"
-              className="aspect-[1/1.414] w-16 border border-tfs-grey bg-white object-cover object-top shadow-sm"
+              className="aspect-[1/1.414] w-16 border border-line bg-white object-cover object-top shadow-sm"
             />
           ) : null}
-          <div className="min-w-0 flex-1 text-xs text-tfs-dark-80">
-            <p className="font-semibold text-tfs-dark">Kapak görseli</p>
+          <div className="min-w-0 flex-1 text-xs text-ink-soft">
+            <p className="font-semibold text-ink">Kapak görseli</p>
             <p>
               {currentCoverUrl
                 ? "Ana sayfadaki kapaklı kartta bu görsel görünüyor."
@@ -196,7 +196,7 @@ export function BulletinForm({
           <button
             type="button"
             onClick={() => bulletin && setPdfSource(`/api/dosya/${bulletin.id}`)}
-            className="shrink-0 rounded-brand border border-tfs-grey bg-white px-3 py-1.5 text-xs font-semibold text-tfs-dark transition-colors hover:border-tfs-red hover:text-tfs-red"
+            className="shrink-0 rounded-brand border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:border-tfs-red hover:text-accent-ink"
           >
             {currentCoverUrl ? "Kapak sayfasını değiştir" : "Kapak sayfası seç"}
           </button>
@@ -208,14 +208,14 @@ export function BulletinForm({
       ) : null}
 
       {bulletin ? (
-        <p className="rounded-brand bg-tfs-grey-20 px-3 py-2 text-xs text-tfs-dark-60">
-          Mevcut dosya: <span className="text-tfs-dark">{bulletin.file_name}</span> ·{" "}
+        <p className="rounded-brand bg-surface-2 px-3 py-2 text-xs text-ink-faint">
+          Mevcut dosya: <span className="text-ink">{bulletin.file_name}</span> ·{" "}
           {formatFileSize(bulletin.file_size)} ·{" "}
           <a
             href={`/api/dosya/${bulletin.id}`}
             target="_blank"
             rel="noopener"
-            className="font-semibold text-tfs-red hover:underline"
+            className="font-semibold text-accent-ink hover:underline"
           >
             görüntüle ↗
           </a>
@@ -228,7 +228,7 @@ export function BulletinForm({
         defaultChecked={bulletin ? Boolean(bulletin.is_published) : true}
       />
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-tfs-grey pt-4">
+      <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
         {/* Kapak hazırlanırken (genelde bir saniyeden kısa) gönderilmesin;
             yoksa bülten kapaksız kaydedilir. */}
         <SubmitButton
@@ -239,7 +239,7 @@ export function BulletinForm({
         </SubmitButton>
         <Link
           href="/admin/bultenler"
-          className="rounded-brand border border-tfs-grey bg-white px-4 py-2 text-sm font-semibold text-tfs-dark transition-colors hover:border-tfs-dark-20"
+          className="rounded-brand border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-line-strong"
         >
           Vazgeç
         </Link>

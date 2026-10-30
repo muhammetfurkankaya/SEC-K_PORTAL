@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { HeaderFrame } from "@/components/HeaderFrame";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { listActiveCategories } from "@/lib/db/queries/categories";
 import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { getSettings } from "@/lib/db/queries/settings";
@@ -58,7 +57,6 @@ export function SiteHeader() {
           </Link>
 
           <div className="flex shrink-0 items-center gap-2">
-            {settings.theme_toggle_visible ? <ThemeToggle /> : null}
             <Link
               href="/admin"
               // Hem koyu şeritte hem fotoğrafın üzerinde okunan beyaz çerçeve.

@@ -104,7 +104,7 @@ export function PortalSettingsForm({
         </div>
       ) : null}
 
-      <div className="-mx-4 mb-5 overflow-x-auto border-b border-tfs-grey px-4 sm:-mx-5 sm:px-5">
+      <div className="-mx-4 mb-5 overflow-x-auto border-b border-line px-4 sm:-mx-5 sm:px-5">
         <div className="flex gap-1">
           {SETTING_GROUPS.map((group) => {
             const isActive = group.id === activeGroup;
@@ -116,8 +116,8 @@ export function PortalSettingsForm({
                 aria-current={isActive ? "true" : undefined}
                 className={`flex shrink-0 items-center gap-1.5 border-b-[3px] px-3 py-2.5 text-xs whitespace-nowrap transition-colors ${
                   isActive
-                    ? "border-tfs-red font-semibold text-tfs-dark"
-                    : "border-transparent text-tfs-dark-60 hover:text-tfs-dark"
+                    ? "border-tfs-red font-semibold text-ink"
+                    : "border-transparent text-ink-faint hover:text-ink"
                 }`}
               >
                 {group.title}
@@ -150,7 +150,7 @@ export function PortalSettingsForm({
               />
             ) : (
               <>
-                <p className="text-xs font-light text-tfs-dark-60">{group.hint}</p>
+                <p className="text-xs font-light text-ink-faint">{group.hint}</p>
 
                 {[...sections.entries()].map(([section, keys]) => (
                   <GroupSection key={section || "_"} title={section}>
@@ -169,11 +169,11 @@ export function PortalSettingsForm({
       })}
 
       {/* Yapışkan: 70 alanlık bir formda kaydet düğmesi hep erişilebilir olmalı. */}
-      <div className="sticky bottom-0 -mx-4 mt-6 flex flex-wrap items-center gap-3 border-t border-tfs-grey bg-white px-4 py-3 sm:-mx-5 sm:px-5">
+      <div className="sticky bottom-0 -mx-4 mt-6 flex flex-wrap items-center gap-3 border-t border-line bg-surface px-4 py-3 sm:-mx-5 sm:px-5">
         <SubmitButton pending={pending} pendingLabel="Kaydediliyor…">
           Ayarları kaydet
         </SubmitButton>
-        <span className="text-xs font-light text-tfs-dark-60">
+        <span className="text-xs font-light text-ink-faint">
           Değişiklikler kaydettiğiniz anda portalda geçerli olur.
         </span>
       </div>

@@ -18,7 +18,7 @@ export function ResetSettingsForm() {
   return (
     <form action={action} className="space-y-3">
       {state.message ? <Alert kind={state.ok ? "success" : "error"}>{state.message}</Alert> : null}
-      <p className="text-sm font-light text-tfs-dark-80">
+      <p className="text-sm font-light text-ink-soft">
         Portal metinleri, punto ve renk seçimleri, ana sayfa yerleşimi, duyuru ve bülten görünümü
         ayarlarının tamamı ilk kurulum değerlerine döner. Bültenler, anketler ve şifreniz
         etkilenmez.

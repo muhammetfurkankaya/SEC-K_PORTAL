@@ -119,13 +119,11 @@ export function SurveyEditor({ survey, questions, action, locked = false }: Surv
         />
       ) : null}
 
-      {state.message ? (
-        <Alert kind={state.ok ? "success" : "error"}>{state.message}</Alert>
-      ) : null}
+      {state.message ? <Alert kind={state.ok ? "success" : "error"}>{state.message}</Alert> : null}
 
       {/* ————— Anket bilgileri ————— */}
-      <section className="rounded-brand border border-tfs-grey bg-white p-5">
-        <h2 className="mb-4 text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+      <section className="rounded-brand border border-line bg-surface p-5">
+        <h2 className="mb-4 text-xs font-semibold tracking-[0.12em] text-accent-ink uppercase">
           Anket Bilgileri
         </h2>
 
@@ -182,7 +180,7 @@ export function SurveyEditor({ survey, questions, action, locked = false }: Surv
             </Field>
           </div>
 
-          <div className="space-y-2 border-t border-tfs-grey-40 pt-4">
+          <div className="space-y-2 border-t border-line-soft pt-4">
             <Checkbox
               name="collect_identity"
               label="İsim ve departman alanlarını sor (isteğe bağlı doldurulur)"
@@ -199,9 +197,9 @@ export function SurveyEditor({ survey, questions, action, locked = false }: Surv
 
       {/* ————— Sorular ————— */}
       {isEdit ? (
-        <section className="rounded-brand border border-tfs-grey bg-white p-5">
+        <section className="rounded-brand border border-line bg-surface p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+            <h2 className="text-xs font-semibold tracking-[0.12em] text-accent-ink uppercase">
               Sorular ({drafts.length})
             </h2>
           </div>
@@ -216,7 +214,7 @@ export function SurveyEditor({ survey, questions, action, locked = false }: Surv
           {!locked ? (
             <>
               {drafts.length === 0 ? (
-                <p className="rounded-brand border border-dashed border-tfs-grey bg-tfs-grey-20 px-4 py-8 text-center text-sm font-light text-tfs-dark-60">
+                <p className="rounded-brand border border-dashed border-line bg-surface-2 px-4 py-8 text-center text-sm font-light text-ink-faint">
                   Henüz soru eklenmedi. Aşağıdan soru tipi seçip ekleyin.
                 </p>
               ) : (
@@ -238,7 +236,7 @@ export function SurveyEditor({ survey, questions, action, locked = false }: Surv
                 </ul>
               )}
 
-              <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-tfs-grey pt-4">
+              <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-line pt-4">
                 <div className="min-w-[12rem]">
                   <Field label="Yeni soru tipi" htmlFor="new-question-type">
                     <Select
@@ -258,7 +256,7 @@ export function SurveyEditor({ survey, questions, action, locked = false }: Surv
                 <button
                   type="button"
                   onClick={() => setDrafts((current) => [...current, emptyDraft(newType)])}
-                  className="rounded-brand border border-tfs-red bg-white px-4 py-2 text-sm font-semibold text-tfs-red transition-colors hover:bg-tfs-red hover:text-white"
+                  className="rounded-brand border border-tfs-red bg-surface px-4 py-2 text-sm font-semibold text-accent-ink transition-colors hover:bg-tfs-red hover:text-white"
                 >
                   + Soru ekle
                 </button>
@@ -299,11 +297,11 @@ function QuestionCard({
   const isChoice = CHOICE_TYPES.includes(draft.type);
 
   return (
-    <div className="rounded-brand border border-tfs-grey bg-tfs-grey-20 p-4">
+    <div className="rounded-brand border border-line bg-surface-2 p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-tfs-dark">
+        <span className="text-xs font-semibold text-ink">
           Soru {index + 1}
-          <span className="ml-2 font-normal text-tfs-dark-60">
+          <span className="ml-2 font-normal text-ink-faint">
             {QUESTION_TYPE_LABELS[draft.type]}
           </span>
         </span>
@@ -312,11 +310,7 @@ function QuestionCard({
           <IconButton label="Yukarı taşı" disabled={index === 0} onClick={() => onMove(-1)}>
             ↑
           </IconButton>
-          <IconButton
-            label="Aşağı taşı"
-            disabled={index === total - 1}
-            onClick={() => onMove(1)}
-          >
+          <IconButton label="Aşağı taşı" disabled={index === total - 1} onClick={() => onMove(1)}>
             ↓
           </IconButton>
           <IconButton label="Soruyu sil" danger onClick={onRemove}>
@@ -371,13 +365,11 @@ function QuestionCard({
 
         {isChoice ? (
           <div>
-            <span className="block text-xs font-semibold text-tfs-dark">Seçenekler</span>
+            <span className="block text-xs font-semibold text-ink">Seçenekler</span>
             <ul className="mt-1 space-y-2">
               {draft.options.map((option, optionIndex) => (
                 <li key={optionIndex} className="flex items-center gap-2">
-                  <span className="w-5 text-right text-xs text-tfs-dark-60">
-                    {optionIndex + 1}.
-                  </span>
+                  <span className="w-5 text-right text-xs text-ink-faint">{optionIndex + 1}.</span>
                   <TextInput
                     value={option}
                     onChange={(event) => {
@@ -407,7 +399,7 @@ function QuestionCard({
             <button
               type="button"
               onClick={() => onChange({ options: [...draft.options, ""] })}
-              className="mt-2 text-xs font-semibold text-tfs-red hover:underline"
+              className="mt-2 text-xs font-semibold text-accent-ink hover:underline"
             >
               + Seçenek ekle
             </button>
@@ -415,12 +407,12 @@ function QuestionCard({
         ) : null}
 
         {draft.type === "rating" ? (
-          <p className="text-[0.6875rem] font-light text-tfs-dark-60">
+          <p className="text-[0.6875rem] font-light text-ink-faint">
             Katılımcı 1–5 arası puan verir. Analizde ortalama ve dağılım gösterilir.
           </p>
         ) : null}
         {draft.type === "nps" ? (
-          <p className="text-[0.6875rem] font-light text-tfs-dark-60">
+          <p className="text-[0.6875rem] font-light text-ink-faint">
             Katılımcı 0–10 arası puan verir. Analizde NPS skoru hesaplanır.
           </p>
         ) : null}
@@ -457,8 +449,8 @@ function IconButton({
       title={label}
       className={`flex size-7 items-center justify-center rounded-brand border text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         danger
-          ? "border-tfs-grey bg-white text-tfs-red hover:border-tfs-red"
-          : "border-tfs-grey bg-white text-tfs-dark-80 hover:border-tfs-dark-20"
+          ? "border-line bg-surface text-accent-ink hover:border-tfs-red"
+          : "border-line bg-surface text-ink-soft hover:border-line-strong"
       }`}
     >
       {children}

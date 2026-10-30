@@ -44,7 +44,7 @@ export function SiteNav({
   return (
     <nav
       aria-label="Portal bölümleri"
-      className={`print-hidden ${overlay ? "border-b border-white/20" : "border-b border-line bg-surface"}`}
+      className={`print-hidden ${overlay ? "" : "border-b border-line bg-surface"}`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Sekmeler taşarsa yatay kaydırılır; sayfa gövdesi asla yatay kaymaz.

@@ -44,17 +44,17 @@ export function SurveyQrPanel({
   }
 
   return (
-    <div className="rounded-brand border border-tfs-grey bg-white">
-      <div className="flex items-center justify-between gap-2 border-b border-tfs-grey px-4 py-3">
-        <h2 className="text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+    <div className="rounded-brand border border-line bg-surface">
+      <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+        <h2 className="text-xs font-semibold tracking-[0.12em] text-accent-ink uppercase">
           QR Kod ve Bağlantı
         </h2>
         {isActive ? (
-          <span className="rounded-brand bg-tfs-green/20 px-2 py-0.5 text-[0.6875rem] font-semibold text-tfs-dark">
+          <span className="rounded-brand bg-tfs-green/20 px-2 py-0.5 text-[0.6875rem] font-semibold text-ink">
             Açık
           </span>
         ) : (
-          <span className="rounded-brand bg-tfs-grey-40 px-2 py-0.5 text-[0.6875rem] font-semibold text-tfs-dark-60">
+          <span className="rounded-brand bg-surface-3 px-2 py-0.5 text-[0.6875rem] font-semibold text-ink-faint">
             Kapalı
           </span>
         )}
@@ -62,9 +62,9 @@ export function SurveyQrPanel({
 
       <div className="p-4">
         {!isActive ? (
-          <p className="mb-3 rounded-brand border border-tfs-grey bg-tfs-grey-20 px-3 py-2 text-xs text-tfs-dark-80">
-            Anket kapalı olduğu için QR kodu okutan kullanıcılar formu göremez.
-            Yayınladıktan sonra bu kod çalışır.
+          <p className="mb-3 rounded-brand border border-line bg-surface-2 px-3 py-2 text-xs text-ink-soft">
+            Anket kapalı olduğu için QR kodu okutan kullanıcılar formu göremez. Yayınladıktan sonra
+            bu kod çalışır.
           </p>
         ) : null}
 
@@ -73,12 +73,12 @@ export function SurveyQrPanel({
         <img
           src={pngDataUrl}
           alt={`${title} anketinin QR kodu`}
-          className="mx-auto block size-48 rounded-brand border border-tfs-grey"
+          className="mx-auto block size-48 rounded-brand border border-line"
         />
 
         <div className="mt-3">
-          <span className="block text-xs font-semibold text-tfs-dark">Anket bağlantısı</span>
-          <p className="mt-1 truncate rounded-brand bg-tfs-grey-20 px-2 py-1.5 font-mono text-[0.6875rem] text-tfs-dark-80">
+          <span className="block text-xs font-semibold text-ink">Anket bağlantısı</span>
+          <p className="mt-1 truncate rounded-brand bg-surface-2 px-2 py-1.5 font-mono text-[0.6875rem] text-ink-soft">
             {url}
           </p>
         </div>
@@ -87,7 +87,7 @@ export function SurveyQrPanel({
           <button
             type="button"
             onClick={copyLink}
-            className="rounded-brand border border-tfs-grey px-3 py-2 text-xs font-semibold text-tfs-dark transition-colors hover:border-tfs-red"
+            className="rounded-brand border border-line px-3 py-2 text-xs font-semibold text-ink transition-colors hover:border-tfs-red"
           >
             {copied ? "Kopyalandı ✓" : "Bağlantıyı kopyala"}
           </button>
@@ -96,7 +96,7 @@ export function SurveyQrPanel({
             href={url}
             target="_blank"
             rel="noopener"
-            className="rounded-brand border border-tfs-grey px-3 py-2 text-center text-xs font-semibold text-tfs-dark transition-colors hover:border-tfs-red"
+            className="rounded-brand border border-line px-3 py-2 text-center text-xs font-semibold text-ink transition-colors hover:border-tfs-red"
           >
             Formu aç ↗
           </Link>
@@ -104,7 +104,7 @@ export function SurveyQrPanel({
           <a
             href={pngDataUrl}
             download={`${fileBase}.png`}
-            className="rounded-brand border border-tfs-grey px-3 py-2 text-center text-xs font-semibold text-tfs-dark transition-colors hover:border-tfs-red"
+            className="rounded-brand border border-line px-3 py-2 text-center text-xs font-semibold text-ink transition-colors hover:border-tfs-red"
           >
             PNG indir
           </a>
@@ -112,7 +112,7 @@ export function SurveyQrPanel({
           <a
             href={svgDataUrl}
             download={`${fileBase}.svg`}
-            className="rounded-brand border border-tfs-grey px-3 py-2 text-center text-xs font-semibold text-tfs-dark transition-colors hover:border-tfs-red"
+            className="rounded-brand border border-line px-3 py-2 text-center text-xs font-semibold text-ink transition-colors hover:border-tfs-red"
           >
             SVG indir
           </a>
@@ -120,7 +120,7 @@ export function SurveyQrPanel({
 
         <Link
           href={`/admin/anketler/${surveyId}/qr`}
-          className="mt-2 block rounded-brand bg-tfs-dark px-3 py-2 text-center text-xs font-semibold text-white transition-colors hover:bg-tfs-red"
+          className="mt-2 block rounded-brand border border-line-strong bg-surface-3 px-3 py-2 text-center text-xs font-semibold text-white transition-colors hover:bg-tfs-red"
         >
           Asılacak afişi yazdır
         </Link>

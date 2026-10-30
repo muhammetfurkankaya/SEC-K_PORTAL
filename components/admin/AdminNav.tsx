@@ -15,7 +15,7 @@ export function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Yönetim bölümleri" className="border-b border-tfs-grey bg-white print-hidden">
+    <nav aria-label="Yönetim bölümleri" className="border-b border-line bg-surface print-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <ul className="-mb-px flex gap-1 overflow-x-auto">
           {ITEMS.map((item) => {
@@ -31,8 +31,8 @@ export function AdminNav() {
                   aria-current={isActive ? "page" : undefined}
                   className={`block border-b-[3px] px-4 py-3.5 text-sm whitespace-nowrap transition-colors ${
                     isActive
-                      ? "border-tfs-red font-semibold text-tfs-dark"
-                      : "border-transparent text-tfs-dark-80 hover:border-tfs-grey hover:text-tfs-dark"
+                      ? "border-tfs-red font-semibold text-ink"
+                      : "border-transparent text-ink-soft hover:border-line hover:text-ink"
                   }`}
                 >
                   {item.label}

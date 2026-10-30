@@ -122,12 +122,12 @@ export function HeroImagePicker({
     : { src: currentSrc, strong: strongScrim };
 
   return (
-    <div className="rounded-brand border border-tfs-grey bg-white">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-tfs-grey px-4 py-2.5">
-        <span className="text-xs font-semibold text-tfs-dark">
+    <div className="rounded-brand border border-line bg-surface">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-4 py-2.5">
+        <span className="text-xs font-semibold text-ink">
           {prepared ? "Yeni görsel — henüz yüklenmedi" : "Ana sayfa görseli"}
         </span>
-        <span className="text-[0.6875rem] font-light text-tfs-dark-60">
+        <span className="text-[0.6875rem] font-light text-ink-faint">
           {prepared
             ? `${prepared.width}×${prepared.height} px · ${Math.round(prepared.blob.size / 1024)} KB (aslı ${prepared.originalKb} KB)`
             : uploaded
@@ -184,14 +184,14 @@ export function HeroImagePicker({
         ) : null}
 
         {prepared && prepared.brightness > BRIGHT_THRESHOLD ? (
-          <p className="text-[0.6875rem] font-light text-tfs-dark-60">
+          <p className="text-[0.6875rem] font-light text-ink-faint">
             Görselin alt kısmı parlak; yazının okunması için perde otomatik olarak güçlendirildi.
           </p>
         ) : null}
 
         <div className="flex flex-wrap items-center gap-2">
           {/* name YOK: dosya büyük ayar formuyla birlikte gönderilmesin. */}
-          <label className="inline-flex cursor-pointer items-center rounded-brand border border-tfs-grey bg-white px-4 py-2 text-sm font-semibold text-tfs-dark transition-colors hover:border-tfs-dark-20">
+          <label className="inline-flex cursor-pointer items-center rounded-brand border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-line-strong">
             {preparing ? "Hazırlanıyor…" : prepared ? "Başka görsel seç" : "Görsel seç"}
             <input
               ref={inputRef}
@@ -209,7 +209,7 @@ export function HeroImagePicker({
                 type="button"
                 onClick={upload}
                 disabled={pending}
-                className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-dark disabled:opacity-60"
+                className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a81a20] disabled:opacity-60"
               >
                 {pending ? "Yükleniyor…" : "Yükle ve yayınla"}
               </button>
@@ -220,7 +220,7 @@ export function HeroImagePicker({
                   if (inputRef.current) inputRef.current.value = "";
                 }}
                 disabled={pending}
-                className="px-2 py-2 text-sm text-tfs-dark-60 hover:text-tfs-dark"
+                className="px-2 py-2 text-sm text-ink-faint hover:text-ink"
               >
                 Vazgeç
               </button>
@@ -230,14 +230,14 @@ export function HeroImagePicker({
               type="button"
               onClick={remove}
               disabled={pending}
-              className="rounded-brand border border-tfs-red px-4 py-2 text-sm font-semibold text-tfs-red transition-colors hover:bg-tfs-red hover:text-white disabled:opacity-60"
+              className="rounded-brand border border-tfs-red px-4 py-2 text-sm font-semibold text-accent-ink transition-colors hover:bg-tfs-red hover:text-white disabled:opacity-60"
             >
               {pending ? "Kaldırılıyor…" : "Görseli kaldır"}
             </button>
           ) : null}
         </div>
 
-        <p className="text-[0.6875rem] font-light text-tfs-dark-60">
+        <p className="text-[0.6875rem] font-light text-ink-faint">
           JPEG, PNG veya WebP; en az 1920×800 önerilir. Görsel tarayıcınızda küçültülür,
           yüklediğiniz anda ana sayfada yayına girer — &ldquo;Ayarları kaydet&rdquo;e basmanız
           gerekmez.

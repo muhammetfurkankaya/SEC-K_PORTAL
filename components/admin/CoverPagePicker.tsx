@@ -111,23 +111,23 @@ export function CoverPagePicker({
 
   if (failed) {
     return (
-      <p className="rounded-brand border border-tfs-grey bg-tfs-grey-20 p-3 text-xs text-tfs-dark-80">
+      <p className="rounded-brand border border-line bg-surface-2 p-3 text-xs text-ink-soft">
         PDF'in sayfaları okunamadı; bülten yine kaydedilir, kartta yazılı kapak görünür.
       </p>
     );
   }
 
   return (
-    <div className="rounded-brand border border-tfs-grey bg-tfs-grey-20 p-3">
+    <div className="rounded-brand border border-line bg-surface-2 p-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-xs font-semibold text-tfs-dark">
+        <p className="text-xs font-semibold text-ink">
           Kapak sayfası
-          <span className="ml-1.5 font-light text-tfs-dark-60">
+          <span className="ml-1.5 font-light text-ink-faint">
             — ana sayfadaki kapaklı kartta (ızgara görünümü) gösterilecek sayfa
           </span>
         </p>
         {total > MAX_PAGES ? (
-          <p className="text-[0.6875rem] text-tfs-dark-60">İlk {MAX_PAGES} sayfa gösteriliyor</p>
+          <p className="text-[0.6875rem] text-ink-faint">İlk {MAX_PAGES} sayfa gösteriliyor</p>
         ) : null}
       </div>
 
@@ -139,12 +139,12 @@ export function CoverPagePicker({
             <img
               src={preview}
               alt={`Kapak: ${selected}. sayfa`}
-              className="aspect-[1/1.414] w-full border border-tfs-grey bg-white object-cover object-top shadow-sm"
+              className="aspect-[1/1.414] w-full border border-line bg-white object-cover object-top shadow-sm"
             />
           ) : (
-            <div className="aspect-[1/1.414] w-full animate-pulse border border-tfs-grey bg-white" />
+            <div className="aspect-[1/1.414] w-full animate-pulse border border-line bg-white" />
           )}
-          <p className="mt-1 text-center text-[0.6875rem] text-tfs-dark-60">{selected}. sayfa</p>
+          <p className="mt-1 text-center text-[0.6875rem] text-ink-faint">{selected}. sayfa</p>
         </div>
 
         <div
@@ -153,7 +153,7 @@ export function CoverPagePicker({
           className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-2"
         >
           {thumbs.length === 0 ? (
-            <p className="self-center text-xs text-tfs-dark-60">Sayfalar hazırlanıyor…</p>
+            <p className="self-center text-xs text-ink-faint">Sayfalar hazırlanıyor…</p>
           ) : null}
           {thumbs.map((url, index) => {
             const page = index + 1;
@@ -166,15 +166,15 @@ export function CoverPagePicker({
                 aria-checked={active}
                 aria-label={`${page}. sayfa`}
                 onClick={() => setSelected(page)}
-                className={`w-20 shrink-0 rounded-brand border-2 bg-white p-0.5 text-center transition-colors ${
-                  active ? "border-tfs-red" : "border-transparent hover:border-tfs-dark-20"
+                className={`w-20 shrink-0 rounded-brand border-2 bg-surface p-0.5 text-center transition-colors ${
+                  active ? "border-tfs-red" : "border-transparent hover:border-line-strong"
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- yerel önizleme */}
                 <img src={url} alt="" className="aspect-[1/1.414] w-full object-cover object-top" />
                 <span
                   className={`mt-0.5 block text-[0.6875rem] ${
-                    active ? "font-semibold text-tfs-red" : "text-tfs-dark-60"
+                    active ? "font-semibold text-accent-ink" : "text-ink-faint"
                   }`}
                 >
                   {page}

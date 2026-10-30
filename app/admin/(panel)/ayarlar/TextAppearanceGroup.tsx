@@ -50,7 +50,7 @@ export function TextAppearanceGroup({
 
   return (
     <div className="space-y-5">
-      <p className="text-xs font-light text-tfs-dark-60">
+      <p className="text-xs font-light text-ink-faint">
         Her yazının metni, puntosu ve rengi bir arada. Yazdıkça ve seçtikçe önizleme değişir;
         önizlemeler masaüstü ölçeğini gösterir, telefonda her kademe bir tık daha ölçülüdür.
       </p>
@@ -97,14 +97,14 @@ function CardBlock({
   const previewText = card.previewKey ? values[card.previewKey]?.trim() || "—" : firstCategory;
 
   return (
-    <fieldset className="overflow-hidden rounded-brand border border-tfs-grey">
+    <fieldset className="overflow-hidden rounded-brand border border-line">
       <legend className="sr-only">{card.title}</legend>
 
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-tfs-grey bg-tfs-grey-20 px-4 py-2.5">
-        <span className="text-xs font-semibold tracking-[0.1em] text-tfs-red uppercase">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-line bg-surface-2 px-4 py-2.5">
+        <span className="text-xs font-semibold tracking-[0.1em] text-accent-ink uppercase">
           {card.title}
         </span>
-        <span className="text-[0.6875rem] font-light text-tfs-dark-60">{card.where}</span>
+        <span className="text-[0.6875rem] font-light text-ink-faint">{card.where}</span>
       </div>
 
       {card.preview === "footer" ? <FooterPreview values={values} logoSrc={logoSrc} /> : null}
@@ -135,7 +135,7 @@ function CardBlock({
         />
 
         {slot ? (
-          <div className="grid gap-4 border-t border-tfs-grey-40 pt-4 lg:grid-cols-2">
+          <div className="grid gap-4 border-t border-line-soft pt-4 lg:grid-cols-2">
             <Field label="Punto">
               <SizeChoice
                 name={sizeKey}
@@ -156,10 +156,10 @@ function CardBlock({
         ) : null}
 
         {card.note ? (
-          <p className="text-[0.6875rem] font-light text-tfs-dark-60">
+          <p className="text-[0.6875rem] font-light text-ink-faint">
             {card.note.text}{" "}
             {card.note.href ? (
-              <Link href={card.note.href} className="font-semibold text-tfs-red hover:underline">
+              <Link href={card.note.href} className="font-semibold text-accent-ink hover:underline">
                 {card.note.linkText}
               </Link>
             ) : null}
@@ -221,7 +221,7 @@ function SlotPreview({
 
   if (slot === "section_title") {
     return (
-      <div className="bg-white px-5 py-5">
+      <div className="bg-surface px-5 py-5">
         <span className="block font-semibold tracking-[0.12em] uppercase">{text}</span>
       </div>
     );
@@ -229,7 +229,7 @@ function SlotPreview({
 
   // page_title ve page_eyebrow: sade başlık bandının aynısı.
   return (
-    <div className="bg-tfs-grey-20 px-5 py-6">
+    <div className="bg-surface-2 px-5 py-6">
       <div className="brand-bar pl-4">
         {slot === "page_eyebrow" ? (
           <span className="block font-semibold tracking-[0.16em] uppercase">{text}</span>
@@ -271,15 +271,13 @@ function FooterPreview({
       <div className="bg-tfs-dark px-5 py-3.5">
         <LogoView variant="light" file={logoSrc} subtitle={showSubtitle ? subtitle : undefined} />
       </div>
-      <div className="border-t border-tfs-grey bg-tfs-grey-20 px-5 py-4 text-xs text-tfs-dark-60">
+      <div className="border-t border-line bg-surface-2 px-5 py-4 text-xs text-ink-faint">
         {footerEmpty ? (
           <p className="italic">Alt bilgi gizli — gösterilecek bir şey yok.</p>
         ) : (
           <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <p>
-              {brand.title ? (
-                <span className="font-semibold text-tfs-dark">{brand.title}</span>
-              ) : null}
+              {brand.title ? <span className="font-semibold text-ink">{brand.title}</span> : null}
               {brand.title && brand.rest ? " · " : ""}
               {brand.rest}
             </p>

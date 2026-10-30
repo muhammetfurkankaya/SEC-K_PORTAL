@@ -26,7 +26,7 @@ export default function AdminDashboard() {
       >
         <Link
           href="/admin/bultenler/yeni"
-          className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-dark"
+          className="rounded-brand bg-tfs-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a81a20]"
         >
           + Bülten yükle
         </Link>
@@ -55,7 +55,10 @@ export default function AdminDashboard() {
         <Panel
           title="Son Yüklenen Bültenler"
           action={
-            <Link href="/admin/bultenler" className="text-xs font-semibold text-tfs-red hover:underline">
+            <Link
+              href="/admin/bultenler"
+              className="text-xs font-semibold text-accent-ink hover:underline"
+            >
               Tümü →
             </Link>
           }
@@ -63,18 +66,18 @@ export default function AdminDashboard() {
           {recent.length === 0 ? (
             <EmptyRow>Henüz bülten yüklenmedi.</EmptyRow>
           ) : (
-            <ul className="divide-y divide-tfs-grey-40">
+            <ul className="divide-y divide-line-soft">
               {recent.map((bulletin) => (
                 <li key={bulletin.id} className="flex items-baseline justify-between gap-3 py-2">
                   <span className="min-w-0">
-                    <span className="font-mono text-xs font-semibold text-tfs-red">
+                    <span className="font-mono text-xs font-semibold text-accent-ink">
                       {bulletin.bulletin_no}
                     </span>
-                    <span className="mt-0.5 block truncate text-sm text-tfs-dark">
+                    <span className="mt-0.5 block truncate text-sm text-ink">
                       {bulletin.subject}
                     </span>
                   </span>
-                  <span className="shrink-0 text-xs text-tfs-dark-60">
+                  <span className="shrink-0 text-xs text-ink-faint">
                     {formatDate(bulletin.published_date)}
                   </span>
                 </li>
@@ -86,7 +89,10 @@ export default function AdminDashboard() {
         <Panel
           title="Anketler"
           action={
-            <Link href="/admin/anketler" className="text-xs font-semibold text-tfs-red hover:underline">
+            <Link
+              href="/admin/anketler"
+              className="text-xs font-semibold text-accent-ink hover:underline"
+            >
               Tümü →
             </Link>
           }
@@ -94,16 +100,16 @@ export default function AdminDashboard() {
           {recentSurveys.length === 0 ? (
             <EmptyRow>Henüz anket oluşturulmadı.</EmptyRow>
           ) : (
-            <ul className="divide-y divide-tfs-grey-40">
+            <ul className="divide-y divide-line-soft">
               {recentSurveys.map((survey) => (
                 <li key={survey.id} className="flex items-baseline justify-between gap-3 py-2">
                   <Link
                     href={`/admin/anketler/${survey.id}/analiz`}
-                    className="min-w-0 truncate text-sm text-tfs-dark hover:text-tfs-red"
+                    className="min-w-0 truncate text-sm text-ink hover:text-accent-ink"
                   >
                     {survey.title}
                   </Link>
-                  <span className="shrink-0 text-xs text-tfs-dark-60">
+                  <span className="shrink-0 text-xs text-ink-faint">
                     {formatNumber(survey.response_count)} cevap
                   </span>
                 </li>
@@ -118,12 +124,12 @@ export default function AdminDashboard() {
           {audit.length === 0 ? (
             <EmptyRow>Henüz işlem kaydı yok.</EmptyRow>
           ) : (
-            <ul className="divide-y divide-tfs-grey-40">
+            <ul className="divide-y divide-line-soft">
               {audit.map((entry) => (
                 <li key={entry.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2">
-                  <span className="font-mono text-xs text-tfs-red">{entry.action}</span>
-                  <span className="text-sm text-tfs-dark">{entry.detail ?? "—"}</span>
-                  <span className="ml-auto text-xs text-tfs-dark-60">
+                  <span className="font-mono text-xs text-accent-ink">{entry.action}</span>
+                  <span className="text-sm text-ink">{entry.detail ?? "—"}</span>
+                  <span className="ml-auto text-xs text-ink-faint">
                     {entry.username ?? "—"} · {formatDateTime(entry.at)}
                   </span>
                 </li>
@@ -137,5 +143,5 @@ export default function AdminDashboard() {
 }
 
 function EmptyRow({ children }: { children: React.ReactNode }) {
-  return <p className="py-4 text-center text-sm font-light text-tfs-dark-60">{children}</p>;
+  return <p className="py-4 text-center text-sm font-light text-ink-faint">{children}</p>;
 }

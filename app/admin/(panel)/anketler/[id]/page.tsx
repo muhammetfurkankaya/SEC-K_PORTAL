@@ -58,13 +58,13 @@ export default async function EditSurveyPage({ params, searchParams }: Props) {
       >
         <Link
           href={`/admin/anketler/${survey.id}/analiz`}
-          className="rounded-brand bg-tfs-dark px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-red"
+          className="rounded-brand border border-line-strong bg-surface-3 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-tfs-red"
         >
           Analizi gör
         </Link>
         <Link
           href="/admin/anketler"
-          className="rounded-brand border border-tfs-grey bg-white px-4 py-2 text-sm font-semibold text-tfs-dark transition-colors hover:border-tfs-dark-20"
+          className="rounded-brand border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-line-strong"
         >
           Listeye dön
         </Link>

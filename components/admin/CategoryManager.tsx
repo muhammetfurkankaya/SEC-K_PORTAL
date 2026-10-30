@@ -23,7 +23,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithCount[
     <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
       <div className="space-y-3">
         {categories.length === 0 ? (
-          <p className="rounded-brand border border-dashed border-tfs-grey bg-white px-4 py-10 text-center text-sm font-light text-tfs-dark-60">
+          <p className="rounded-brand border border-dashed border-line bg-surface px-4 py-10 text-center text-sm font-light text-ink-faint">
             Henüz sekme yok. Sağdaki formdan ilk sekmeyi ekleyin.
           </p>
         ) : (
@@ -55,10 +55,10 @@ function CategoryRow({
   const [state, action] = useActionState(updateCategoryAction, IDLE);
 
   return (
-    <div className="rounded-brand border border-tfs-grey bg-white p-4">
+    <div className="rounded-brand border border-line bg-surface p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="font-mono text-[0.6875rem] text-tfs-dark-60">/{category.slug}</span>
-        <span className="text-xs text-tfs-dark-60">
+        <span className="font-mono text-[0.6875rem] text-ink-faint">/{category.slug}</span>
+        <span className="text-xs text-ink-faint">
           {formatNumber(category.bulletin_count)} bülten
         </span>
       </div>
@@ -99,7 +99,7 @@ function CategoryRow({
           defaultChecked={Boolean(category.is_active)}
         />
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-tfs-grey-40 pt-3">
+        <div className="flex flex-wrap items-center gap-2 border-t border-line-soft pt-3">
           <SubmitButton variant="secondary" pendingLabel="Kaydediliyor…">
             Kaydet
           </SubmitButton>
@@ -154,8 +154,8 @@ function NewCategoryForm() {
 
   return (
     <div className="lg:sticky lg:top-4 lg:self-start">
-      <div className="rounded-brand border border-tfs-grey bg-white p-4">
-        <h2 className="mb-3 text-xs font-semibold tracking-[0.12em] text-tfs-red uppercase">
+      <div className="rounded-brand border border-line bg-surface p-4">
+        <h2 className="mb-3 text-xs font-semibold tracking-[0.12em] text-accent-ink uppercase">
           Yeni Sekme Ekle
         </h2>
 
@@ -180,7 +180,7 @@ function NewCategoryForm() {
           </SubmitButton>
         </form>
 
-        <p className="mt-3 text-[0.6875rem] font-light text-tfs-dark-60">
+        <p className="mt-3 text-[0.6875rem] font-light text-ink-faint">
           Sekme adresi (slug) addan otomatik üretilir ve sonradan değişmez.
         </p>
       </div>

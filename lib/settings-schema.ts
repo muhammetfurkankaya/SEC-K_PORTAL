@@ -43,15 +43,16 @@ export const SIZE_OPTIONS = [
  * Yazı renkleri.
  *
  * Seçenekler kurumsal paletle sınırlı ve **anlamsal** karşılıklara eşleniyor
- * (lib/appearance.ts): gece modunda "Koyu" seçimi siyah üstüne siyah
- * üretmesin diye.
+ * (lib/appearance.ts). Portal her zaman koyu görünümde olduğu için etiketler
+ * ve renk kareleri koyu zemindeki karşılıklarını gösteriyor. Kayıtlı değerler
+ * (`koyu`, `orta`, …) geriye dönük uyumluluk için aynı kaldı.
  */
 export const COLOR_OPTIONS = [
   { value: "otomatik", label: "Varsayılan", swatch: "transparent" },
-  { value: "koyu", label: "Koyu", swatch: "#1d252d" },
-  { value: "orta", label: "Orta", swatch: "#4a5057" },
-  { value: "soluk", label: "Soluk", swatch: "#777b81" },
-  { value: "kirmizi", label: "Kurumsal kırmızı", swatch: "#ce2028" },
+  { value: "koyu", label: "Beyaz", swatch: "#f1efec" },
+  { value: "orta", label: "Açık gri", swatch: "#d2d3d5" },
+  { value: "soluk", label: "Soluk", swatch: "#9aa0a6" },
+  { value: "kirmizi", label: "Kurumsal kırmızı", swatch: "#e8565c" },
   { value: "yesil", label: "TFS yeşili", swatch: "#9ed660" },
 ] as const satisfies readonly EnumOption[];
 
@@ -98,12 +99,6 @@ export const HERO_SCRIM_OPTIONS = [
   { value: "guclu", label: "Güçlü" },
 ] as const satisfies readonly EnumOption[];
 
-export const THEME_OPTIONS = [
-  { value: "acik", label: "Gündüz" },
-  { value: "koyu", label: "Gece" },
-  { value: "sistem", label: "Ziyaretçinin cihazına göre" },
-] as const satisfies readonly EnumOption[];
-
 export const SORT_OPTIONS = [
   { value: "tarih-yeni", label: "En yeni önce" },
   { value: "tarih-eski", label: "En eski önce" },
@@ -141,11 +136,6 @@ export const SETTING_GROUPS = [
     id: "duyuru",
     title: "Duyuru Bandı",
     hint: "Sekmelerin altında görünen şerit.",
-  },
-  {
-    id: "tema",
-    title: "Tema",
-    hint: "Gece / gündüz modu. Yönetim paneli her zaman gündüz görünümünde kalır.",
   },
 ] as const;
 
@@ -820,25 +810,6 @@ export const SETTINGS = {
     group: "duyuru",
     label: "Duyuru yayında",
     description: "Metni silmeden geçici olarak kapatmak için kullanın.",
-  },
-
-  // ————— Tema —————
-  theme_default: {
-    kind: "enum",
-    default: "acik",
-    control: "segment",
-    options: THEME_OPTIONS,
-    group: "tema",
-    label: "Varsayılan tema",
-    help: "Ziyaretçi düğmeyle seçim yapmadıysa portal bu temayla açılır. Cihaza göre: ziyaretçinin bilgisayarı ya da telefonu gece modundaysa portal da gece açılır.",
-  },
-  theme_toggle_visible: {
-    kind: "bool",
-    default: "1",
-    group: "tema",
-    label: "Gece / gündüz düğmesi görünsün",
-    description:
-      "Üst bantta, Yönetim düğmesinin yanında. Kapalıyken herkes varsayılan temayı görür; ziyaretçilerin eski seçimleri de yok sayılır.",
   },
 } as const satisfies Record<string, SettingDef>;
 

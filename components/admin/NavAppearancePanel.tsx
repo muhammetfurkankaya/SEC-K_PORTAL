@@ -45,15 +45,15 @@ export function NavAppearancePanel({
   return (
     <form
       onSubmit={submitWithoutReset(action)}
-      className="overflow-hidden rounded-brand border border-tfs-grey bg-white"
+      className="overflow-hidden rounded-brand border border-line bg-surface"
     >
       <input type="hidden" name="__alanlar" value={KEYS.join(",")} />
 
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-tfs-grey bg-tfs-grey-20 px-4 py-2.5">
-        <span className="text-xs font-semibold tracking-[0.1em] text-tfs-red uppercase">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-line bg-surface-2 px-4 py-2.5">
+        <span className="text-xs font-semibold tracking-[0.1em] text-accent-ink uppercase">
           Sekme görünümü
         </span>
-        <span className="text-[0.6875rem] font-light text-tfs-dark-60">
+        <span className="text-[0.6875rem] font-light text-ink-faint">
           Portalın üstündeki sekme çubuğu — önizleme seçtikçe değişir
         </span>
       </div>
