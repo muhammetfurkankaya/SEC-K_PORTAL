@@ -64,6 +64,15 @@ describe("bülten kapak görseli", () => {
     assert.notEqual(up.coverVersion(PDF), first);
   });
 
+  test("JPEG ölçüsü başlıktan okunur", () => {
+    const hero = new Uint8Array(
+      fs.readFileSync(path.join(__dirname, "..", "public", "brand", "hero-anasayfa.jpg")),
+    );
+    assert.deepEqual(up.jpegSize(hero), { width: 1600, height: 901 });
+    assert.equal(up.jpegSize(PNG), null);
+    assert.equal(up.jpegSize(JPEG), null, "SOF bölümü olmayan kesik dosya");
+  });
+
   test("kaydedilen kapak PDF silinince o da silinir", async () => {
     await up.saveCover(PDF, file(JPEG));
     assert.equal(up.coverExists(PDF), true);

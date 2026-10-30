@@ -10,7 +10,7 @@ import { getSettings } from "@/lib/db/queries/settings";
 import { resolveHomeHero } from "@/lib/hero";
 import { alignClass, blockWidthClass, textClass } from "@/lib/appearance";
 import { formatDate, formatNumber } from "@/lib/format";
-import { coverExists, coverVersion } from "@/lib/uploads";
+import { coverExists, coverSize, coverVersion } from "@/lib/uploads";
 import { EMPTY_MESSAGES } from "@/lib/messages";
 
 // Bültenler ve anketler admin panelinden değiştiğinde ana sayfa güncel
@@ -29,10 +29,15 @@ export default function HomePage() {
   // "Yalnızca kart" görünümünde kartlar kapaklı (PDF'in ilk sayfası).
   // Kapağı henüz üretilmemiş bültende kart yazılı kapağa düşer.
   const coverCards = settings.home_list_mode === "kart";
-  const coverUrl = (bulletin: (typeof recent)[number]) =>
-    coverExists(bulletin.file_path)
-      ? `/api/kapak/${bulletin.id}?v=${coverVersion(bulletin.file_path)}`
-      : null;
+  const coverOf = (bulletin: (typeof recent)[number]) => {
+    if (!coverExists(bulletin.file_path)) return null;
+    const size = coverSize(bulletin.file_path);
+    return {
+      url: `/api/kapak/${bulletin.id}?v=${coverVersion(bulletin.file_path)}`,
+      width: size?.width,
+      height: size?.height,
+    };
+  };
 
   // Hero yüksekliği ayardan; kayıttaki değerler bileşenin boyut adlarına
   // çevriliyor.
@@ -182,7 +187,7 @@ export default function HomePage() {
                     <BulletinCoverCard
                       key={bulletin.id}
                       bulletin={bulletin}
-                      coverUrl={coverUrl(bulletin)}
+                      cover={coverOf(bulletin)}
                       openLabel={settings.btn_open}
                     />
                   ))}

@@ -14,11 +14,12 @@ import type { BulletinWithCategory } from "@/lib/types";
  */
 export function BulletinCoverCard({
   bulletin,
-  coverUrl,
+  cover,
   openLabel,
 }: {
   bulletin: BulletinWithCategory;
-  coverUrl: string | null;
+  /** Kapak görseli ve (biliniyorsa) piksel ölçüsü; yoksa yazılı kapak. */
+  cover: { url: string; width?: number; height?: number } | null;
   openLabel: string;
 }) {
   return (
@@ -31,17 +32,22 @@ export function BulletinCoverCard({
         <span className="sr-only">{openLabel}</span>
       </Link>
 
-      {/* Kapak: A4 oranı. */}
-      <div className="w-24 shrink-0 sm:w-36 lg:w-40">
-        {coverUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element -- küçük, önceden
+      {/* Kapak: sayfanın TAMAMI, kendi oranında — kırpılmaz. Eskiden A4
+          oranına zorlanıp kırpılıyordu; A4 olmayan (Letter, yatay) sayfaların
+          kenarları kayboluyordu. Ölçü sunucudan geliyor: görsel inmeden doğru
+          oranda yer ayrılır, sayfa kaymaz. */}
+      <div className="flex w-32 shrink-0 items-start justify-center sm:w-48 xl:w-60">
+        {cover ? (
+          /* eslint-disable-next-line @next/next/no-img-element -- önceden
              boyutlandırılmış JPEG; paket sharp içermiyor */
           <img
-            src={coverUrl}
+            src={cover.url}
             alt=""
+            width={cover.width}
+            height={cover.height}
             loading="lazy"
             decoding="async"
-            className="aspect-[1/1.414] w-full border border-line bg-white object-cover object-top shadow-brand-raised transition-transform duration-[180ms] ease-[var(--ease-out-brand)] group-hover:-translate-y-0.5"
+            className="block h-auto w-full border border-white/10 bg-white shadow-[0_12px_28px_rgb(0_0_0/0.45)] transition-transform duration-[250ms] ease-[var(--ease-out-brand)] group-hover:scale-[1.03]"
           />
         ) : (
           <div

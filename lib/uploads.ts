@@ -135,6 +135,54 @@ export function coverExists(pdfPath: string): boolean {
   return absolute ? fs.existsSync(absolute) : false;
 }
 
+/**
+ * JPEG'in piksel ölçüsünü başlığından (SOF bölümü) okur; dosyanın tamamı
+ * çözülmez. Bozuk ya da tanınmayan dosyada null.
+ */
+export function jpegSize(bytes: Uint8Array): { width: number; height: number } | null {
+  if (bytes[0] !== 0xff || bytes[1] !== 0xd8) return null;
+  let i = 2;
+  while (i + 9 < bytes.length) {
+    if (bytes[i] !== 0xff) return null;
+    const marker = bytes[i + 1];
+    // Uzunluğu olmayan işaretler (dolgu, RST) atlanır.
+    if (marker === 0xff || (marker >= 0xd0 && marker <= 0xd7) || marker === 0x01) {
+      i += marker === 0xff ? 1 : 2;
+      continue;
+    }
+    const length = (bytes[i + 2] << 8) | bytes[i + 3];
+    // SOF0–SOF15 (DHT=C4, JPG=C8, DAC=CC hariç): ölçü burada.
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+      const height = (bytes[i + 5] << 8) | bytes[i + 6];
+      const width = (bytes[i + 7] << 8) | bytes[i + 8];
+      return width > 0 && height > 0 ? { width, height } : null;
+    }
+    i += 2 + length;
+  }
+  return null;
+}
+
+/**
+ * Kaydedilmiş kapağın piksel ölçüsü — kart, görsel yüklenmeden önce doğru
+ * oranda yer ayırsın (sayfa kaymasın) diye. Yalnızca baştaki 64 KB okunur.
+ */
+export function coverSize(pdfPath: string): { width: number; height: number } | null {
+  const absolute = coverAbsolutePath(pdfPath);
+  if (!absolute) return null;
+  try {
+    const handle = fs.openSync(absolute, "r");
+    try {
+      const head = Buffer.alloc(64 * 1024);
+      const read = fs.readSync(handle, head, 0, head.length, 0);
+      return jpegSize(head.subarray(0, read));
+    } finally {
+      fs.closeSync(handle);
+    }
+  } catch {
+    return null;
+  }
+}
+
 /** Kapak görselini kaydeder (varsa üzerine yazar). Yalnızca JPEG. */
 export async function saveCover(pdfPath: string, file: File): Promise<void> {
   if (file.size === 0) throw new UploadError("Kapak görseli boş.");

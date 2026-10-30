@@ -30,8 +30,12 @@ export async function loadPdf(source: string | ArrayBuffer) {
   });
 }
 
-/** Kapak görselinin piksel genişliği — kartta ~240 px, yüksek DPI için iki katı. */
-export const COVER_WIDTH = 480;
+/**
+ * Kapak görselinin piksel genişliği. Kartta en fazla 240 px gösteriliyor;
+ * yüksek çözünürlüklü ekranlarda (2x–3x) da keskin kalsın diye 720.
+ * Dosya ~80–150 KB — sunucu sınırı 1 MB (lib/uploads.ts).
+ */
+export const COVER_WIDTH = 720;
 
 export type PdfDoc = PDFDocumentProxy;
 
