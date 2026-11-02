@@ -51,7 +51,7 @@ function ensureCategories(): string[] {
  * Yönetici hesabı yoksa oluşturur.
  *
  * Şifre sabittir (bkz. DEFAULT_ADMIN_PASSWORD) ve kurulum belgelerinde
- * yazılıdır; değiştirilene kadar yönetim panelinde uyarı şeridi görünür.
+ * yazılıdır; ilk girişten sonra Ayarlar → Şifre Değiştir'den değiştirilmelidir.
  * SECK_ADMIN_USERNAME / SECK_ADMIN_PASSWORD ile başka değerler verilebilir.
  */
 function ensureAdmin(): { created: boolean; username: string | null; password: string | null } {

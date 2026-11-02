@@ -103,8 +103,6 @@ kutuya `IIS AppPool\<havuz adı>` yazın → **Değiştir** iznini işaretleyin.
 
 > **Bu varsayılan şifre bu belgede yazılı olduğu için gizli değildir.**
 > İlk girişten sonra **Ayarlar → Şifre Değiştir**'den değiştirin.
-> Değiştirilene kadar yönetim panelinin üstünde kırmızı bir uyarı şeridi
-> görünür; şifreyi değiştirdiğinizde kendiliğinden kaybolur.
 
 Başka bir başlangıç şifresi istiyorsanız, **ilk açılıştan önce** paket
 köküne `.env` adlı bir metin dosyası koyun:
@@ -175,9 +173,9 @@ durur; yedeğe `data` klasörüyle birlikte girer.
 
 Kurulum sonrası **sizin yapmanız gereken iki şey** var:
 
-1. **Varsayılan şifreyi değiştirin** (Ayarlar → Şifre Değiştir). Değiştirilene
-   kadar panelde kırmızı uyarı şeridi durur. Şifre değiştiğinde o hesapla
-   açılmış diğer tüm oturumlar kapanır.
+1. **Varsayılan şifreyi değiştirin** (Ayarlar → Şifre Değiştir). Panel bunu
+   ayrıca hatırlatmaz. Şifre değiştiğinde o hesapla açılmış diğer tüm
+   oturumlar kapanır.
 2. **HTTPS'e geçin.** Sertifikayı IIS site bağlamasına ekleyip `.env`
    dosyasına `SECK_SECURE_COOKIE=true` yazın (aşağıdaki HTTPS bölümü) —
    oturum cookie'si yalnızca o zaman şifreli bağlantıyla sınırlanır.

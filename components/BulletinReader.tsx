@@ -232,12 +232,6 @@ export function BulletinReader({
             </ul>
           )}
         </div>
-
-        <p className="mt-2 text-[0.6875rem] font-light text-ink-faint">
-          {previewEnabled
-            ? "Bülten satırına tıklamak onu yanda açar. İndirmek için ↓ simgesini kullanın."
-            : "Bülten satırına tıklamak PDF'i indirir."}
-        </p>
       </aside>
 
       {/* ————————————— Önizleme ————————————— */}
@@ -454,10 +448,6 @@ function Preview({
           className="h-[70vh] min-h-[26rem]"
         />
       </div>
-
-      <p className="mt-2 text-xs font-light text-ink-faint">
-        PDF görüntülenemiyorsa “{labels.download}” düğmesini kullanabilirsiniz.
-      </p>
     </div>
   );
 }

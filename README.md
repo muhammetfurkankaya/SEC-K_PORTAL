@@ -35,8 +35,7 @@ npm run dev      # http://localhost:3000
 **`Tfs2026...`** (`lib/password.ts` içindeki `DEFAULT_ADMIN_PASSWORD`).
 
 > Bu şifre depoda ve kurulum belgelerinde yazılı olduğu için gizli değildir.
-> İlk girişten sonra Yönetim → Ayarlar → Şifre Değiştir'den değiştirin;
-> değiştirilene kadar yönetim panelinde kırmızı bir uyarı şeridi görünür.
+> İlk girişten sonra Yönetim → Ayarlar → Şifre Değiştir'den değiştirin.
 
 Kurulumu farklı bir şifreyle yapmak isterseniz:
 

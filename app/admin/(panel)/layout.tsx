@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AdminNav } from "@/components/admin/AdminNav";
-import { DefaultPasswordNotice } from "@/components/admin/DefaultPasswordNotice";
 import { Logo } from "@/components/brand/Logo";
 import { logoutAction } from "@/app/admin/actions";
 import { requireUser } from "@/lib/auth";
@@ -57,7 +56,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
 
         <AdminNav />
-        <DefaultPasswordNotice userId={user.id} />
       </header>
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">{children}</main>

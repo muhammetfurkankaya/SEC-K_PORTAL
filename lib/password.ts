@@ -17,8 +17,7 @@ const SCRYPT_OPTS = { N: 16384, r: 8, p: 1 } as const;
  * Sabit olması kasıtlı: kurulumu yapan kişi terminal çıktısını kaçırsa bile
  * panele girebilsin diye. Buna karşılık bu şifre bu depoda ve kurulum
  * belgelerinde açıkça yazılı — yani **ilk girişten sonra Ayarlar'dan
- * değiştirilmesi gerekir.** Değiştirilmediği sürece yönetim panelinde uyarı
- * gösterilir (bkz. isDefaultPassword).
+ * değiştirilmesi gerekir.** (Ayarlar → Şifre Değiştir)
  *
  * Farklı bir şifreyle kurmak için SECK_ADMIN_PASSWORD ortam değişkenini
  * verin; seed script'i onu kullanır.
@@ -65,14 +64,4 @@ export function verifyPassword(password: string, stored: string): boolean {
   }
 
   return derived.length === expected.length && crypto.timingSafeEqual(derived, expected);
-}
-
-/**
- * Hesap hâlâ varsayılan şifreyi mi kullanıyor?
- *
- * Şifreler tek yönlü saklandığı için "değiştirilmiş mi" sorusunun tek cevabı
- * varsayılanı deneyip bakmaktır.
- */
-export function isDefaultPassword(storedHash: string): boolean {
-  return verifyPassword(DEFAULT_ADMIN_PASSWORD, storedHash);
 }
