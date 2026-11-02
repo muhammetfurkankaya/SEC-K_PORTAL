@@ -227,17 +227,94 @@ function SlotPreview({
     );
   }
 
-  // page_title ve page_eyebrow: sade başlık bandının aynısı.
-  return (
-    <div className="bg-surface-2 px-5 py-6">
+  // page_title ve page_eyebrow: portaldaki üç sayfa başı, gerçek metinlerle.
+  return <PageHeadsPreview values={values} category={secondTab} />;
+}
+
+/**
+ * Sayfa başlıkları ve üst etiketleri — portalda göründükleri üç yerin
+ * aynısı, ayarlardaki GERÇEK metinlerle: bülten sekmesi (görselin
+ * üzerinde), Arama sayfası ve Anketler sayfası. Örnek bir yazı yok; bir
+ * etiket boşsa ya da gizliyse önizlemede de görünmez.
+ */
+function PageHeadsPreview({
+  values,
+  category,
+}: {
+  values: Record<string, string>;
+  category: string;
+}) {
+  const title = (onDark: boolean) =>
+    textClassFor("page_title", values.type_page_title_size, values.type_page_title_color, onDark);
+  const eyebrow = (onDark: boolean) =>
+    textClassFor(
+      "page_eyebrow",
+      values.type_page_eyebrow_size,
+      values.type_page_eyebrow_color,
+      onDark,
+    );
+
+  const tabEyebrow = values.page_category_eyebrow?.trim();
+  const tabPlace = values.page_category_eyebrow_pos;
+  const tabEyebrowNode =
+    tabEyebrow && tabPlace !== "gizli" ? (
+      <span
+        className={`flex items-center justify-center gap-2.5 font-semibold tracking-[0.18em] uppercase ${eyebrow(true)}`}
+      >
+        <span aria-hidden="true" className="h-px w-6 shrink-0 bg-tfs-red" />
+        {tabEyebrow}
+        <span aria-hidden="true" className="h-px w-6 shrink-0 bg-tfs-red" />
+      </span>
+    ) : null;
+
+  const flat = (where: string, label: string | undefined, heading: string | undefined) => (
+    <div className="relative bg-surface-2 px-5 py-5">
+      <PreviewWhere>{where}</PreviewWhere>
       <div className="brand-bar pl-4">
-        {slot === "page_eyebrow" ? (
-          <span className="block font-semibold tracking-[0.16em] uppercase">{text}</span>
-        ) : (
-          <span className="block font-semibold tracking-[-0.015em]">{text}</span>
-        )}
+        {label?.trim() ? (
+          <span className={`block font-semibold tracking-[0.16em] uppercase ${eyebrow(false)}`}>
+            {label}
+          </span>
+        ) : null}
+        <span
+          className={`block font-semibold tracking-[-0.015em] break-words ${title(false)} ${
+            label?.trim() ? "mt-1.5" : ""
+          }`}
+        >
+          {heading?.trim() || "—"}
+        </span>
       </div>
     </div>
+  );
+
+  return (
+    <div className="divide-y divide-line">
+      <div className="hero-brand relative px-5 py-6 text-center">
+        <PreviewWhere>Bülten sekmeleri (görselin üzerinde)</PreviewWhere>
+        {tabPlace === "ustte" ? tabEyebrowNode : null}
+        <span
+          className={`block font-semibold tracking-[-0.015em] ${title(true)} ${
+            tabPlace === "ustte" && tabEyebrowNode ? "mt-2" : ""
+          }`}
+        >
+          {category}
+        </span>
+        {tabPlace === "altta" && tabEyebrowNode ? (
+          <div className="mt-2">{tabEyebrowNode}</div>
+        ) : null}
+      </div>
+      {flat("Arama sayfası", values.page_search_eyebrow, values.page_search_title)}
+      {flat("Anketler sayfası", values.page_surveys_eyebrow, values.page_surveys_title)}
+    </div>
+  );
+}
+
+/** Önizleme satırının portalda hangi sayfaya karşılık geldiği. */
+function PreviewWhere({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="absolute top-2 right-3 text-[0.625rem] font-semibold tracking-[0.08em] text-ink-faint uppercase">
+      {children}
+    </span>
   );
 }
 

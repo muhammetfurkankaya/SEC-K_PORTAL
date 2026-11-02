@@ -89,7 +89,6 @@ export const TEXT_CARDS: readonly TextCard[] = [
     title: "Sayfa üst etiketleri",
     where: "Bülten sekmeleri, Arama ve Anketler sayfalarında başlığın üstündeki küçük yazı",
     slot: "page_eyebrow",
-    previewKey: "page_search_eyebrow",
     fields: [
       "page_category_eyebrow",
       "page_category_eyebrow_pos",
