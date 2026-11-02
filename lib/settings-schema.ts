@@ -463,8 +463,8 @@ export const SETTINGS = {
     group: "metin",
     section: "Bülten sekmeleri",
     span: "half",
-    label: "Sekme üst etiketi",
-    help: "Sekme başlığının yanında görünen küçük yazı. Boşsa gösterilmez.",
+    label: "Bülten sekmelerinde üst etiket",
+    help: "Her bülten sekmesinde, görselin üzerindeki sekme adının üstünde ya da altında küçük kırmızı çizgili yazı. Boşsa ya da konum Gizli ise görünmez.",
   },
   page_category_eyebrow_pos: {
     kind: "enum",
@@ -474,7 +474,7 @@ export const SETTINGS = {
     group: "metin",
     section: "Bülten sekmeleri",
     span: "half",
-    label: "Üst etiketin konumu",
+    label: "Bülten sekmelerinde üst etiketin konumu",
   },
   reader_index_title: {
     kind: "text",
@@ -492,7 +492,8 @@ export const SETTINGS = {
     group: "metin",
     section: "Arama sayfası",
     span: "half",
-    label: "Üst etiket",
+    label: "Arama sayfası üst etiketi",
+    help: "Ana sayfadaki arama bandından arama yapınca açılan sayfada, başlığın üstündeki küçük yazı.",
   },
   page_search_title: {
     kind: "text",
@@ -501,7 +502,7 @@ export const SETTINGS = {
     group: "metin",
     section: "Arama sayfası",
     span: "half",
-    label: "Başlık",
+    label: "Arama sayfası başlığı",
     help: "Arama yapıldığında yerini sonuç başlığı alır.",
   },
   page_search_desc: {
@@ -510,7 +511,7 @@ export const SETTINGS = {
     max: 240,
     group: "metin",
     section: "Arama sayfası",
-    label: "Açıklama",
+    label: "Arama sayfası açıklaması",
   },
   page_surveys_eyebrow: {
     kind: "text",
@@ -519,7 +520,8 @@ export const SETTINGS = {
     group: "metin",
     section: "Anketler sayfası",
     span: "half",
-    label: "Üst etiket",
+    label: "Anketler sayfası üst etiketi",
+    help: "Menüdeki Anketler sekmesinde (açık anket varken görünür), başlığın üstündeki küçük yazı.",
   },
   page_surveys_title: {
     kind: "text",
@@ -528,7 +530,7 @@ export const SETTINGS = {
     group: "metin",
     section: "Anketler sayfası",
     span: "half",
-    label: "Başlık",
+    label: "Anketler sayfası başlığı",
   },
   page_surveys_desc: {
     kind: "text",
@@ -536,7 +538,7 @@ export const SETTINGS = {
     max: 240,
     group: "metin",
     section: "Anketler sayfası",
-    label: "Açıklama",
+    label: "Anketler sayfası açıklaması",
   },
   section_survey_title: {
     kind: "text",
