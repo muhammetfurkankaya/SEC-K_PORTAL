@@ -68,6 +68,17 @@ describe("ayar veritabanı", () => {
     assert.equal(getSettings().home_recent_count, 24, "üst sınıra çekilmeli");
   });
 
+  test("kaldırılmış bir seçenek formda varsayılanıyla gelir (kaydetmeyi takmaz)", async () => {
+    const { getDb } = await import("../lib/db");
+    const { getRawSettings } = await import("../lib/db/queries/settings");
+    getDb()
+      .prepare(
+        `INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))`,
+      )
+      .run("home_hero_scrim", "otomatik");
+    assert.equal(getRawSettings().home_hero_scrim, "normal");
+  });
+
   test("sıfırlama YENİ eklenen anahtarları da varsayılana döndürür", async () => {
     const { setSettings, resetSettings, getSettings } = await import("../lib/db/queries/settings");
     const { SETTING_KEYS } = await import("../lib/settings-schema");

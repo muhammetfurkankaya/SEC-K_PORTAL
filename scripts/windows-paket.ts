@@ -19,7 +19,7 @@
  * `sqlite-ikili/` altına koyuyoruz; sunucuda `baslat.cjs` çalıştığı Node
  * sürümüne uygun olanı yerine kopyalıyor.
  *
- * Ayrıca yönetim komutları (seed / şifre / demo) TypeScript oldukları için
+ * Ayrıca yönetim komutları (seed / şifre) TypeScript oldukları için
  * normalde `tsx` gerektiriyor; tsx de platforma özel esbuild ikilisi
  * kullanıyor. Bu komutları burada düz JavaScript'e derliyoruz, böylece
  * sunucuda yalnızca `node` yeterli oluyor.
@@ -216,7 +216,6 @@ async function bundleAdminScripts(): Promise<void> {
   const scripts = [
     { entry: "scripts/seed.ts", out: "komutlar/seed.cjs" },
     { entry: "scripts/sifre.ts", out: "komutlar/sifre.cjs" },
-    { entry: "scripts/demo.ts", out: "komutlar/demo.cjs" },
   ];
 
   for (const script of scripts) {
@@ -392,9 +391,6 @@ function writeBundleFiles(): void {
     // Ikisi de PowerShell bilgisi gerektirmeden calisir.
     { from: "KUR.cmd", to: "KUR.cmd" },
     { from: "nodejs.cmd", to: "nodejs.cmd" },
-    // Kendi bilgisayarinda deneme: IIS'siz, yonetici yetkisi istemez, veriyi
-    // ayri bir klasore (data-deneme\) yazar.
-    { from: "YERELDE-DENE.cmd", to: "YERELDE-DENE.cmd" },
     // IIS ile yayin: script'ler, sablonlar ve rehber.
     { from: path.join("iis", "iis-kur.ps1"), to: path.join("iis", "iis-kur.ps1") },
     { from: path.join("iis", "iis-kontrol.ps1"), to: path.join("iis", "iis-kontrol.ps1") },

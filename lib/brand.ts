@@ -45,16 +45,28 @@ export function findLogo(variant: "light" | "dark"): string | null {
 }
 
 /**
- * Ana sayfa hero fotoğrafı.
+ * Ana sayfa hero fotoğrafı — yalnızca GELİŞTİRİCİ değiştirir, panelden değil.
  *
- * `public/brand/hero-anasayfa.(jpg|png|webp)` varsa kullanılır; yoksa hero
- * kurumsal gradyana düşer — eksik dosya boş bir alan bırakmaz. Görseli
- * değiştirmek için dosyayı bu adla değiştirmek yeterlidir.
+ * `public/brand/hero-anasayfa.(webp|jpg|jpeg|png)` varsa kullanılır; yoksa
+ * hero kurumsal gradyana düşer — eksik dosya boş bir alan bırakmaz.
+ * Değiştirmek için dosyayı aynı adla değiştirmek yeterli (public/brand/README.md).
  *
- * Yalnızca ANA SAYFADA kullanılır: bülten sekmeleri bilinçli olarak
- * fotoğrafsız, sade başlık bandıyla çalışır.
+ * Adrese dosyanın değişme zamanı eklenir (`?v=…`): dosya değişince adres de
+ * değişir, tarayıcılar önbellekteki eski görseli göstermez. Her istekte
+ * yeniden bakılır; sunucuda dosya değiştirildiğinde yeniden başlatma
+ * gerekmez (birkaç `stat` çağrısı, maliyeti yok denecek kadar az).
  */
-export const HOME_HERO_IMAGE: string | null = findFile(
-  ["hero-anasayfa", "hero"],
-  PHOTO_EXTENSIONS,
-);
+export function homeHeroImage(): string | null {
+  const dir = path.join(process.cwd(), "public", "brand");
+  for (const base of ["hero-anasayfa", "hero"]) {
+    for (const ext of PHOTO_EXTENSIONS) {
+      try {
+        const stat = fs.statSync(path.join(dir, base + ext));
+        if (stat.isFile()) return `/brand/${base}${ext}?v=${Math.round(stat.mtimeMs)}`;
+      } catch {
+        // Bu ad/uzantı yok; sıradakine bak.
+      }
+    }
+  }
+  return null;
+}

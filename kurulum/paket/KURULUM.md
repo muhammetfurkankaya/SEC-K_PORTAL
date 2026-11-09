@@ -20,45 +20,14 @@ Yani yapılacak iş: **dosyaları kopyala → IIS'te siteyi göster → Browse.*
 
 ---
 
-## Önce kendi bilgisayarınızda deneyin (isteğe bağlı)
-
-Sunucuya almadan önce portalı Windows bilgisayarınızda açıp her şeye
-bakabilirsiniz. Kurulum, yönetici yetkisi ve IIS gerekmez.
-
-1. İki arşivi (`SEC-K-Portali-sunucu.zip` ve `SEC-K-Portali-node.zip`)
-   **aynı** boş klasöre açın; ör. `C:\SECK-DENEME`.
-2. Klasördeki **`YERELDE-DENE.cmd`** dosyasına çift tıklayın.
-3. Birkaç saniye sonra tarayıcıda `http://localhost:3000` açılır.
-   Yönetim paneli: `http://localhost:3000/admin`, giriş `admin` / `Tfs2026...`
-
-İlk açılışta örnek bültenler ve bir örnek anket eklenir. Durdurmak için
-siyah pencereyi kapatın.
-
-- Deneme verileri **ayrı** bir klasöre yazılır (`data-deneme\`). Sunucuya
-  gidecek `data\` klasörüne dokunulmaz.
-- Sıfırdan başlamak için `data-deneme` klasörünü silip tekrar çift tıklayın.
-- 3000 portu doluysa komut isteminde `YERELDE-DENE.cmd 3010` yazın.
-- Windows "bilgisayarınız korundu" derse **Ek bilgi → Yine de çalıştır**.
-  Bunu hiç görmemek için zip dosyalarını açmadan önce: dosyaya sağ tık →
-  Özellikler → **Engellemeyi kaldır**.
-
-> Sunucuya **deneme klasörünü değil**, zip dosyalarını yeniden açarak
-> aktarın. Böylece örnek veriler sunucuya taşınmaz.
-
 ## Kurulum
 
 ### 1. Klasörü yerine koyun
 
-> **Paket iki arşiv hâlinde geldiyse** (boyut sınırı nedeniyle) ikisini de
-> **aynı klasöre** açın:
->
-> | Arşiv | İçindekiler |
-> |---|---|
-> | `SEC-K-Portali-sunucu.zip` | portalın tamamı |
-> | `SEC-K-Portali-node.zip` | yalnızca `node\node.exe` |
->
-> İkinci arşiv `node\` klasörünü içerdiği için doğru yere açılır. Eksik
-> kalırsa kurulum script'i "Pakette node\node.exe yok" diye uyarır.
+`SEC-K-Portali-sunucu.zip` arşivinde sunucunun ihtiyaç duyduğu her şey
+var (`node\node.exe` dahil). Zip'i açmadan önce: dosyaya sağ tık →
+Özellikler → **Engellemeyi kaldır** — yoksa Windows bazı dosyaları
+"internetten gelmiş" sayıp çalıştırmayı engelleyebilir.
 
 Paketi kalıcı bir yere taşıyın — örneğin `C:\seckportal`. Şunlardan kaçının:
 
@@ -157,15 +126,25 @@ Komut satırı erişiminiz varsa ek araçlar (`komutlar\OKU.txt`):
 |---|---|
 | Şifre sıfırla (panele giremiyorsanız) | `nodejs.cmd komutlar\sifre.cjs` |
 | Hesapları listele | `nodejs.cmd komutlar\sifre.cjs --liste` |
-| Örnek veri ekle | `nodejs.cmd komutlar\demo.cjs` |
-| Örnek veriyi sil | `nodejs.cmd komutlar\demo.cjs --temizle` |
 
 **Bülten kapak görselleri:** ana sayfada "Yalnızca kart" görünümü PDF'in ilk
 sayfasını kapak olarak gösterir. Kapak, bülten panelden yüklenirken
-tarayıcıda kendiliğinden üretilir. Komutla eklenen (ör. örnek veri) ya da bu
-özellikten önce yüklenmiş bültenler için **Yönetim → Bültenler → Kapakları
+tarayıcıda kendiliğinden üretilir. Bu özellikten önce yüklenmiş bültenler için **Yönetim → Bültenler → Kapakları
 oluştur** düğmesine bir kez basın. Kapaklar `data\uploads\_kapak\` altında
 durur; yedeğe `data` klasörüyle birlikte girer.
+
+**Ana sayfa görseli:** panelden değiştirilemez (bilinçli olarak). Görsel
+`public\brand\hero-anasayfa.jpg` dosyasıdır. Değiştirmek için:
+
+1. Yeni görseli **aynı adla** (`hero-anasayfa.jpg`) hazırlayın: yatay
+   (16:9), en az 1920 px genişlik, JPEG, ~300–600 KB.
+2. `C:\seckportal\public\brand\hero-anasayfa.jpg` dosyasının üzerine kopyalayın.
+3. IIS Yöneticisi → Application Pools → portalın havuzu → **Recycle**.
+
+Tarayıcılar eski görseli göstermez: adres dosyanın değişme zamanını taşır.
+Ayrıntı: `public\brand\README.md`. Ayarlar → Ana Sayfa Yerleşimi'ndeki
+"Fotoğraflı / Fotoğrafsız", "Fotoğraf kadrajı" ve "Yazı perdesi" seçimleri
+panelde kalır.
 
 ---
 
@@ -205,14 +184,8 @@ e-posta ile göndermeyin. Anahtar değişirse açık oturumlar düşer (zararsı
 
 ## Yedekleme
 
-Her şey `data\` klasöründedir: veritabanı, yüklenen PDF'ler, panelden
-yüklenen ana sayfa görseli (`data\uploads\_gorsel\`) ve oturum anahtarı.
-Yedek için bu klasörü kopyalamak yeterlidir.
-
-> Ana sayfa görseli `public\` altına değil `data\` altına yazılır: IIS'te
-> uygulama havuzunun yalnızca `data\` klasörüne yazma izni var ve sürüm
-> yükseltmede paket klasörü değiştirilirken `data\` korunur. Görsel ayrıca
-> yüklenmediyse ana sayfa paketle gelen görseli kullanır.
+Her şey `data\` klasöründedir: veritabanı, yüklenen PDF'ler, kapak
+görselleri ve oturum anahtarı. Yedek için bu klasörü kopyalamak yeterlidir.
 
 > Portal çalışırken de kopyalanabilir; durdurulmuş hâlde alınan yedek daha
 > tutarlı olur.

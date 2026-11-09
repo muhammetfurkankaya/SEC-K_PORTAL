@@ -41,7 +41,7 @@ export default function HomePage() {
 
   // Hero yüksekliği ayardan; kayıttaki değerler bileşenin boyut adlarına
   // çevriliyor.
-  // Görsel: yüklenen → paketle gelen → marka gradyanı (lib/hero.ts).
+  // Görsel: public/brand/hero-anasayfa.* → marka gradyanı (lib/hero.ts).
   const hero = resolveHomeHero(settings);
 
   const heroSize = ({ tam: "full", kisa: "sm", orta: "md", yuksek: "lg" } as const)[
@@ -84,7 +84,6 @@ export default function HomePage() {
         eyebrowClass={textClass(settings, "home_kicker", { onDark: true })}
         descriptionClass={textClass(settings, "home_intro", { onDark: true })}
         imageSrc={hero.imageSrc}
-        blurDataUrl={hero.blurDataUrl}
         scrim={hero.scrim}
         focal={hero.focal}
         fadeTo={settings.show_search_band ? "deep" : "surface"}

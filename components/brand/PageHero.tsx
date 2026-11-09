@@ -60,8 +60,6 @@ type PageHeroProps = {
   eyebrowClass?: string;
   descriptionClass?: string;
   imageSrc?: string | null;
-  /** Yüklenirken anında boyanan, satır içi gömülü küçük bulanık kare. */
-  blurDataUrl?: string | null;
   scrim?: "normal" | "strong";
   /** Fotoğrafın hangi kısmı görünsün. */
   focal?: "ust" | "orta" | "alt";
@@ -125,7 +123,6 @@ export function PageHero({
   eyebrowClass = "",
   descriptionClass = "",
   imageSrc,
-  blurDataUrl,
   scrim = "normal",
   focal = "orta",
   fadeTo = "surface",
@@ -182,16 +179,6 @@ export function PageHero({
         full ? `flex ${MIN_HEIGHT.full}` : ""
       }`}
     >
-      {/* Bulanık yer tutucu: fotoğraf inerken boş koyu kare yerine
-          kompozisyonun soluk bir izi görünür. */}
-      {blurDataUrl ? (
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 scale-110 bg-cover bg-center blur-2xl saturate-[0.9]"
-          style={{ backgroundImage: `url("${blurDataUrl}")` }}
-        />
-      ) : null}
-
       {resolvedTone === "photo" && imageSrc ? (
         /* eslint-disable-next-line @next/next/no-img-element -- paket sharp
            içermiyor; görsel akış dışında olduğu için optimizasyon gerekmiyor */

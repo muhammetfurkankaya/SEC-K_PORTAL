@@ -32,18 +32,6 @@ node\node.exe dosyasini kullanir.
         node komutlar\sifre.cjs --liste
 
 
-  node komutlar\demo.cjs
-
-      Ekranlari gercekci veriyle gormek icin ornek bulten ve anket ekler.
-      Yalnizca deneme amacli; canli kurulumda kullanmayin.
-
-      --temizle    eklenen ornek verileri geri alir
-
-      Ornek:
-        node komutlar\demo.cjs
-        node komutlar\demo.cjs --temizle
-
-
 Not: Sifreler tek yonlu (scrypt) hashlenerek saklanir. Kurulum varsayilani
 ("Tfs2026...") disinda bir sifre bir kez degistirildikten sonra hicbir
 yerden okunamaz; kaybolursa yukaridaki sifre komutu ile yenisi belirlenir.

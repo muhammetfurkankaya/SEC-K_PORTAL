@@ -5,10 +5,11 @@ import os from "node:os";
 import path from "node:path";
 
 /**
- * Hero görseli: tür tespiti, yol koruması, kayıt ve çözümleme.
+ * Ana sayfa görseli: paketteki dosyadan çözümleme ve görsel türü tespiti.
  *
- * Veri klasörü içe aktarmadan ÖNCE ayarlanıyor: lib/paths.ts DATA_DIR'i
- * modül yüklenirken bir kez hesaplıyor.
+ * Görsel panelden yüklenmiyor; geliştirici public/brand/hero-anasayfa.*
+ * dosyasını değiştiriyor. Veri klasörü içe aktarmadan ÖNCE ayarlanıyor:
+ * lib/paths.ts DATA_DIR'i modül yüklenirken bir kez hesaplıyor.
  */
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "seck-hero-"));
 process.env.SECK_DATA_DIR = dataDir;
@@ -20,10 +21,6 @@ const SVG = new TextEncoder().encode(
   '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
 );
 const HTML = new TextEncoder().encode("<!doctype html><script>alert(1)</script>");
-
-function fileOf(bytes: Uint8Array, name: string, type: string): File {
-  return new File([bytes as Uint8Array<ArrayBuffer>], name, { type });
-}
 
 describe("sniffImageType", () => {
   test("JPEG, PNG ve WebP ilk baytlarından tanınır", async () => {
@@ -41,150 +38,87 @@ describe("sniffImageType", () => {
   });
 });
 
-describe("saveHeroImage", () => {
-  test("uzantı dosya adından değil içerikten belirlenir", async () => {
-    const { saveHeroImage, UploadError } = await import("../lib/uploads");
-
-    // Adı .jpg ama içi SVG: reddedilmeli.
-    await assert.rejects(saveHeroImage(fileOf(SVG, "masum.jpg", "image/jpeg")), UploadError);
-
-    // Adı .svg ama içi PNG: PNG olarak kaydedilmeli.
-    const saved = await saveHeroImage(fileOf(PNG, "garip.svg", "image/svg+xml"));
-    assert.match(saved.path, /^_gorsel\/[0-9a-f-]{36}\.png$/);
-  });
-
-  test("boyut sınırı aşılamaz", async () => {
-    const { saveHeroImage, MAX_HERO_BYTES, UploadError } = await import("../lib/uploads");
-    const big = new Uint8Array(MAX_HERO_BYTES + 1);
-    big.set(JPEG);
-    await assert.rejects(saveHeroImage(fileOf(big, "buyuk.jpg", "image/jpeg")), UploadError);
-  });
-
-  test("her kayıt yeni bir ad alır ve önceki dosya silinir", async () => {
-    const { saveHeroImage, heroAbsolutePath } = await import("../lib/uploads");
-
-    const first = await saveHeroImage(fileOf(JPEG, "a.jpg", "image/jpeg"));
-    const firstAbs = heroAbsolutePath(first.path)!;
-    assert.ok(fs.existsSync(firstAbs));
-
-    const second = await saveHeroImage(fileOf(JPEG, "b.jpg", "image/jpeg"), first.path);
-    assert.notEqual(second.path, first.path, "aynı ad önbelleği bozardı");
-    assert.equal(fs.existsSync(firstAbs), false, "önceki dosya silinmeli");
-    assert.ok(fs.existsSync(heroAbsolutePath(second.path)!));
-  });
-});
-
-describe("resolveHeroRequest", () => {
-  const stored = "_gorsel/0f8fad5b-d9cb-469f-a165-70867728950e.jpg";
-
-  test("yalnızca ayarlarda kayıtlı görsel sunulur", async () => {
-    const { resolveHeroRequest } = await import("../lib/uploads");
-    const hit = resolveHeroRequest(stored.split("/"), stored);
-    assert.ok(hit);
-    assert.equal(hit.type, "jpg");
-
-    // Biçimi geçerli ama kayıtlı olmayan bir dosya: sunulmaz.
-    const other = "_gorsel/7c9e6679-7425-40de-944b-e07fc1f90ae7.jpg";
-    assert.equal(resolveHeroRequest(other.split("/"), stored), null);
-  });
-
-  test("yol kaçışı ve desen dışı adlar reddedilir", async () => {
-    const { resolveHeroRequest } = await import("../lib/uploads");
-    const kotu = [
-      ["..", "portal.db"],
-      ["_gorsel", "..", "..", "portal.db"],
-      ["_gorsel", "../session-secret"],
-      ["_gorsel", "resim.svg"],
-      ["sec-k", "0f8fad5b-d9cb-469f-a165-70867728950e.pdf"],
-      ["/etc", "passwd"],
-      [],
-    ];
-    for (const parts of kotu) {
-      assert.equal(resolveHeroRequest(parts, stored), null, parts.join("/"));
-    }
-    // Kayıtlı yol bile bozuk olsa sunulmaz.
-    assert.equal(resolveHeroRequest(["..", "x"], "../x"), null);
-  });
-});
-
 describe("resolveHomeHero", () => {
   async function settings(overrides: Record<string, string>) {
     const { resolveSettings } = await import("../lib/settings-validate");
     return resolveSettings(overrides);
   }
 
-  test("yüklenen görsel > paketle gelen > gradyan", async () => {
+  test("paketteki görsel → marka gradyanı", async () => {
     const { resolveHomeHero } = await import("../lib/hero");
-    const path = "_gorsel/0f8fad5b-d9cb-469f-a165-70867728950e.jpg";
 
-    const yuklu = resolveHomeHero(await settings({ home_hero_path: path }), "/brand/hero.jpg");
-    assert.equal(yuklu.imageSrc, `/api/gorsel/${path}`);
-    assert.equal(yuklu.uploaded, true);
+    const paket = resolveHomeHero(await settings({}), "/brand/hero-anasayfa.jpg?v=1");
+    assert.equal(paket.imageSrc, "/brand/hero-anasayfa.jpg?v=1");
 
-    const paket = resolveHomeHero(await settings({}), "/brand/hero.jpg");
-    assert.equal(paket.imageSrc, "/brand/hero.jpg");
-    assert.equal(paket.uploaded, false);
-
-    const hicbiri = resolveHomeHero(await settings({}), null);
-    assert.equal(hicbiri.imageSrc, null, "görsel yoksa marka gradyanı");
+    const yok = resolveHomeHero(await settings({}), null);
+    assert.equal(yok.imageSrc, null, "görsel yoksa marka gradyanı");
 
     const gradyan = resolveHomeHero(
-      await settings({ home_hero_path: path, home_hero_style: "gradyan" }),
-      "/brand/hero.jpg",
+      await settings({ home_hero_style: "gradyan" }),
+      "/brand/hero-anasayfa.jpg?v=1",
     );
-    assert.equal(gradyan.imageSrc, null, "fotoğrafsız seçimi her şeyi ezer");
+    assert.equal(gradyan.imageSrc, null, "fotoğrafsız seçimi görseli ezer");
   });
 
-  test("otomatik perde parlak görselde güçlenir", async () => {
-    const { resolveHomeHero, BRIGHT_THRESHOLD } = await import("../lib/hero");
-    const path = "_gorsel/0f8fad5b-d9cb-469f-a165-70867728950e.jpg";
-
-    const parlak = resolveHomeHero(
-      await settings({ home_hero_path: path, home_hero_brightness: String(BRIGHT_THRESHOLD + 30) }),
-    );
-    assert.equal(parlak.scrim, "strong");
-
-    const koyu = resolveHomeHero(
-      await settings({ home_hero_path: path, home_hero_brightness: "60" }),
-    );
-    assert.equal(koyu.scrim, "normal");
-
-    const elle = resolveHomeHero(
-      await settings({
-        home_hero_path: path,
-        home_hero_brightness: "60",
-        home_hero_scrim: "guclu",
-      }),
-    );
-    assert.equal(elle.scrim, "strong", "elle seçim otomatiği ezer");
+  test("daha önce panelden yüklenmiş görsel kaydı yok sayılır", async () => {
+    const { resolveHomeHero } = await import("../lib/hero");
+    const eski = await settings({
+      home_hero_path: "_gorsel/0f8fad5b-d9cb-469f-a165-70867728950e.jpg",
+    } as Record<string, string>);
+    const hero = resolveHomeHero(eski, "/brand/hero-anasayfa.jpg?v=1");
+    assert.equal(hero.imageSrc, "/brand/hero-anasayfa.jpg?v=1");
   });
 
-  test("bozuk ya da tehlikeli yol/ön izleme sayfaya sızmaz", async () => {
-    const { resolveHomeHero, safeBlur } = await import("../lib/hero");
-
-    const bozuk = resolveHomeHero(await settings({ home_hero_path: "../../portal.db" }), null);
-    assert.equal(bozuk.imageSrc, null);
-
-    assert.equal(safeBlur('data:image/jpeg;base64,AAAA") ; background:url(//kotu'), null);
-    assert.equal(safeBlur("https://dis-site/x.jpg"), null);
+  test("yazı perdesi: Normal / Güçlü; eski 'otomatik' kaydı Normal'e düşer", async () => {
+    const { resolveHomeHero } = await import("../lib/hero");
+    const src = "/brand/hero-anasayfa.jpg?v=1";
+    assert.equal(resolveHomeHero(await settings({}), src).scrim, "normal");
     assert.equal(
-      safeBlur("data:image/jpeg;base64,/9j/4AAQSkZJRg=="),
-      "data:image/jpeg;base64,/9j/4AAQSkZJRg==",
+      resolveHomeHero(await settings({ home_hero_scrim: "guclu" }), src).scrim,
+      "strong",
+    );
+    assert.equal(
+      resolveHomeHero(await settings({ home_hero_scrim: "otomatik" }), src).scrim,
+      "normal",
     );
   });
 });
 
-describe("gizli ayarlar", () => {
-  test("hero yolu formdan yazılamaz", async () => {
-    // "Ayarları kaydet" yüklenen görseli asla ezmemeli: bu anahtarlar
-    // yalnızca yükleme eylemiyle yazılıyor.
-    const { isFormKey, SETTING_KEYS, SETTINGS } = await import("../lib/settings-schema");
-    for (const key of ["home_hero_path", "home_hero_blur", "home_hero_brightness"]) {
-      assert.equal(isFormKey(key), false, `${key} formdan yazılabiliyor`);
-    }
-    assert.equal(isFormKey("home_hero_scrim"), true, "kullanıcı seçimi formda olmalı");
+describe("homeHeroImage", () => {
+  test("adres dosyanın değişme zamanını taşır; dosya değişince adres değişir", async () => {
+    const { homeHeroImage } = await import("../lib/brand");
+    const cwd = process.cwd();
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "seck-brand-"));
+    const brand = path.join(root, "public", "brand");
+    fs.mkdirSync(brand, { recursive: true });
+    process.chdir(root);
+    try {
+      assert.equal(homeHeroImage(), null, "dosya yoksa gradyan");
 
-    const gizli = SETTING_KEYS.filter((k) => (SETTINGS[k] as { hidden?: true }).hidden);
-    assert.deepEqual(gizli.sort(), ["home_hero_blur", "home_hero_brightness", "home_hero_path"]);
+      const file = path.join(brand, "hero-anasayfa.jpg");
+      fs.writeFileSync(file, JPEG);
+      fs.utimesSync(file, 1_700_000_000, 1_700_000_000);
+      assert.equal(homeHeroImage(), "/brand/hero-anasayfa.jpg?v=1700000000000");
+
+      fs.utimesSync(file, 1_700_000_500, 1_700_000_500);
+      assert.equal(homeHeroImage(), "/brand/hero-anasayfa.jpg?v=1700000500000");
+
+      // WebP önce gelir (daha küçük); ikisi birden varsa WebP seçilir.
+      fs.writeFileSync(path.join(brand, "hero-anasayfa.webp"), WEBP);
+      assert.match(homeHeroImage() ?? "", /^\/brand\/hero-anasayfa\.webp\?v=\d+$/);
+    } finally {
+      process.chdir(cwd);
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("yükleme yüzeyi kaldırıldı", () => {
+  test("görsel yükleme anahtarları ve rotası yok", async () => {
+    const { SETTING_KEYS } = await import("../lib/settings-schema");
+    for (const key of ["home_hero_path", "home_hero_blur", "home_hero_brightness"]) {
+      assert.equal((SETTING_KEYS as readonly string[]).includes(key), false, key);
+    }
+    assert.equal(fs.existsSync(path.join(process.cwd(), "app", "api", "gorsel")), false);
   });
 });

@@ -2,14 +2,19 @@
  * Sekme çubuğunun önizlemesi — ayarlar ve Sekmeler ekranı ortak kullanır.
  *
  * Portaldaki SiteNav'ın görünümünü taklit eder: ilk sekme etkin (kırmızı
- * alt çizgi), diğerleri pasif. Punto/renk ve hiza seçimi anında yansır.
+ * alt çizgi), diğerleri pasif. Punto/renk, hiza ve sayı seçimi anında yansır.
  */
 export function NavPreview({
   labels,
+  counts = [],
+  showCounts = false,
   appearance,
   alignClass,
 }: {
   labels: string[];
+  /** Sekmelerin yanındaki sayılar, `labels` ile aynı sırada (yoksa boş). */
+  counts?: (number | undefined)[];
+  showCounts?: boolean;
   appearance: string;
   alignClass: string;
 }) {
@@ -25,7 +30,14 @@ export function NavPreview({
                 : "border-transparent text-ink-soft"
             }`}
           >
-            <span className={appearance}>{label || "—"}</span>
+            <span className={`inline-flex items-center gap-2 ${appearance}`}>
+              {label || "—"}
+              {showCounts && (counts[index] ?? 0) > 0 ? (
+                <span className="rounded-brand bg-white/20 px-1.5 py-0.5 text-[0.6875rem] font-semibold text-white">
+                  {counts[index]}
+                </span>
+              ) : null}
+            </span>
           </span>
         ))}
       </div>

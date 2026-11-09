@@ -54,8 +54,8 @@ if not exist "%~dp0baslat.cjs" (
 if not exist "%~dp0node\node.exe" (
     echo   [UYARI] node\node.exe bulunamadi.
     echo.
-    echo   Paket iki arsiv halinde geldiyse ikincisini de AYNI klasore
-    echo   acmalisiniz ^(SEC-K-Portali-node.zip icinde node\node.exe var^).
+    echo   Zip arsivi eksik acilmis olabilir: SEC-K-Portali-sunucu.zip
+    echo   arsivini yeniden, tamamini ayni klasore acin.
     echo   Sistemde Node.js 20/22 kuruluysa yine de devam edebilir.
     echo.
     pause

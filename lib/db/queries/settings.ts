@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { getDb } from "@/lib/db";
 import {
+  SETTINGS,
   SETTING_DEFAULTS,
   SETTING_KEYS,
   type PortalSettings,
@@ -34,7 +35,13 @@ export const getRawSettings = cache(function getRawSettings(): PortalSettings {
 
   for (const key of SETTING_KEYS) {
     const value = stored.get(key);
-    if (value !== undefined) result[key] = value;
+    if (value === undefined) continue;
+    // Kaldırılmış bir seçenek (ör. eski "otomatik" yazı perdesi) formda
+    // hiçbir seçeneği işaretlemez ve kaydetmeyi doğrulama hatasında
+    // takardı. Böyle bir değer varsayılanıyla gösterilir; ilk kayıtta düzelir.
+    const def = SETTINGS[key];
+    if (def.kind === "enum" && !def.options.some((option) => option.value === value)) continue;
+    result[key] = value;
   }
   return result;
 });

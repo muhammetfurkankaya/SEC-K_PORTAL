@@ -102,7 +102,6 @@ export const HERO_FOCAL_OPTIONS = [
 ] as const satisfies readonly EnumOption[];
 
 export const HERO_SCRIM_OPTIONS = [
-  { value: "otomatik", label: "Otomatik" },
   { value: "normal", label: "Normal" },
   { value: "guclu", label: "Güçlü" },
 ] as const satisfies readonly EnumOption[];
@@ -299,7 +298,7 @@ export const SETTINGS = {
     section: "Hero",
     span: "half",
     label: "Arka plan",
-    help: "Fotoğraflı seçiliyken yüklenen görsel, yoksa paketle gelen görsel kullanılır.",
+    help: "Fotoğraflı seçiliyken paketteki ana sayfa görseli kullanılır (görseli geliştirici değiştirir).",
   },
   home_hero_focal: {
     kind: "enum",
@@ -314,40 +313,14 @@ export const SETTINGS = {
   },
   home_hero_scrim: {
     kind: "enum",
-    default: "otomatik",
+    default: "normal",
     control: "segment",
     options: HERO_SCRIM_OPTIONS,
     group: "anasayfa",
     section: "Hero",
     span: "half",
     label: "Yazı perdesi",
-    help: "Otomatik, görselin parlaklığına göre seçer. Parlak fotoğrafta Güçlü yazıyı okunur tutar.",
-  },
-  // Yükleme eyleminin yazdığı değerler — formda çizilmez (hidden).
-  home_hero_path: {
-    kind: "text",
-    default: "",
-    max: 200,
-    hidden: true,
-    group: "anasayfa",
-    label: "Hero görseli yolu",
-  },
-  home_hero_blur: {
-    kind: "text",
-    default: "",
-    max: 4096,
-    hidden: true,
-    group: "anasayfa",
-    label: "Hero bulanık ön izleme",
-  },
-  home_hero_brightness: {
-    kind: "int",
-    default: "0",
-    min: 0,
-    max: 255,
-    hidden: true,
-    group: "anasayfa",
-    label: "Hero görseli parlaklığı",
+    help: "Parlak bir fotoğrafta Güçlü, yazıyı daha okunur tutar.",
   },
   hero_motion: {
     kind: "enum",
@@ -726,6 +699,14 @@ export const SETTINGS = {
     section: "Sayfa üst etiketleri",
     span: "half",
     label: "Renk",
+  },
+  nav_show_counts: {
+    kind: "bool",
+    default: "1",
+    group: "metin",
+    label: "Sekmelerin yanında sayı görünsün",
+    description:
+      "Bülten sekmelerinin yanında yayındaki bülten sayısı, Anketler'in yanında açık anket sayısı.",
   },
   nav_align: {
     kind: "enum",

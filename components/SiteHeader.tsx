@@ -24,7 +24,7 @@ export function SiteHeader() {
     ...categories.map((category) => ({
       href: `/bultenler/${category.slug}`,
       label: category.name,
-      count: category.bulletin_count,
+      count: settings.nav_show_counts ? category.bulletin_count : undefined,
     })),
   ];
 
@@ -32,7 +32,7 @@ export function SiteHeader() {
     items.push({
       href: "/anketler",
       label: settings.nav_surveys_label,
-      count: openSurveys.length,
+      count: settings.nav_show_counts ? openSurveys.length : undefined,
     });
   }
 

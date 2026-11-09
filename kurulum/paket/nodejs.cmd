@@ -8,7 +8,6 @@ rem
 rem Kullanim (paket klasorunde):
 rem   nodejs.cmd komutlar\seed.cjs
 rem   nodejs.cmd komutlar\sifre.cjs --liste
-rem   nodejs.cmd komutlar\demo.cjs
 rem   nodejs.cmd baslat.cjs
 
 setlocal

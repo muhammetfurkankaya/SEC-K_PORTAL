@@ -3,9 +3,9 @@ import { PortalSettingsForm } from "./SettingsForm";
 import { ResetSettingsForm } from "./ResetForm";
 import { SettingsTabs } from "./SettingsTabs";
 import { AdminHeading, Panel } from "@/components/admin/AdminHeading";
-import { getRawSettings, getSettings } from "@/lib/db/queries/settings";
-import { resolveHomeHero } from "@/lib/hero";
+import { getRawSettings } from "@/lib/db/queries/settings";
 import { listActiveCategories } from "@/lib/db/queries/categories";
+import { listOpenSurveys } from "@/lib/db/queries/surveys";
 import { findLogo } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
@@ -16,16 +16,10 @@ export default function SettingsPage() {
 
   // Önizlemelerde gerçek içerik görünsün: ilk bülten sekmesinin adı. Örnek
   // metin uydurmak, ayarın etkisini gerçek uzunlukta göstermezdi.
-  const firstCategory = listActiveCategories()[0]?.name ?? "SEÇ-K Bültenleri";
-
-  const typed = getSettings();
-  const resolvedHero = resolveHomeHero(typed);
-  const hero = {
-    currentSrc: resolvedHero.imageSrc,
-    uploaded: resolvedHero.uploaded,
-    strongScrim: resolvedHero.scrim === "strong",
-    title: typed.portal_title,
-  };
+  const first = listActiveCategories()[0];
+  const firstCategory = first?.name ?? "SEÇ-K Bültenleri";
+  // Sekme önizlemesindeki sayılar da gerçek: yayındaki bülten, açık anket.
+  const navCounts = { category: first?.bulletin_count ?? 0, surveys: listOpenSurveys().length };
 
   return (
     <>
@@ -41,7 +35,7 @@ export default function SettingsPage() {
           <PortalSettingsForm
             settings={settings}
             firstCategory={firstCategory}
-            hero={hero}
+            navCounts={navCounts}
             logoSrc={findLogo("light")}
           />
         </Panel>

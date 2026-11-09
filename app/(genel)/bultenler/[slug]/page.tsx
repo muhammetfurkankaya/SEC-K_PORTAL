@@ -62,7 +62,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         eyebrowClass={textClass(settings, "page_eyebrow", { onDark: true })}
         description={category.description}
         imageSrc={hero.imageSrc}
-        blurDataUrl={hero.blurDataUrl}
         scrim={hero.scrim}
         focal={hero.focal}
         fadeTo="surface"

@@ -10,6 +10,7 @@ import {
   Segmented,
   SizeChoice,
   SubmitButton,
+  SwitchRow,
   submitWithoutReset,
 } from "@/components/ui/form";
 import { IDLE } from "@/lib/action-state";
@@ -17,22 +18,25 @@ import { navAlignClass, textClassFor } from "@/lib/appearance";
 import { ALIGN_OPTIONS, COLOR_OPTIONS, SIZE_OPTIONS } from "@/lib/settings-schema";
 
 /** Bu panelin yazdığı anahtarlar — sunucuya yalnızca bunlar bildirilir. */
-const KEYS = ["type_nav_size", "type_nav_color", "nav_align"] as const;
+const KEYS = ["type_nav_size", "type_nav_color", "nav_align", "nav_show_counts"] as const;
 
 /**
  * Sekmeler ekranındaki "Sekme görünümü" paneli.
  *
  * Ayarlar > Metin ve Görünüm'deki "Sekmeler ve menü" kartıyla AYNI
  * anahtarları yazar; iki yerden de ayarlanabilir, tek kaynak vardır.
- * `__alanlar` yalnızca bu üç anahtarı bildirdiği için diğer ayarlar
+ * `__alanlar` yalnızca bu dört anahtarı bildirdiği için diğer ayarlar
  * kaydetmede ezilmez.
  */
 export function NavAppearancePanel({
   labels,
+  counts,
   initial,
 }: {
   /** Portaldaki gerçek sekme adları, sırasıyla. */
   labels: string[];
+  /** Sekmelerin gerçek sayıları, `labels` ile aynı sırada. */
+  counts: (number | undefined)[];
   initial: Record<(typeof KEYS)[number], string>;
 }) {
   const [state, action, pending] = useActionState(saveSettingsAction, IDLE);
@@ -60,6 +64,8 @@ export function NavAppearancePanel({
 
       <NavPreview
         labels={labels}
+        counts={counts}
+        showCounts={values.nav_show_counts === "1"}
         appearance={textClassFor("nav", values.type_nav_size, values.type_nav_color)}
         alignClass={navAlignClass(values.nav_align)}
       />
@@ -95,6 +101,15 @@ export function NavAppearancePanel({
             />
           </Field>
         </div>
+
+        <SwitchRow
+          name="nav_show_counts"
+          value="1"
+          label="Sekmelerin yanında sayı görünsün"
+          description="Bülten sekmelerinin yanında yayındaki bülten sayısı, Anketler'in yanında açık anket sayısı."
+          checked={values.nav_show_counts === "1"}
+          onChange={(event) => set("nav_show_counts", event.target.checked ? "1" : "0")}
+        />
 
         <div className="flex justify-end">
           <SubmitButton pending={pending} pendingLabel="Kaydediliyor…">

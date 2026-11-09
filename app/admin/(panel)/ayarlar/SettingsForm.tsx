@@ -14,8 +14,7 @@ import {
 } from "@/lib/settings-schema";
 import { textCardKeys } from "@/lib/settings-layout";
 import { FieldRows, GroupSection } from "./FieldRows";
-import { TextAppearanceGroup } from "./TextAppearanceGroup";
-import { HeroImagePicker } from "@/components/admin/HeroImagePicker";
+import { TextAppearanceGroup, type NavCounts } from "./TextAppearanceGroup";
 import { saveSettingsAction } from "./actions";
 
 /**
@@ -30,24 +29,17 @@ import { saveSettingsAction } from "./actions";
  * "kapat" olarak yazılırdı. `__alanlar` alanı aynı tehlikeye karşı ikinci
  * katman: sunucu yalnızca gerçekten gönderilen anahtarları doğrular ve yazar.
  */
-export type HeroPickerInfo = {
-  currentSrc: string | null;
-  uploaded: boolean;
-  strongScrim: boolean;
-  title: string;
-};
-
 export function PortalSettingsForm({
   settings,
   firstCategory,
-  hero,
+  navCounts,
   logoSrc,
 }: {
   settings: PortalSettings;
   /** Önizlemelerde gösterilecek gerçek bülten sekmesi adı. */
   firstCategory: string;
-  /** Ana sayfa görselinin şu anki durumu — seçici için. */
-  hero: HeroPickerInfo;
+  /** Sekme önizlemesindeki gerçek sayılar. */
+  navCounts: NavCounts;
   /** Alt bilgi/logo önizlemesi için beyaz logonun adresi. */
   logoSrc: string | null;
 }) {
@@ -146,6 +138,7 @@ export function PortalSettingsForm({
                 settings={settings}
                 errors={errors}
                 firstCategory={firstCategory}
+                navCounts={navCounts}
                 logoSrc={logoSrc}
               />
             ) : (
@@ -154,11 +147,6 @@ export function PortalSettingsForm({
 
                 {[...sections.entries()].map(([section, keys]) => (
                   <GroupSection key={section || "_"} title={section}>
-                    {/* Görsel, kullanıcının arayacağı yerde: Hero bölümünün
-                        başında. Kendi eylemiyle anında yüklenir. */}
-                    {group.id === "anasayfa" && section === "Hero" ? (
-                      <HeroImagePicker {...hero} />
-                    ) : null}
                     <FieldRows keys={keys} settings={settings} errors={errors} />
                   </GroupSection>
                 ))}

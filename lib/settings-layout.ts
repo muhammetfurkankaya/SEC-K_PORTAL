@@ -65,7 +65,13 @@ export const TEXT_CARDS: readonly TextCard[] = [
     where: "Üstteki gezinme çubuğu",
     slot: "nav",
     previewKey: "nav_home_label",
-    fields: ["nav_home_label", "nav_surveys_label", "nav_admin_label", "nav_align"],
+    fields: [
+      "nav_home_label",
+      "nav_surveys_label",
+      "nav_admin_label",
+      "nav_align",
+      "nav_show_counts",
+    ],
     note: {
       text: "Bülten sekmelerinin adları Sekmeler ekranından değiştirilir.",
       href: "/admin/kategoriler",

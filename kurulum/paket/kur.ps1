@@ -422,6 +422,5 @@ if ($taskCreated) {
 
 Write-Info ""
 Write-Info "Sifre sifirlama : .\nodejs.cmd komutlar\sifre.cjs"
-Write-Info "Ornek veri      : .\nodejs.cmd komutlar\demo.cjs"
 Write-Info "Ayrintili bilgi : KURULUM.md"
 Write-Host ""

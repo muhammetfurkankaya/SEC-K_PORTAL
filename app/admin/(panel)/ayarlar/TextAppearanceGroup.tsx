@@ -16,6 +16,9 @@ import {
 } from "@/lib/settings-schema";
 import { FieldRows } from "./FieldRows";
 
+/** Sekme önizlemesinde gösterilen gerçek sayılar. */
+export type NavCounts = { category: number; surveys: number };
+
 /**
  * "Metin ve Görünüm" sekmesi.
  *
@@ -29,12 +32,14 @@ export function TextAppearanceGroup({
   settings,
   errors,
   firstCategory,
+  navCounts,
   logoSrc,
 }: {
   settings: PortalSettings;
   errors: Record<string, string>;
   /** Sayfa başlığı ve sekme önizlemelerinde gösterilecek gerçek sekme adı. */
   firstCategory: string;
+  navCounts: NavCounts;
   logoSrc: string | null;
 }) {
   // Kartların çizdiği tüm alanların canlı değeri. Önizleme buradan okur.
@@ -63,6 +68,7 @@ export function TextAppearanceGroup({
           settings={settings}
           errors={errors}
           firstCategory={firstCategory}
+          navCounts={navCounts}
           logoSrc={logoSrc}
           onChange={set}
         />
@@ -77,6 +83,7 @@ function CardBlock({
   settings,
   errors,
   firstCategory,
+  navCounts,
   logoSrc,
   onChange,
 }: {
@@ -85,6 +92,7 @@ function CardBlock({
   settings: PortalSettings;
   errors: Record<string, string>;
   firstCategory: string;
+  navCounts: NavCounts;
   logoSrc: string | null;
   onChange: (key: string, value: string) => void;
 }) {
@@ -114,6 +122,7 @@ function CardBlock({
           slot={slot}
           text={previewText}
           secondTab={firstCategory}
+          navCounts={navCounts}
           values={values}
           appearance={textClassFor(
             slot,
@@ -180,12 +189,14 @@ function SlotPreview({
   slot,
   text: sample,
   secondTab,
+  navCounts,
   values,
   appearance,
 }: {
   slot: TextSlot;
   text: string;
   secondTab: string;
+  navCounts: NavCounts;
   values: Record<string, string>;
   appearance: string;
 }) {
@@ -213,6 +224,8 @@ function SlotPreview({
     return (
       <NavPreview
         labels={[sample, secondTab, values.nav_surveys_label ?? ""]}
+        counts={[undefined, navCounts.category, navCounts.surveys]}
+        showCounts={values.nav_show_counts === "1"}
         appearance={appearance}
         alignClass={navAlignClass(values.nav_align ?? "sol")}
       />
