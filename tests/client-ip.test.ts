@@ -3,12 +3,15 @@ import { test, describe } from "node:test";
 import { pickClientIp } from "../lib/client-ip";
 
 describe("pickClientIp", () => {
-  test("x-forwarded-for'daki ilk adresi alır", () => {
-    assert.equal(pickClientIp("10.20.30.40, 10.0.0.1"), "10.20.30.40");
+  test("yalnızca IIS'in eklediği en sağdaki adrese güvenir", () => {
+    // İstemci "1.2.3.4" uydurdu; IIS gerçek adresi (10.0.0.1) sona ekledi.
+    assert.equal(pickClientIp("1.2.3.4, 10.0.0.1"), "10.0.0.1");
+    assert.equal(pickClientIp("1.2.3.4, 5.6.7.8, 10.0.0.1:51234"), "10.0.0.1");
   });
 
-  test("başlık yoksa x-real-ip'e düşer", () => {
-    assert.equal(pickClientIp(null, "10.20.30.40"), "10.20.30.40");
+  test("x-real-ip okunmaz (IIS yazmaz, istemci uydurabilir)", () => {
+    // @ts-expect-error — ikinci parametre artık yok
+    assert.equal(pickClientIp(null, "10.20.30.40"), null);
   });
 
   test("vekilin kendi adresini istemci saymaz", () => {
@@ -18,11 +21,8 @@ describe("pickClientIp", () => {
     assert.equal(pickClientIp("127.0.0.1"), null);
     assert.equal(pickClientIp("::1"), null);
     assert.equal(pickClientIp("::ffff:127.0.0.1"), null);
-    assert.equal(pickClientIp(null, "127.0.0.1"), null);
-  });
-
-  test("zincirde vekil adresi varsa gerçek istemciyi bulur", () => {
-    assert.equal(pickClientIp("127.0.0.1, 10.20.30.40"), "10.20.30.40");
+    // Sunucunun kendisinden gelen istek: soldaki uydurma değere düşülmez.
+    assert.equal(pickClientIp("10.20.30.40, 127.0.0.1"), null);
   });
 
   test("porta takılmaz", () => {

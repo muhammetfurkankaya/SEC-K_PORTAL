@@ -204,7 +204,6 @@ try {
     console.log("  Sifre         : " + sonuc.adminPassword);
     console.log("");
     console.log("  ILK GIRISTEN SONRA Ayarlar > Sifre Degistir ile degistirin.");
-    console.log("  Degistirilene kadar panelde kirmizi uyari seridi gorunur.");
     console.log("  ============================================================");
     console.log("");
   }

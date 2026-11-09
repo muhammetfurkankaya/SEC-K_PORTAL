@@ -164,9 +164,9 @@ Kutudan çıktığı gibi çalışan korumalar:
 | Konu | Uygulanan |
 |---|---|
 | Şifre saklama | scrypt (N=16384) ile tek yönlü karma, sabit zamanlı karşılaştırma |
-| Oturum | HMAC imzalı, httpOnly, sameSite=lax cookie; 8 saat geçerli |
+| Oturum | HMAC imzalı, httpOnly, sameSite=lax cookie; 8 saat geçerli; çıkışta sunucuda da geçersiz kılınır |
 | Şifre değişimi | Eski oturumlar geçersiz olur; pasife alınan hesap anında düşer |
-| Kaba kuvvet | 5 dakikada 8 hatalı denemeden sonra her deneme yavaşlatılır (doğru şifreyi bilen kilitlenmez) |
+| Kaba kuvvet | Aynı bilgisayardan 5 dakikada 8 hatalı denemeden sonra giriş o bilgisayar için 5 dakika kapanır (başka bilgisayardan girilebilir); istemci adresi IIS'in eklediği değerden okunur, `X-Forwarded-For` ile taklit edilemez |
 | Yönetim ekranları | Her sayfa ve her işlem ayrı ayrı oturum doğrular |
 | PDF erişimi | Dosyalar web kökünün dışında; yayından kaldırılan bültenler sunulmaz |
 | Yükleme | Yalnızca gerçek PDF (dosya imzası kontrol edilir), en fazla 25 MB, diskte rastgele ad |

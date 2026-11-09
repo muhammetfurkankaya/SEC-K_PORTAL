@@ -140,3 +140,11 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_at ON audit_log (at DESC);
+
+-- Çıkış yapılmış oturumlar. Çerez yalnızca tarayıcıdan silinseydi, ele
+-- geçirilmiş bir kopyası süresi dolana (8 saat) kadar geçerli kalırdı.
+-- Satır, oturumun süresi dolunca silinir; tablo hep küçük kalır.
+CREATE TABLE IF NOT EXISTS revoked_sessions (
+  sid        TEXT    PRIMARY KEY,
+  expires_at INTEGER NOT NULL
+);

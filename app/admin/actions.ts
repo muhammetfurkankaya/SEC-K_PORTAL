@@ -23,7 +23,7 @@ const LoginSchema = z.object({
  */
 async function clientIp(): Promise<string> {
   const store = await headers();
-  return pickClientIp(store.get("x-forwarded-for"), store.get("x-real-ip")) ?? "bilinmiyor";
+  return pickClientIp(store.get("x-forwarded-for")) ?? "bilinmiyor";
 }
 
 export async function loginAction(
@@ -39,17 +39,24 @@ export async function loginAction(
     return fail("Kullanıcı adı ve şifre zorunludur.");
   }
 
-  // Kaba kuvvet denemelerini yavaşlat: 5 dakikada en fazla 8 deneme.
-  const key = `giris:${await clientIp()}:${parsed.data.username.toLocaleLowerCase("tr")}`;
+  // Kaba kuvvet: aynı adresten aynı hesaba 5 dakikada en fazla 8 deneme.
+  const ip = await clientIp();
+  const key = `giris:${ip}:${parsed.data.username.toLocaleLowerCase("tr")}`;
   const limit = checkRateLimit(key, 8, 5 * 60 * 1000);
 
-  // Sınır aşıldığında hesabı KİLİTLEMİYORUZ, denemeyi yavaşlatıyoruz.
+  // Adres biliniyorsa sınır aşılınca şifre HİÇ denenmez: yavaşlatmak
+  // yetmiyordu, paralel istekler beklemeyi aşıyordu. Kilit yalnızca o
+  // adres için geçerli; başka bir bilgisayardan yönetici girebilir.
   //
-  // Kilitleme, ters vekil arkasında istemci adresi okunamadığında (bkz.
-  // clientIp) hizmet engellemeye dönüşür: sınır tüm istekler için tek kovaya
-  // düştüğü için herhangi biri 8 hatalı denemeyle yöneticiyi 5 dakika dışarıda
-  // bırakabilirdi. Doğru şifreyi bilen kişi her hâlükârda girebilir; şifreyi
-  // bilmeyen için her deneme yavaşlar ve scrypt'in kendi maliyeti de eklenir.
+  // Adres okunamıyorsa (tüm istekler tek kovaya düşer) kilitlemek
+  // herkesin yöneticiyi dışarıda bırakabilmesi demek olurdu; o durumda
+  // yalnızca yavaşlatılır.
+  if (!limit.allowed && ip !== "bilinmiyor") {
+    logAction(null, "giris.engellendi", { detail: parsed.data.username });
+    return fail(
+      `Çok fazla hatalı deneme yapıldı. ${limit.retryAfterSeconds} saniye sonra tekrar deneyin.`,
+    );
+  }
   if (!limit.allowed) {
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }

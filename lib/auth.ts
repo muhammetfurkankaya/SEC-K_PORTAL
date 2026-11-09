@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getDb } from "@/lib/db";
 import { DATA_DIR } from "@/lib/paths";
 import { getUserById, getUserByUsername, touchLastLogin } from "@/lib/db/queries/users";
 import { hashPassword, verifyPassword } from "@/lib/password";
@@ -55,7 +56,7 @@ function sign(payload: string): string {
   return crypto.createHmac("sha256", getSecret()).update(payload).digest("base64url");
 }
 
-type TokenPayload = SessionUser & { exp: number; pv?: string };
+type TokenPayload = SessionUser & { exp: number; pv?: string; sid?: string };
 
 /**
  * Şifreye bağlı oturum damgası.
@@ -77,6 +78,8 @@ function createToken(user: SessionUser, passwordHash: string): string {
     role: user.role,
     exp: Date.now() + SESSION_HOURS * 60 * 60 * 1000,
     pv: passwordStamp(passwordHash),
+    // Oturum kimliği: çıkışta bu kimlik geçersiz listesine yazılır.
+    sid: crypto.randomBytes(16).toString("base64url"),
   };
   const body = base64url(JSON.stringify(payload));
   return `${body}.${sign(body)}`;
@@ -145,9 +148,27 @@ export async function startSession(user: SessionUser): Promise<void> {
   });
 }
 
+/**
+ * Oturumu kapatır: çerezi siler VE oturum kimliğini sunucuda geçersiz kılar.
+ * Böylece çerezin ele geçirilmiş bir kopyası da çıkıştan sonra işe yaramaz.
+ */
 export async function endSession(): Promise<void> {
   const store = await cookies();
+  const token = store.get(COOKIE_NAME)?.value;
+  const payload = token ? readToken(token) : null;
+  if (payload?.sid) {
+    const db = getDb();
+    db.prepare(`DELETE FROM revoked_sessions WHERE expires_at < ?`).run(Date.now());
+    db.prepare(`INSERT OR IGNORE INTO revoked_sessions (sid, expires_at) VALUES (?, ?)`).run(
+      payload.sid,
+      payload.exp,
+    );
+  }
   store.delete(COOKIE_NAME);
+}
+
+function isRevoked(sid: string): boolean {
+  return Boolean(getDb().prepare(`SELECT 1 FROM revoked_sessions WHERE sid = ?`).get(sid));
 }
 
 /** Geçerli oturumdaki kullanıcıyı verir; yoksa null. */
@@ -157,7 +178,9 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!token) return null;
 
   const payload = readToken(token);
-  if (!payload) return null;
+  // Kimliksiz çerez bu sürümden önce yazılmıştır; çıkışla geçersiz
+  // kılınamayacağı için kabul edilmez (yükseltmeden sonra bir kez yeniden giriş).
+  if (!payload || !payload.sid || isRevoked(payload.sid)) return null;
 
   // Kullanıcı silinmiş veya pasife alınmış olabilir — veritabanından doğrula.
   const user = getUserById(payload.id);

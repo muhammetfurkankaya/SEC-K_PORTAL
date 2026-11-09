@@ -25,20 +25,23 @@ const PROXY_LOCAL = new Set([
 ]);
 
 /**
- * `x-forwarded-for` (soldan sağa: istemci, vekil…) ve `x-real-ip`
- * başlıklarından ilk anlamlı adresi seçer; bulunamazsa null döner.
+ * `x-forwarded-for` başlığının YALNIZCA EN SAĞDAKİ adresini istemci sayar;
+ * bulunamazsa null döner.
+ *
+ * Neden en sağ: tarayıcı bu başlığı istediği değerle gönderebilir. IIS
+ * (AspNetCoreModuleV2 / HttpPlatformHandler) gelen başlığı silmez, gerçek
+ * bağlantı adresini sonuna EKLER: `<istemcinin yazdığı>, <gerçek adres>`.
+ * Soldaki değerlere güvenmek, her istekte farklı bir adres uydurarak giriş
+ * ve anket sınırlarını aşmaya izin verirdi. ARR vekil modunda
+ * (web.config.vekil) başlık zaten tek değerle — gerçek adresle — ezilir.
+ *
+ * `x-real-ip` bilinçli olarak okunmaz: IIS onu hiç yazmaz, yani yalnızca
+ * istemcinin uydurabileceği bir değer olurdu.
  */
-export function pickClientIp(
-  forwardedFor: string | null | undefined,
-  realIp?: string | null,
-): string | null {
-  const candidates = [...(forwardedFor ?? "").split(","), realIp ?? ""];
-
-  for (const raw of candidates) {
-    const value = normalizeAddress(raw);
-    if (value && !PROXY_LOCAL.has(value)) return value;
-  }
-  return null;
+export function pickClientIp(forwardedFor: string | null | undefined): string | null {
+  const entries = (forwardedFor ?? "").split(",");
+  const value = normalizeAddress(entries[entries.length - 1] ?? "");
+  return value && !PROXY_LOCAL.has(value) ? value : null;
 }
 
 /** Adresi karşılaştırılabilir hâle getirir: boşluk, port ve köşeli parantez. */

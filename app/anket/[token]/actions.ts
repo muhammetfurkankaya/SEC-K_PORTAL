@@ -106,7 +106,7 @@ function readAnswer(
 
 async function clientIp(): Promise<string | null> {
   const store = await headers();
-  return pickClientIp(store.get("x-forwarded-for"), store.get("x-real-ip"));
+  return pickClientIp(store.get("x-forwarded-for"));
 }
 
 const DEVICE_COOKIE = "seck_katilimci";
