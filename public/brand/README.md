@@ -38,8 +38,8 @@ okunurluğunu ayarlar.
    `npm run paket:windows` ile paketi yeniden üretin. Sonraki sürümlerde de
    yeni görsel gelir.
 2. **Doğrudan sunucuda:** `<site klasörü>\public\brand\hero-anasayfa.jpg`
-   üzerine yeni dosyayı kopyalayın, IIS Yöneticisi'nde uygulama havuzunu
-   **Recycle** edin. Sürüm yükseltmede paket klasörü değiştiği için görseli
+   üzerine yeni dosyayı kopyalayın ve sayfayı yenileyin — yeniden başlatma
+   gerekmez (gelmezse IIS'te uygulama havuzunu **Recycle** edin). Sürüm yükseltmede paket klasörü değiştiği için görseli
    kaynağa da koymayı unutmayın (1. yol).
 
 Tarayıcı önbelleği sorun olmaz: sayfadaki adres dosyanın değişme zamanını

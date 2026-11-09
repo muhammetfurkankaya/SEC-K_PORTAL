@@ -139,7 +139,9 @@ durur; yedeğe `data` klasörüyle birlikte girer.
 1. Yeni görseli **aynı adla** (`hero-anasayfa.jpg`) hazırlayın: yatay
    (16:9), en az 1920 px genişlik, JPEG, ~300–600 KB.
 2. `C:\seckportal\public\brand\hero-anasayfa.jpg` dosyasının üzerine kopyalayın.
-3. IIS Yöneticisi → Application Pools → portalın havuzu → **Recycle**.
+3. Portalı tarayıcıda yenileyin — yeni görsel hemen gelir, yeniden başlatma
+   gerekmez. Gelmezse IIS Yöneticisi → Application Pools → portalın
+   havuzu → **Recycle**.
 
 Tarayıcılar eski görseli göstermez: adres dosyanın değişme zamanını taşır.
 Ayrıntı: `public\brand\README.md`. Ayarlar → Ana Sayfa Yerleşimi'ndeki
